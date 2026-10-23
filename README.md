@@ -58,12 +58,12 @@ Pengguna memilih peran (asisten/praktikan) dan identitasnya dari daftar dummy di
 
 ## Sprint 1
 
-| Programmer       | Fitur (Ref FR)                      | Branch              | Folder/Modul                                                                                                                                                 | Catatan Dependency                                                                                              |
-| ---------------- | ----------------------------------- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------- |
-| **Abhista** (PM) | FR-02, FR-03, FR-12 (logika), FR-14 | `feature/fondasi`   | `src/types.ts`, `src/data/`, `src/context/`, `src/utils/`, `src/app/_layout.tsx`, `src/app/*/profil.tsx`                                                     | Dikerjakan paling awal. Semua modul lain bergantung pada `usePraktikum()` dan tipe di `types.ts`                |
-| **Rafif**        | FR-01, FR-04, FR-05, FR-06 (header) | `feature/shared-ui` | `src/app/index.tsx`, `src/app/sesi/[id].tsx`, `src/components/sesi-card.tsx`, `status-badge.tsx`, `empty-state.tsx`, `confirm-modal.tsx`, `bottom-sheet.tsx` | `ConfirmModal` dan `BottomSheet` dibuat di awal karena dipakai Sofwan dan Naufal                                |
-| **Sofwan**       | FR-07, FR-08, FR-09                 | `feature/asisten`   | `src/app/asisten/`, `src/components/asisten-panel.tsx`                                                                                                       | Butuh `SesiCard` dan `ConfirmModal` dari Rafif. Sebelum siap, pakai `Alert.alert` sementara                     |
-| **Naufal**       | FR-10, FR-11, FR-12 (UI), FR-13     | `feature/praktikan` | `src/app/praktikan/`, `src/components/praktikan-panel.tsx`                                                                                                   | Butuh `SesiCard`, `ConfirmModal`, dan `BottomSheet` dari Rafif. Logika anti presensi ganda sudah ada di context |
+| Programmer       | Fitur (Ref FR)                                             | Branch                                         | Folder/Modul                                                                                                                                           | Catatan Dependency                                                                                                                                            |
+| ---------------- | ---------------------------------------------------------- | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Abhista** (PM) | -                                                          | Merge branch lain                              | Repo, collaborator, proteksi branch `main`, `README.md`                                                                                                | -                                                                                                                                                             |
+| **Rafif**        | FR-01, FR-02, FR-03, FR-06 (header), FR-12 (logika), FR-14 | `feature/fondasi`, lalu `feature/pilih-peran`  | `src/types.ts`, `src/data/`, `src/context/`, `src/utils/`, `src/app/_layout.tsx`, `src/app/index.tsx`, `src/app/sesi/[id].tsx`, `src/app/*/profil.tsx` | Fondasi (tipe, data dummy, context, root layout, halaman placeholder) di-merge paling awal karena semua modul bergantung pada `usePraktikum()` dan `types.ts` |
+| **Sofwan**       | FR-05, FR-07, FR-08, FR-09                                 | `feature/modal`, lalu `feature/asisten`        | `src/components/confirm-modal.tsx`, `bottom-sheet.tsx`, `src/app/asisten/`, `src/components/asisten-panel.tsx`                                         | `ConfirmModal` dan `BottomSheet` di-merge lebih dulu karena dipakai Naufal. Butuh `SesiCard` dari Naufal                                                      |
+| **Naufal**       | FR-04, FR-10, FR-11, FR-12 (UI), FR-13                     | `feature/kartu-sesi`, lalu `feature/praktikan` | `src/components/sesi-card.tsx`, `status-badge.tsx`, `empty-state.tsx`, `src/app/praktikan/`, `src/components/praktikan-panel.tsx`                      | `SesiCard`, `StatusBadge`, dan `EmptyState` di-merge lebih dulu karena dipakai Sofwan. Butuh `ConfirmModal` dan `BottomSheet` dari Sofwan                     |
 
 ## 4. Akun Dummy
 
@@ -74,8 +74,6 @@ Pengguna memilih peran (asisten/praktikan) dan identitasnya dari daftar dummy di
 | Asisten   | Rina Kusuma                                               | Tanpa jadwal (uji empty state)   |
 | Praktikan | Andi Saputra, Budi Santoso, Citra Lestari, Dewi Anggraini | Kelas A                          |
 | Praktikan | Eko Nugroho, Fajar Ramadhan, Gita Permata                 | Kelas B                          |
-
-Sesi yang sudah dibuka di data awal: Pemrograman Mobile pertemuan 3 kelas B, kode presensi `4821`.
 
 ## 5. Setup Proyek (Programmer, Setelah Clone)
 
@@ -110,7 +108,7 @@ Untuk menambah paket, gunakan `npx expo install <paket>`, bukan `npm install <pa
 - Format commit: `<type>(<scope>): <deskripsi singkat>` diikuti body opsional.
   - Contoh: `feat(asisten): tambah tombol buka sesi dengan modal konfirmasi`
 - Type yang dipakai: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`.
-- Scope yang dipakai: `fondasi`, `shared-ui`, `asisten`, `praktikan`, `docs`.
+- Scope yang dipakai: `fondasi`, `pilih-peran`, `komponen`, `asisten`, `praktikan`, `docs`.
 - Tidak ada co-author pada commit.
 - Sertakan screenshot setiap kondisi tampilan (kosong, normal, sukses) di deskripsi Pull Request.
 - Merge ke `main` hanya dilakukan oleh PM setelah branch fitur direview.

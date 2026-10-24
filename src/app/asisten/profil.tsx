@@ -1,5 +1,4 @@
 import { router } from 'expo-router';
-import React from 'react';
 import {
   Alert,
   Pressable,
@@ -44,9 +43,6 @@ export default function AsistenProfilScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.card}>
-        <Text style={styles.title}>Profil Asisten</Text>
-
-        <View style={styles.divider} />
 
         <View style={styles.row}>
           <Text style={styles.label}>Nama</Text>

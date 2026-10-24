@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import React, { useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   FlatList,
   Pressable,
@@ -148,7 +148,7 @@ export default function PilihPeranScreen() {
                 styles.masukButtonText,
                 !selectedUser && styles.masukButtonTextDisabled,
               ]}>
-              {selectedUser ? `Masuk sebagai ${selectedUser.nama}` : 'Pilih Identitas Terlebih Dahulu'}
+              {selectedUser ? `Masuk` : 'Pilih Identitas Terlebih Dahulu'}
             </Text>
           </Pressable>
         </View>

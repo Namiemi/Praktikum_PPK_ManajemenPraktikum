@@ -1,31 +1,323 @@
-import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { useLocalSearchParams } from 'expo-router';
+import React, { useState } from 'react';
+import {
+  Modal,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 
-export default function SesiDetailPlaceholder() {
+import { usePraktikum } from '@/context/praktikum-context';
+import { formatDateIndo } from '@/utils';
+
+export default function DetailSesiScreen() {
+  const { id } = useLocalSearchParams<{ id: string }>();
+  const { getSesiById, currentUser } = usePraktikum();
+
+  const [modalCatatanOpen, setModalCatatanOpen] = useState(false);
+
+  const sesi = getSesiById(id);
+
+  if (!sesi) {
+    return (
+      <View style={styles.centerContainer}>
+        <Text style={styles.errorText}>Sesi praktikum tidak ditemukan.</Text>
+      </View>
+    );
+  }
+
+  const isAsisten = currentUser?.peran === 'asisten';
+
+  const getStatusColor = () => {
+    switch (sesi.status) {
+      case 'DIBUKA':
+        return { bg: '#e8f5e9', text: '#2e7d32', label: 'Dibuka' };
+      case 'DITUTUP':
+        return { bg: '#ffebee', text: '#c62828', label: 'Ditutup' };
+      default:
+        return { bg: '#f5f5f5', text: '#616161', label: 'Belum Dibuka' };
+    }
+  };
+
+  const status = getStatusColor();
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Detail Sesi Praktikum</Text>
-      <Text style={styles.subtitle}>Placeholder Layar Sesi (Fondasi)</Text>
-    </View>
+    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      {/* Header Detail Sesi (FR-06) */}
+      <View style={styles.headerCard}>
+        <View style={styles.headerTop}>
+          <Text style={styles.mataKuliah}>{sesi.mataKuliah}</Text>
+          <View style={[styles.badge, { backgroundColor: status.bg }]}>
+            <Text style={[styles.badgeText, { color: status.text }]}>
+              {status.label}
+            </Text>
+          </View>
+        </View>
+
+        <Text style={styles.topikTitle}>
+          Pertemuan {sesi.pertemuan}: {sesi.topik}
+        </Text>
+
+        <View style={styles.divider} />
+
+        <View style={styles.infoList}>
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>Kelas</Text>
+            <Text style={styles.infoValue}>Kelas {sesi.kelas}</Text>
+          </View>
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>Tanggal</Text>
+            <Text style={styles.infoValue}>{formatDateIndo(sesi.tanggal)}</Text>
+          </View>
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>Waktu</Text>
+            <Text style={styles.infoValue}>
+              {sesi.jamMulai} - {sesi.jamSelesai} WIB
+            </Text>
+          </View>
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>Ruang</Text>
+            <Text style={styles.infoValue}>{sesi.ruang}</Text>
+          </View>
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>Asisten</Text>
+            <Text style={styles.infoValue}>{sesi.asistenNama}</Text>
+          </View>
+
+          {sesi.jamBuka && (
+            <View style={styles.infoRow}>
+              <Text style={styles.infoLabel}>Jam Buka</Text>
+              <Text style={styles.infoValue}>{sesi.jamBuka} WIB</Text>
+            </View>
+          )}
+
+          {sesi.jamTutup && (
+            <View style={styles.infoRow}>
+              <Text style={styles.infoLabel}>Jam Tutup</Text>
+              <Text style={styles.infoValue}>{sesi.jamTutup} WIB</Text>
+            </View>
+          )}
+
+          {isAsisten && sesi.status === 'DIBUKA' && sesi.kodePresensi && (
+            <View style={styles.kodeContainer}>
+              <Text style={styles.kodeTitle}>Kode Presensi Aktif:</Text>
+              <Text style={styles.kodeNumber}>{sesi.kodePresensi}</Text>
+            </View>
+          )}
+        </View>
+
+        <Pressable
+          style={styles.infoButton}
+          onPress={() => setModalCatatanOpen(true)}>
+          <Text style={styles.infoButtonText}>Lihat Catatan Sesi</Text>
+        </Pressable>
+      </View>
+
+      {/* Panel Bawah Sesuai Peran Aktif */}
+      <View style={styles.panelContainer}>
+        {isAsisten ? (
+          <View style={styles.panelPlaceholder}>
+            <Text style={styles.panelPlaceholderTitle}>Panel Asisten</Text>
+            <Text style={styles.panelPlaceholderDesc}>
+              Slot untuk integrasi modul asisten (buka/tutup sesi dan rekap kehadiran).
+            </Text>
+          </View>
+        ) : (
+          <View style={styles.panelPlaceholder}>
+            <Text style={styles.panelPlaceholderTitle}>Panel Praktikan</Text>
+            <Text style={styles.panelPlaceholderDesc}>
+              Slot untuk integrasi modul praktikan (form presensi kode & feedback).
+            </Text>
+          </View>
+        )}
+      </View>
+
+      {/* Modal Info Catatan Sesi */}
+      <Modal
+        visible={modalCatatanOpen}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setModalCatatanOpen(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalBox}>
+            <Text style={styles.modalHeader}>Catatan Sesi</Text>
+            <Text style={styles.modalBody}>
+              {sesi.catatan || 'Tidak ada catatan tambahan untuk sesi ini.'}
+            </Text>
+            <Pressable
+              style={styles.modalCloseButton}
+              onPress={() => setModalCatatanOpen(false)}>
+              <Text style={styles.modalCloseButtonText}>Tutup</Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#f7f7f7',
+  },
+  content: {
+    padding: 16,
+  },
+  centerContainer: {
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#ffffff',
     padding: 24,
   },
-  title: {
-    fontSize: 16,
+  errorText: {
+    fontSize: 15,
+    color: '#666666',
+  },
+  headerCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 8,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#e8e8e8',
+    marginBottom: 16,
+  },
+  headerTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  mataKuliah: {
+    fontSize: 13,
     fontWeight: '600',
+    color: '#666666',
+    textTransform: 'uppercase',
+  },
+  badge: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 4,
+  },
+  badgeText: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  topikTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#111111',
+    marginTop: 6,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: '#eeeeee',
+    marginVertical: 12,
+  },
+  infoList: {
+    gap: 8,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  infoLabel: {
+    fontSize: 14,
+    color: '#666666',
+  },
+  infoValue: {
+    fontSize: 14,
+    fontWeight: '500',
     color: '#111111',
   },
-  subtitle: {
+  kodeContainer: {
+    backgroundColor: '#f0f0f0',
+    padding: 10,
+    borderRadius: 6,
+    alignItems: 'center',
+    marginVertical: 4,
+  },
+  kodeTitle: {
+    fontSize: 12,
+    color: '#666666',
+  },
+  kodeNumber: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#111111',
+    letterSpacing: 2,
+    marginTop: 2,
+  },
+  infoButton: {
+    marginTop: 12,
+    paddingVertical: 8,
+    alignItems: 'center',
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#dddddd',
+  },
+  infoButtonText: {
+    fontSize: 13,
+    color: '#444444',
+    fontWeight: '500',
+  },
+  panelContainer: {
+    marginTop: 4,
+  },
+  panelPlaceholder: {
+    backgroundColor: '#ffffff',
+    borderRadius: 8,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#e8e8e8',
+    borderStyle: 'dashed',
+  },
+  panelPlaceholderTitle: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#333333',
+  },
+  panelPlaceholderDesc: {
     fontSize: 13,
     color: '#777777',
     marginTop: 4,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 20,
+  },
+  modalBox: {
+    backgroundColor: '#ffffff',
+    borderRadius: 8,
+    padding: 20,
+    width: '100%',
+    maxWidth: 360,
+  },
+  modalHeader: {
+    fontSize: 17,
+    fontWeight: '700',
+    color: '#111111',
+    marginBottom: 8,
+  },
+  modalBody: {
+    fontSize: 14,
+    color: '#444444',
+    lineHeight: 20,
+    marginBottom: 16,
+  },
+  modalCloseButton: {
+    backgroundColor: '#111111',
+    paddingVertical: 10,
+    borderRadius: 6,
+    alignItems: 'center',
+  },
+  modalCloseButtonText: {
+    color: '#ffffff',
+    fontSize: 14,
+    fontWeight: '600',
   },
 });

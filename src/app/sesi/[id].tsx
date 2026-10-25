@@ -14,7 +14,6 @@ import { BottomSheet } from '@/components/bottom-sheet';
 import { usePraktikum } from '@/context/praktikum-context';
 import { formatDateIndo } from '@/utils';
 import { ConfirmModal } from '@/components/confirm-modal';
-import { BottomSheet } from '@/components/bottom-sheet';
 
 export default function DetailSesiScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -236,8 +235,8 @@ export default function DetailSesiScreen() {
         </View>
       </BottomSheet>
 
-      {/* Modal Info Catatan Sesi */}
-      <Modal
+      {/* Bottom Sheet Info Catatan Sesi */}
+      <BottomSheet
         visible={modalCatatanOpen}
         title="Catatan Sesi Praktikum"
         closeText="Tutup"

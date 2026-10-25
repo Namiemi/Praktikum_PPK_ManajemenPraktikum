@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
+import React, { useState } from 'react';
 import {
-  Alert,
   Pressable,
   SafeAreaView,
   StyleSheet,
@@ -8,23 +8,17 @@ import {
   View,
 } from 'react-native';
 
+import { ConfirmModal } from '@/components/confirm-modal';
 import { usePraktikum } from '@/context/praktikum-context';
 
 export default function AsistenProfilScreen() {
   const { currentUser, logout } = usePraktikum();
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
-  const handleGantiPeran = () => {
-    Alert.alert('Ganti Peran', 'Apakah Anda yakin ingin keluar dan berganti peran?', [
-      { text: 'Batal', style: 'cancel' },
-      {
-        text: 'Keluar',
-        style: 'destructive',
-        onPress: () => {
-          logout();
-          router.replace('/');
-        },
-      },
-    ]);
+  const handleKeluar = () => {
+    setConfirmOpen(false);
+    logout();
+    router.replace('/');
   };
 
   if (!currentUser) {
@@ -65,9 +59,20 @@ export default function AsistenProfilScreen() {
         </View>
       </View>
 
-      <Pressable style={styles.gantiButton} onPress={handleGantiPeran}>
+      <Pressable style={styles.gantiButton} onPress={() => setConfirmOpen(true)}>
         <Text style={styles.gantiButtonText}>Ganti Peran</Text>
       </Pressable>
+
+      <ConfirmModal
+        visible={confirmOpen}
+        onCancel={() => setConfirmOpen(false)}
+        onConfirm={handleKeluar}
+        title="Ganti Peran"
+        message="Apakah Anda yakin ingin keluar dan berganti peran?"
+        confirmText="Keluar"
+        cancelText="Batal"
+        variant="danger"
+      />
     </SafeAreaView>
   );
 }

@@ -1,3 +1,10 @@
+import { Text, View, StyleSheet } from "react-native";
+
+export default function Index() {
+  return (
+    <View style={styles.container}>
+      <Text>Edit src/app/index.tsx to edit this screen.</Text>
+    </View>
 import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
 import {
@@ -158,6 +165,10 @@ export default function PilihPeranScreen() {
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
   safeArea: {
     flex: 1,
     backgroundColor: '#ffffff',

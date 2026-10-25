@@ -1,36 +1,83 @@
-import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { router } from 'expo-router';
+import { useMemo } from 'react';
+import { FlatList, SafeAreaView, StyleSheet } from 'react-native';
 
-/**
- * Halaman Placeholder Jadwal Praktikan (Sesuai README: 'halaman placeholder' di branch fondasi).
- * Modul ini akan dikerjakan sepenuhnya oleh Naufal (FR-10).
- */
-export default function JadwalPraktikanPlaceholder() {
+import { EmptyState } from '@/components/empty-state';
+import { Sesi, SesiCard } from '@/components/sesi-card';
+
+import { usePraktikum } from '@/context/praktikum-context';
+
+export default function JadwalPraktikanScreen() {
+  const { currentUser, sesiList, hasPraktikanPresensi } = usePraktikum();
+
+  const sesiPraktikan = useMemo(() => {
+    const kelas = currentUser?.kelas;
+    if (!kelas) {
+      return [];
+    }
+    return sesiList
+      .filter((sesi) => sesi.kelas === kelas)
+      .sort((a, b) =>
+        `${a.tanggal}${a.jamMulai}`.localeCompare(`${b.tanggal}${b.jamMulai}`)
+      );
+  }, [sesiList, currentUser?.kelas]);
+
+  const dataSesi: Sesi[] = useMemo(
+    () =>
+      sesiPraktikan.map((sesi) => ({
+        id: sesi.id,
+        praktikum: sesi.mataKuliah,
+        pertemuan: sesi.pertemuan,
+        kelas: sesi.kelas,
+        tanggal: sesi.tanggal,
+        jamMulai: sesi.jamMulai,
+        jamSelesai: sesi.jamSelesai,
+        ruang: sesi.ruang,
+        status:
+          sesi.status === 'BELUM_DIBUKA'
+            ? 'belum_dibuka'
+            : sesi.status === 'DIBUKA'
+              ? 'dibuka'
+              : 'ditutup',
+      })),
+    [sesiPraktikan]
+  );
+
+  const renderItem = ({ item }: { item: Sesi }) => (
+    <SesiCard
+      sesi={item}
+      onPress={() => router.push(`/sesi/${item.id}`)}
+      hadir={
+        currentUser ? hasPraktikanPresensi(item.id, currentUser.id) : false
+      }
+    />
+  );
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Placeholder Jadwal Praktikan</Text>
-      <Text style={styles.subtitle}>Modul ini akan dikerjakan oleh Naufal (FR-10)</Text>
-    </View>
+    <SafeAreaView style={styles.safeArea}>
+      <FlatList
+        data={dataSesi}
+        keyExtractor={(item) => item.id}
+        renderItem={renderItem}
+        contentContainerStyle={styles.listContent}
+        ListEmptyComponent={
+          <EmptyState
+            judul="Belum Ada Jadwal Praktikum"
+            deskripsi="Belum ada sesi praktikum yang dijadwalkan untuk kelas Anda."
+          />
+        }
+        showsVerticalScrollIndicator={false}
+      />
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  safeArea: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
     backgroundColor: '#ffffff',
-    padding: 24,
   },
-  title: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333333',
-  },
-  subtitle: {
-    fontSize: 13,
-    color: '#888888',
-    marginTop: 4,
+  listContent: {
+    flexGrow: 1,
   },
 });
-

@@ -5,6 +5,7 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from 'react-native';
 
@@ -12,12 +13,25 @@ import { AsistenPanel } from '@/components/asisten-panel';
 import { BottomSheet } from '@/components/bottom-sheet';
 import { usePraktikum } from '@/context/praktikum-context';
 import { formatDateIndo } from '@/utils';
+import { ConfirmModal } from '@/components/confirm-modal';
+import { BottomSheet } from '@/components/bottom-sheet';
 
 export default function DetailSesiScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { getSesiById, currentUser } = usePraktikum();
+  const {
+    getSesiById,
+    currentUser,
+    presensi,
+    getPresensiBySesi,
+    hasPraktikanPresensi,
+  } = usePraktikum();
 
   const [modalCatatanOpen, setModalCatatanOpen] = useState(false);
+  const [kodeInput, setKodeInput] = useState('');
+  const [errorMsg, setErrorMsg] = useState('');
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [successOpen, setSuccessOpen] = useState(false);
+  const [waktuSukses, setWaktuSukses] = useState('');
 
   const sesi = getSesiById(id);
 
@@ -30,6 +44,33 @@ export default function DetailSesiScreen() {
   }
 
   const isAsisten = currentUser?.peran === 'asisten';
+  const isPraktikanSudahHadir = currentUser
+    ? hasPraktikanPresensi(sesi.id, currentUser.id)
+    : false;
+  const catatanPresensi = currentUser
+    ? getPresensiBySesi(sesi.id).find((p) => p.praktikanId === currentUser.id)
+    : undefined;
+
+  const handleBukaKonfirmasi = () => {
+    const kode = kodeInput.trim();
+    if (!kode) {
+      setErrorMsg('Kode presensi tidak boleh kosong.');
+      return;
+    }
+    setErrorMsg('');
+    setConfirmOpen(true);
+  };
+
+  const handleKonfirmasiPresensi = () => {
+    const result = presensi(sesi.id, kodeInput.trim());
+    setConfirmOpen(false);
+    if (result.success && result.data) {
+      setWaktuSukses(result.data.waktuPresensi);
+      setSuccessOpen(true);
+    } else {
+      setErrorMsg(result.message ?? 'Gagal mencatat presensi.');
+    }
+  };
 
   const getStatusColor = () => {
     switch (sesi.status) {
@@ -121,17 +162,82 @@ export default function DetailSesiScreen() {
         {isAsisten ? (
           <AsistenPanel sesi={sesi} />
         ) : (
-          <View style={styles.panelPlaceholder}>
-            <Text style={styles.panelPlaceholderTitle}>Panel Praktikan</Text>
-            <Text style={styles.panelPlaceholderDesc}>
-              Slot untuk integrasi modul praktikan (form presensi kode & feedback).
-            </Text>
-          </View>
+          <>
+            {isPraktikanSudahHadir ? (
+              <View style={styles.panelTercatat}>
+                <Text style={styles.panelJudul}>Presensi Tercatat</Text>
+                <Text style={styles.panelWaktu}>
+                  Pukul {catatanPresensi?.waktuPresensi}
+                </Text>
+              </View>
+            ) : sesi.status === 'DIBUKA' ? (
+              <View style={styles.formPanel}>
+                <Text style={styles.formJudul}>Masukkan Kode Presensi</Text>
+                <TextInput
+                  style={styles.inputKode}
+                  value={kodeInput}
+                  onChangeText={setKodeInput}
+                  placeholder="Masukkan kode 4 digit"
+                  maxLength={4}
+                  keyboardType="numeric"
+                  autoCapitalize="none"
+                />
+                {errorMsg ? (
+                  <Text style={styles.errorText}>{errorMsg}</Text>
+                ) : null}
+                <Pressable
+                  style={[
+                    styles.tombolKonfirmasi,
+                    !kodeInput.trim() && styles.tombolKonfirmasiDisabled,
+                  ]}
+                  onPress={handleBukaKonfirmasi}
+                  disabled={!kodeInput.trim()}>
+                  <Text style={styles.tombolKonfirmasiText}>Konfirmasi</Text>
+                </Pressable>
+              </View>
+            ) : (
+              <View style={styles.panelPlaceholder}>
+                <Text style={styles.panelPlaceholderTitle}>Sesi Belum Dibuka</Text>
+                <Text style={styles.panelPlaceholderDesc}>
+                  Tunggu asisten membuka sesi praktikum.
+                </Text>
+                <Pressable
+                  style={[styles.tombolKonfirmasi, styles.tombolKonfirmasiDisabled]}
+                  disabled>
+                  <Text style={styles.tombolKonfirmasiText}>Presensi (Tidak Tersedia)</Text>
+                </Pressable>
+              </View>
+            )}
+          </>
         )}
       </View>
 
-      {/* Bottom Sheet Info Catatan Sesi */}
+      {/* Konfirmasi Presensi */}
+      <ConfirmModal
+        visible={confirmOpen}
+        onCancel={() => setConfirmOpen(false)}
+        onConfirm={handleKonfirmasiPresensi}
+        title="Konfirmasi Presensi"
+        message={`Yakin presensi dengan kode ${kodeInput.trim()}?`}
+        confirmText="Ya, Konfirmasi"
+        cancelText="Batal"
+      />
+
+      {/* Bottom Sheet Sukses Presensi */}
       <BottomSheet
+        visible={successOpen}
+        onClose={() => setSuccessOpen(false)}
+        title="Presensi Berhasil"
+        closeText="Tutup">
+        <View style={styles.bottomSheetBody}>
+          <Text style={styles.bottomSheetJudul}>Presensi tercatat</Text>
+          <Text style={styles.bottomSheetWaktu}>Pukul {waktuSukses}</Text>
+          <Text style={styles.bottomSheetInfo}>Terima kasih telah hadir.</Text>
+        </View>
+      </BottomSheet>
+
+      {/* Modal Info Catatan Sesi */}
+      <Modal
         visible={modalCatatanOpen}
         title="Catatan Sesi Praktikum"
         closeText="Tutup"
@@ -269,6 +375,62 @@ const styles = StyleSheet.create({
     color: '#777777',
     marginTop: 4,
   },
+  panelTercatat: {
+    backgroundColor: '#e8f5e9',
+    borderRadius: 8,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#c8e6c9',
+    alignItems: 'center',
+  },
+  panelJudul: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#2e7d32',
+  },
+  panelWaktu: {
+    fontSize: 13,
+    color: '#1b5e20',
+    marginTop: 4,
+  },
+  formPanel: {
+    backgroundColor: '#ffffff',
+    borderRadius: 8,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#e8e8e8',
+  },
+  formJudul: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#111111',
+    marginBottom: 12,
+  },
+  inputKode: {
+    height: 44,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    fontSize: 16,
+    backgroundColor: '#fafafa',
+    marginBottom: 12,
+  },
+  tombolKonfirmasi: {
+    backgroundColor: '#2e7d32',
+    height: 48,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  tombolKonfirmasiDisabled: {
+    backgroundColor: '#cccccc',
+  },
+  tombolKonfirmasiText: {
+    color: '#ffffff',
+    fontSize: 15,
+    fontWeight: '600',
+  },
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.4)',
@@ -305,5 +467,25 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     fontSize: 14,
     fontWeight: '600',
+  },
+  bottomSheetBody: {
+    alignItems: 'center',
+  },
+  bottomSheetJudul: {
+    fontSize: 17,
+    fontWeight: '700',
+    color: '#111111',
+    marginTop: 8,
+  },
+  bottomSheetWaktu: {
+    fontSize: 15,
+    color: '#2e7d32',
+    fontWeight: '700',
+    marginTop: 4,
+  },
+  bottomSheetInfo: {
+    fontSize: 13,
+    color: '#666666',
+    marginTop: 4,
   },
 });

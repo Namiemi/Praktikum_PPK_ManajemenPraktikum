@@ -1,12 +1,5 @@
-import { Text, View, StyleSheet } from "react-native";
-
-export default function Index() {
-  return (
-    <View style={styles.container}>
-      <Text>Edit src/app/index.tsx to edit this screen.</Text>
-    </View>
-import { router } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { router } from "expo-router";
+import { useMemo, useState } from "react";
 import {
   FlatList,
   Pressable,
@@ -15,16 +8,16 @@ import {
   Text,
   TextInput,
   View,
-} from 'react-native';
+} from "react-native";
 
-import { usePraktikum } from '@/context/praktikum-context';
-import { Peran, User } from '@/types';
+import { usePraktikum } from "@/context/praktikum-context";
+import { Peran, User } from "@/types";
 
 export default function PilihPeranScreen() {
   const { users, login } = usePraktikum();
 
-  const [selectedRole, setSelectedRole] = useState<Peran>('praktikan');
-  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedRole, setSelectedRole] = useState<Peran>("praktikan");
+  const [searchQuery, setSearchQuery] = useState("");
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
   const filteredUsers = useMemo(() => {
@@ -48,10 +41,10 @@ export default function PilihPeranScreen() {
   const handleMasuk = () => {
     if (!selectedUser) return;
     login(selectedUser);
-    if (selectedUser.peran === 'asisten') {
-      router.replace('/asisten/jadwal');
+    if (selectedUser.peran === "asisten") {
+      router.replace("/asisten/jadwal");
     } else {
-      router.replace('/praktikan/jadwal');
+      router.replace("/praktikan/jadwal");
     }
   };
 
@@ -70,14 +63,16 @@ export default function PilihPeranScreen() {
           <Pressable
             style={[
               styles.roleTabButton,
-              selectedRole === 'praktikan' && styles.roleTabButtonActive,
+              selectedRole === "praktikan" && styles.roleTabButtonActive,
             ]}
-            onPress={() => handleRoleChange('praktikan')}>
+            onPress={() => handleRoleChange("praktikan")}
+          >
             <Text
               style={[
                 styles.roleTabText,
-                selectedRole === 'praktikan' && styles.roleTabTextActive,
-              ]}>
+                selectedRole === "praktikan" && styles.roleTabTextActive,
+              ]}
+            >
               Praktikan
             </Text>
           </Pressable>
@@ -85,14 +80,16 @@ export default function PilihPeranScreen() {
           <Pressable
             style={[
               styles.roleTabButton,
-              selectedRole === 'asisten' && styles.roleTabButtonActive,
+              selectedRole === "asisten" && styles.roleTabButtonActive,
             ]}
-            onPress={() => handleRoleChange('asisten')}>
+            onPress={() => handleRoleChange("asisten")}
+          >
             <Text
               style={[
                 styles.roleTabText,
-                selectedRole === 'asisten' && styles.roleTabTextActive,
-              ]}>
+                selectedRole === "asisten" && styles.roleTabTextActive,
+              ]}
+            >
               Asisten
             </Text>
           </Pressable>
@@ -116,17 +113,15 @@ export default function PilihPeranScreen() {
             const isSelected = selectedUser?.id === item.id;
             return (
               <Pressable
-                style={[
-                  styles.userCard,
-                  isSelected && styles.userCardSelected,
-                ]}
-                onPress={() => setSelectedUser(item)}>
+                style={[styles.userCard, isSelected && styles.userCardSelected]}
+                onPress={() => setSelectedUser(item)}
+              >
                 <View style={styles.userCardInfo}>
                   <Text style={styles.userName}>{item.nama}</Text>
                   <Text style={styles.userNim}>{item.nim}</Text>
                 </View>
                 <Text style={styles.userMeta}>
-                  {item.peran === 'asisten'
+                  {item.peran === "asisten"
                     ? item.mataKuliah
                     : `Kelas ${item.kelas}`}
                 </Text>
@@ -149,13 +144,15 @@ export default function PilihPeranScreen() {
               !selectedUser && styles.masukButtonDisabled,
             ]}
             disabled={!selectedUser}
-            onPress={handleMasuk}>
+            onPress={handleMasuk}
+          >
             <Text
               style={[
                 styles.masukButtonText,
                 !selectedUser && styles.masukButtonTextDisabled,
-              ]}>
-              {selectedUser ? `Masuk` : 'Pilih Identitas Terlebih Dahulu'}
+              ]}
+            >
+              {selectedUser ? `Masuk` : "Pilih Identitas Terlebih Dahulu"}
             </Text>
           </Pressable>
         </View>
@@ -165,13 +162,9 @@ export default function PilihPeranScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
   safeArea: {
     flex: 1,
-    backgroundColor: '#ffffff',
+    backgroundColor: "#ffffff",
   },
   container: {
     flex: 1,
@@ -182,17 +175,17 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 22,
-    fontWeight: '700',
-    color: '#111111',
+    fontWeight: "700",
+    color: "#111111",
   },
   subtitle: {
     fontSize: 14,
-    color: '#666666',
+    color: "#666666",
     marginTop: 4,
   },
   roleTabContainer: {
-    flexDirection: 'row',
-    backgroundColor: '#f0f0f0',
+    flexDirection: "row",
+    backgroundColor: "#f0f0f0",
     borderRadius: 8,
     padding: 4,
     marginBottom: 12,
@@ -200,12 +193,12 @@ const styles = StyleSheet.create({
   roleTabButton: {
     flex: 1,
     paddingVertical: 10,
-    alignItems: 'center',
+    alignItems: "center",
     borderRadius: 6,
   },
   roleTabButtonActive: {
-    backgroundColor: '#ffffff',
-    shadowColor: '#000000',
+    backgroundColor: "#ffffff",
+    shadowColor: "#000000",
     shadowOpacity: 0.08,
     shadowOffset: { width: 0, height: 1 },
     shadowRadius: 2,
@@ -213,21 +206,21 @@ const styles = StyleSheet.create({
   },
   roleTabText: {
     fontSize: 14,
-    fontWeight: '500',
-    color: '#666666',
+    fontWeight: "500",
+    color: "#666666",
   },
   roleTabTextActive: {
-    color: '#111111',
-    fontWeight: '700',
+    color: "#111111",
+    fontWeight: "700",
   },
   searchInput: {
     height: 44,
     borderWidth: 1,
-    borderColor: '#e0e0e0',
+    borderColor: "#e0e0e0",
     borderRadius: 8,
     paddingHorizontal: 12,
     fontSize: 14,
-    backgroundColor: '#fafafa',
+    backgroundColor: "#fafafa",
     marginBottom: 12,
   },
   listContent: {
@@ -235,18 +228,18 @@ const styles = StyleSheet.create({
     paddingBottom: 16,
   },
   userCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     padding: 14,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#e8e8e8',
-    backgroundColor: '#ffffff',
+    borderColor: "#e8e8e8",
+    backgroundColor: "#ffffff",
   },
   userCardSelected: {
-    borderColor: '#111111',
-    backgroundColor: '#f8f8f8',
+    borderColor: "#111111",
+    backgroundColor: "#f8f8f8",
     borderWidth: 1.5,
   },
   userCardInfo: {
@@ -254,46 +247,46 @@ const styles = StyleSheet.create({
   },
   userName: {
     fontSize: 15,
-    fontWeight: '600',
-    color: '#111111',
+    fontWeight: "600",
+    color: "#111111",
   },
   userNim: {
     fontSize: 13,
-    color: '#777777',
+    color: "#777777",
     marginTop: 2,
   },
   userMeta: {
     fontSize: 12,
-    color: '#555555',
-    fontWeight: '500',
+    color: "#555555",
+    fontWeight: "500",
   },
   emptyContainer: {
     paddingVertical: 32,
-    alignItems: 'center',
+    alignItems: "center",
   },
   emptyText: {
     fontSize: 14,
-    color: '#999999',
+    color: "#999999",
   },
   footer: {
     paddingTop: 12,
   },
   masukButton: {
-    backgroundColor: '#111111',
+    backgroundColor: "#111111",
     height: 48,
     borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   masukButtonDisabled: {
-    backgroundColor: '#cccccc',
+    backgroundColor: "#cccccc",
   },
   masukButtonText: {
-    color: '#ffffff',
+    color: "#ffffff",
     fontSize: 15,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   masukButtonTextDisabled: {
-    color: '#888888',
+    color: "#888888",
   },
 });

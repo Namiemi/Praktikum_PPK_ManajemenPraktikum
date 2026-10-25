@@ -1,34 +1,45 @@
 import { Tabs } from 'expo-router';
 import React from 'react';
-import { Text } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import {
+  CalendarIcon,
+  ClipboardListIcon,
+  UserIcon,
+} from '@/components/icons/praktikum-theme-icons';
 
 export default function PraktikanTabLayout() {
   const insets = useSafeAreaInsets();
   return (
     <Tabs
       screenOptions={{
-        headerStyle: { backgroundColor: '#ffffff' },
-        headerTintColor: '#000000',
-        headerTitleStyle: { fontWeight: '600' },
+        headerStyle: { backgroundColor: '#2E4028' },
+        headerTintColor: '#FDFBF7',
+        headerTitleStyle: { fontWeight: '700', color: '#FDFBF7' },
         headerShadowVisible: false,
         tabBarStyle: {
-          backgroundColor: '#ffffff',
-          borderTopColor: '#e0e0e0',
+          backgroundColor: '#2E4028',
+          borderTopColor: '#202D1D',
+          borderTopWidth: 1,
           height: 60 + insets.bottom,
           paddingBottom: insets.bottom + 6,
           paddingTop: 6,
         },
-        tabBarActiveTintColor: '#111111',
-        tabBarInactiveTintColor: '#888888',
-      }}>
+        tabBarActiveTintColor: '#FDFBF7',
+        tabBarInactiveTintColor: '#A0A79A',
+        tabBarLabelStyle: {
+          fontSize: 12,
+          fontWeight: '600',
+        },
+      }}
+    >
       <Tabs.Screen
         name="jadwal"
         options={{
           title: 'Jadwal Praktikum',
           tabBarLabel: 'Jadwal',
-          tabBarIcon: ({ color }) => (
-            <Text style={{ fontSize: 18, color }}>📚</Text>
+          tabBarIcon: ({ color, size }) => (
+            <CalendarIcon size={size ?? 22} color={color} />
           ),
         }}
       />
@@ -37,8 +48,8 @@ export default function PraktikanTabLayout() {
         options={{
           title: 'Riwayat Kehadiran',
           tabBarLabel: 'Riwayat',
-          tabBarIcon: ({ color }) => (
-            <Text style={{ fontSize: 18, color }}>📋</Text>
+          tabBarIcon: ({ color, size }) => (
+            <ClipboardListIcon size={size ?? 22} color={color} />
           ),
         }}
       />
@@ -47,8 +58,8 @@ export default function PraktikanTabLayout() {
         options={{
           title: 'Pengajuan Izin',
           tabBarLabel: 'Izin',
-          tabBarIcon: ({ color }) => (
-            <Text style={{ fontSize: 18, color }}>📝</Text>
+          tabBarIcon: ({ color, size }) => (
+            <ClipboardListIcon size={size ?? 22} color={color} />
           ),
         }}
       />
@@ -57,8 +68,8 @@ export default function PraktikanTabLayout() {
         options={{
           title: 'Profil Praktikan',
           tabBarLabel: 'Profil',
-          tabBarIcon: ({ color }) => (
-            <Text style={{ fontSize: 18, color }}>👤</Text>
+          tabBarIcon: ({ color, size }) => (
+            <UserIcon size={size ?? 22} color={color} />
           ),
         }}
       />

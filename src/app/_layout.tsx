@@ -61,15 +61,16 @@ function RootContent() {
 
   return (
     <PraktikumProvider>
-      <StatusBar style="dark" />
+      <StatusBar style="light" />
       <OfflineBanner />
       <RouteGuard>
         <Stack
           screenOptions={{
-            headerStyle: { backgroundColor: '#ffffff' },
-            headerTintColor: '#000000',
+            headerStyle: { backgroundColor: '#2E4028' },
+            headerTintColor: '#FDFBF7',
+            headerTitleStyle: { fontWeight: '700', color: '#FDFBF7' },
             headerShadowVisible: false,
-            contentStyle: { backgroundColor: '#ffffff' },
+            contentStyle: { backgroundColor: '#FDFBF7' },
           }}
         >
           <Stack.Screen name="index" options={{ headerShown: false }} />

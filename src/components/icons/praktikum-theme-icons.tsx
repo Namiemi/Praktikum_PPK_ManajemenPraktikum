@@ -33,6 +33,8 @@ const cardCornerAsset = require('../../../assets/illustrations/card-corner-leave
 const emptyScheduleAsset = require('../../../assets/illustrations/empty-schedule-calendar.svg');
 const emptyAttendanceAsset = require('../../../assets/illustrations/empty-attendance-leaf.svg');
 const headerBlobAsset = require('../../../assets/illustrations/header-botanical-blob.svg');
+const waveTopAsset = require('../../../assets/illustrations/pilih-peran-wave-top.svg');
+const waveBottomAsset = require('../../../assets/illustrations/pilih-peran-wave-bottom.svg');
 
 function TintedSvgIcon({
   source,
@@ -232,6 +234,45 @@ export function HeaderBotanicalBlob({
         source={headerBlobAsset}
         style={{ width, height }}
         contentFit="contain"
+      />
+    </View>
+  );
+}
+
+/**
+ * 10. Organic Wave Backgrounds
+ */
+export function PilihPeranWaveTop({
+  width = '100%',
+  height = 220,
+}: {
+  width?: number | `${number}%`;
+  height?: number;
+}) {
+  return (
+    <View style={{ width, height, overflow: 'hidden' }}>
+      <Image
+        source={waveTopAsset}
+        style={{ width: '100%', height }}
+        contentFit="fill"
+      />
+    </View>
+  );
+}
+
+export function PilihPeranWaveBottom({
+  width = '100%',
+  height = 140,
+}: {
+  width?: number | `${number}%`;
+  height?: number;
+}) {
+  return (
+    <View style={{ width, height, overflow: 'hidden' }}>
+      <Image
+        source={waveBottomAsset}
+        style={{ width: '100%', height }}
+        contentFit="fill"
       />
     </View>
   );

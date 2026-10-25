@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 375 220" width="375" height="220" fill="none">
+  <!-- Cream wave layer (slightly darker cream) -->
+  <path d="M 0 0 L 375 0 L 375 210 C 345 195 320 155 280 115 C 240 80 210 75 170 90 C 130 105 100 142 50 140 C 20 139 5 130 0 125 Z" fill="#ECDFBC" />
+  <!-- Soft matcha wave layer -->
+  <path d="M 135 0 C 145 25 170 65 205 65 C 240 65 265 72 300 115 C 330 150 355 175 375 185 L 375 0 Z" fill="#B9C891" />
+</svg>

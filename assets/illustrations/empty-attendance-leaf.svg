@@ -1,0 +1,39 @@
+<svg width="140" height="140" viewBox="0 0 140 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Grid Background (4x4 squares) -->
+  <g stroke="#D4DEC9" stroke-width="1.2" stroke-linecap="round">
+    <!-- Horizontal lines -->
+    <line x1="25" y1="35" x2="115" y2="35"/>
+    <line x1="25" y1="55" x2="115" y2="55"/>
+    <line x1="25" y1="75" x2="115" y2="75"/>
+    <line x1="25" y1="95" x2="115" y2="95"/>
+    <line x1="25" y1="115" x2="115" y2="115"/>
+
+    <!-- Vertical lines -->
+    <line x1="35" y1="25" x2="35" y2="115"/>
+    <line x1="55" y1="25" x2="55" y2="115"/>
+    <line x1="75" y1="25" x2="75" y2="115"/>
+    <line x1="95" y1="25" x2="95" y2="115"/>
+    <line x1="115" y1="25" x2="115" y2="115"/>
+  </g>
+
+  <!-- Central Botanical Plant Sprig (5 Leaves) -->
+  <g transform="translate(70, 72)">
+    <!-- Central Curved Stem -->
+    <path d="M-2 42C-1 25 1 2 2 -32" stroke="#384D32" stroke-width="2.2" stroke-linecap="round"/>
+
+    <!-- Top Apex Leaf -->
+    <path d="M2 -32C-4 -42 2 -48 3 -48C4 -48 10 -42 2 -32Z" fill="#A5B895" stroke="#384D32" stroke-width="1.8"/>
+
+    <!-- Top Left Leaf -->
+    <path d="M1 -18C-14 -24 -18 -16 -18 -13C-16 -9 -4 -8 1 -18Z" fill="#889E78" stroke="#384D32" stroke-width="1.8"/>
+
+    <!-- Top Right Leaf -->
+    <path d="M2 -10C16 -16 22 -10 21 -6C19 -2 8 0 2 -10Z" fill="#A5B895" stroke="#384D32" stroke-width="1.8"/>
+
+    <!-- Lower Left Leaf -->
+    <path d="M0 6C-16 2 -21 11 -20 15C-18 19 -5 18 0 6Z" fill="#758B65" stroke="#384D32" stroke-width="1.8"/>
+
+    <!-- Lower Right Leaf -->
+    <path d="M-1 16C15 12 21 21 20 25C18 29 6 28 -1 16Z" fill="#889E78" stroke="#384D32" stroke-width="1.8"/>
+  </g>
+</svg>

@@ -1,0 +1,26 @@
+<svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Subtle Organic Corner Contour Lines -->
+  <path d="M12 80C14 55 35 34 60 32C68 31 75 32 80 34" stroke="#D1DCB8" stroke-width="1.2" stroke-linecap="round"/>
+  <path d="M26 80C28 62 42 48 60 46C67 45 74 46 80 48" stroke="#E2EAD2" stroke-width="1.2" stroke-linecap="round"/>
+
+  <!-- Botanical Leaf Sprig Branch in Corner -->
+  <g transform="translate(48, 48) rotate(-20)">
+    <!-- Stem -->
+    <path d="M-8 30C0 15 12 0 26 -16" stroke="#8A9E75" stroke-width="1.6" stroke-linecap="round"/>
+
+    <!-- Apex Leaf -->
+    <path d="M26 -16C23 -22 28 -26 29 -26C30 -26 34 -21 26 -16Z" fill="#C5D6B4" stroke="#8A9E75" stroke-width="1.2"/>
+
+    <!-- Left Leaf 1 -->
+    <path d="M20 -6C10 -10 8 -4 9 -2C11 1 18 0 20 -6Z" fill="#B2C69E" stroke="#8A9E75" stroke-width="1.2"/>
+
+    <!-- Right Leaf 1 -->
+    <path d="M15 4C24 0 27 6 26 8C24 10 17 9 15 4Z" fill="#C5D6B4" stroke="#8A9E75" stroke-width="1.2"/>
+
+    <!-- Left Leaf 2 -->
+    <path d="M9 14C-1 10 -3 16 -2 18C0 21 7 20 9 14Z" fill="#B2C69E" stroke="#8A9E75" stroke-width="1.2"/>
+
+    <!-- Right Leaf 2 -->
+    <path d="M3 22C12 18 15 24 14 26C12 28 5 27 3 22Z" fill="#C5D6B4" stroke="#8A9E75" stroke-width="1.2"/>
+  </g>
+</svg>

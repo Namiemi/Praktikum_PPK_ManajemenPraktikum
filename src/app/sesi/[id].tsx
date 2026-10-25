@@ -1,7 +1,6 @@
 import { useLocalSearchParams } from 'expo-router';
 import React, { useState } from 'react';
 import {
-  Modal,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -10,6 +9,8 @@ import {
   View,
 } from 'react-native';
 
+import { AsistenPanel } from '@/components/asisten-panel';
+import { BottomSheet } from '@/components/bottom-sheet';
 import { usePraktikum } from '@/context/praktikum-context';
 import { formatDateIndo } from '@/utils';
 import { ConfirmModal } from '@/components/confirm-modal';
@@ -159,12 +160,7 @@ export default function DetailSesiScreen() {
       {/* Panel Bawah Sesuai Peran Aktif */}
       <View style={styles.panelContainer}>
         {isAsisten ? (
-          <View style={styles.panelPlaceholder}>
-            <Text style={styles.panelPlaceholderTitle}>Panel Asisten</Text>
-            <Text style={styles.panelPlaceholderDesc}>
-              Slot untuk integrasi modul asisten (buka/tutup sesi dan rekap kehadiran).
-            </Text>
-          </View>
+          <AsistenPanel sesi={sesi} />
         ) : (
           <>
             {isPraktikanSudahHadir ? (
@@ -243,23 +239,13 @@ export default function DetailSesiScreen() {
       {/* Modal Info Catatan Sesi */}
       <Modal
         visible={modalCatatanOpen}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setModalCatatanOpen(false)}>
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalBox}>
-            <Text style={styles.modalHeader}>Catatan Sesi</Text>
-            <Text style={styles.modalBody}>
-              {sesi.catatan || 'Tidak ada catatan tambahan untuk sesi ini.'}
-            </Text>
-            <Pressable
-              style={styles.modalCloseButton}
-              onPress={() => setModalCatatanOpen(false)}>
-              <Text style={styles.modalCloseButtonText}>Tutup</Text>
-            </Pressable>
-          </View>
-        </View>
-      </Modal>
+        title="Catatan Sesi Praktikum"
+        closeText="Tutup"
+        onClose={() => setModalCatatanOpen(false)}>
+        <Text style={styles.modalBody}>
+          {sesi.catatan || 'Tidak ada catatan tambahan untuk sesi ini.'}
+        </Text>
+      </BottomSheet>
     </ScrollView>
   );
 }

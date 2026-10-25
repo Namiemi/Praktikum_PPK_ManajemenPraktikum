@@ -21,6 +21,7 @@ export default function AsistenTabLayout() {
         name="jadwal"
         options={{
           title: 'Jadwal Asisten',
+          headerShown: false,
           tabBarLabel: 'Jadwal',
           tabBarIcon: ({ color }) => (
             <Text style={{ fontSize: 18, color }}>📅</Text>

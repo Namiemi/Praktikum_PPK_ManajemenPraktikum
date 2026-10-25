@@ -1,0 +1,60 @@
+<svg width="220" height="200" viewBox="0 0 220 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Soft Sage Green Background Blob -->
+  <path d="M45 105C35 60 70 30 115 25C160 20 185 45 190 90C195 135 160 175 115 178C70 180 55 150 45 105Z" fill="#E2EAD8" opacity="0.85" />
+  
+  <!-- Botanical Leaves - Top Left -->
+  <g transform="translate(30, 65) rotate(-35)">
+    <!-- Main stem -->
+    <path d="M5 45C12 30 25 15 45 5" stroke="#3A4D33" stroke-width="2.5" stroke-linecap="round"/>
+    <!-- Leaf 1 -->
+    <path d="M45 5C40 1 30 2 28 8C26 14 36 12 45 5Z" fill="#586E4D" stroke="#3A4D33" stroke-width="1.5"/>
+    <!-- Leaf 2 -->
+    <path d="M33 16C26 12 18 16 19 22C20 28 29 23 33 16Z" fill="#7D956E" stroke="#3A4D33" stroke-width="1.5"/>
+    <!-- Leaf 3 -->
+    <path d="M22 28C14 26 8 32 11 38C14 44 21 36 22 28Z" fill="#586E4D" stroke="#3A4D33" stroke-width="1.5"/>
+  </g>
+
+  <!-- Tilted Desk Calendar Container -->
+  <g transform="translate(62, 42) rotate(4)">
+    <!-- Calendar Shadow -->
+    <rect x="2" y="4" width="88" height="96" rx="14" fill="#000000" fill-opacity="0.08"/>
+
+    <!-- Calendar Back Support Board -->
+    <rect x="0" y="0" width="88" height="96" rx="14" fill="#2E4028"/>
+
+    <!-- Calendar Paper Sheet -->
+    <rect x="3" y="14" width="82" height="78" rx="8" fill="#FAF9F5"/>
+
+    <!-- Calendar Top Binder Loops -->
+    <rect x="18" y="-4" width="6" height="14" rx="3" fill="#E2EAD8" stroke="#2E4028" stroke-width="2"/>
+    <rect x="41" y="-4" width="6" height="14" rx="3" fill="#E2EAD8" stroke="#2E4028" stroke-width="2"/>
+    <rect x="64" y="-4" width="6" height="14" rx="3" fill="#E2EAD8" stroke="#2E4028" stroke-width="2"/>
+
+    <!-- Calendar Header Stripe -->
+    <rect x="3" y="14" width="82" height="16" fill="#879F75"/>
+
+    <!-- Calendar Grid Lines -->
+    <!-- Horizontal lines -->
+    <line x1="10" y1="42" x2="78" y2="42" stroke="#BACAB0" stroke-width="1.5" stroke-linecap="round"/>
+    <line x1="10" y1="54" x2="78" y2="54" stroke="#BACAB0" stroke-width="1.5" stroke-linecap="round"/>
+    <line x1="10" y1="66" x2="78" y2="66" stroke="#BACAB0" stroke-width="1.5" stroke-linecap="round"/>
+    <line x1="10" y1="78" x2="78" y2="78" stroke="#BACAB0" stroke-width="1.5" stroke-linecap="round"/>
+    <!-- Vertical lines -->
+    <line x1="24" y1="36" x2="24" y2="84" stroke="#BACAB0" stroke-width="1.5" stroke-linecap="round"/>
+    <line x1="38" y1="36" x2="38" y2="84" stroke="#BACAB0" stroke-width="1.5" stroke-linecap="round"/>
+    <line x1="52" y1="36" x2="52" y2="84" stroke="#BACAB0" stroke-width="1.5" stroke-linecap="round"/>
+    <line x1="66" y1="36" x2="66" y2="84" stroke="#BACAB0" stroke-width="1.5" stroke-linecap="round"/>
+  </g>
+
+  <!-- Botanical Leaves - Bottom Right -->
+  <g transform="translate(135, 125) rotate(15)">
+    <!-- Stem -->
+    <path d="M0 45C10 32 24 18 42 2" stroke="#3A4D33" stroke-width="2.5" stroke-linecap="round"/>
+    <!-- Top Leaf -->
+    <path d="M42 2C42 8 36 15 28 13C22 11 32 4 42 2Z" fill="#586E4D" stroke="#3A4D33" stroke-width="1.5"/>
+    <!-- Middle Leaf -->
+    <path d="M26 16C31 21 32 29 25 30C20 31 18 22 26 16Z" fill="#7D956E" stroke="#3A4D33" stroke-width="1.5"/>
+    <!-- Lower Leaf -->
+    <path d="M12 32C18 36 17 44 11 44C6 44 6 36 12 32Z" fill="#586E4D" stroke="#3A4D33" stroke-width="1.5"/>
+  </g>
+</svg>

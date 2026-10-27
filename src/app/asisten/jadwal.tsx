@@ -17,6 +17,7 @@ import {
 } from '@/components/icons/praktikum-theme-icons';
 import { usePraktikum } from '@/context/praktikum-context';
 import { StatusSesi } from '@/types';
+import { bandingkanSesiJadwal } from '@/utils';
 
 type FilterStatus = 'SEMUA' | StatusSesi;
 
@@ -34,9 +35,7 @@ export default function JadwalAsistenScreen() {
   // ponytail: derived state langsung tanpa sinkronisasi useEffect
   const sesiMilikAsisten = sesiList
     .filter((s) => s.asistenId === currentUser?.id)
-    .sort((a, b) =>
-      `${a.tanggal}-${a.jamMulai}`.localeCompare(`${b.tanggal}-${b.jamMulai}`)
-    );
+    .sort(bandingkanSesiJadwal);
 
   const filteredSesi =
     selectedFilter === 'SEMUA'

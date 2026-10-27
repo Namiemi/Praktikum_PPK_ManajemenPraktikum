@@ -38,8 +38,8 @@ export default function RiwayatPraktikanScreen() {
     })
     .sort((a, b) => b.sesi.tanggal.localeCompare(a.sesi.tanggal));
 
-  const totalSesi = sesiKelas.length;
   const hadirCount = daftar.filter((item) => item.status === 'hadir').length;
+  const totalSesi = daftar.filter((item) => item.status !== 'menunggu').length;
 
   const renderItem = ({ item }: { item: { sesi: any; status: string; keterangan: string } }) => {
     const chipBg =

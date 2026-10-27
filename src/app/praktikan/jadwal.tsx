@@ -6,6 +6,7 @@ import { EmptyState } from '@/components/empty-state';
 import { Sesi, SesiCard } from '@/components/sesi-card';
 
 import { usePraktikum } from '@/context/praktikum-context';
+import { bandingkanSesiJadwal } from '@/utils';
 
 export default function JadwalPraktikanScreen() {
   const { currentUser, sesiList, hasPraktikanPresensi } = usePraktikum();
@@ -17,9 +18,7 @@ export default function JadwalPraktikanScreen() {
     }
     return sesiList
       .filter((sesi) => sesi.kelas === kelas)
-      .sort((a, b) =>
-        `${a.tanggal}${a.jamMulai}`.localeCompare(`${b.tanggal}${b.jamMulai}`)
-      );
+      .sort(bandingkanSesiJadwal);
   }, [sesiList, currentUser?.kelas]);
 
   const dataSesi: Sesi[] = useMemo(

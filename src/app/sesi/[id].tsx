@@ -8,6 +8,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AsistenPanel } from '@/components/asisten-panel';
 import { BottomSheet } from '@/components/bottom-sheet';
@@ -31,6 +32,7 @@ export default function DetailSesiScreen() {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [successOpen, setSuccessOpen] = useState(false);
   const [waktuSukses, setWaktuSukses] = useState('');
+  const insets = useSafeAreaInsets();
 
   const sesi = getSesiById(id);
 
@@ -85,7 +87,12 @@ export default function DetailSesiScreen() {
   const status = getStatusColor();
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={[
+        styles.content,
+        { paddingBottom: styles.content.padding + insets.bottom },
+      ]}>
       {/* Header Detail Sesi (FR-06) */}
       <View style={styles.headerCard}>
         <View style={styles.headerTop}>

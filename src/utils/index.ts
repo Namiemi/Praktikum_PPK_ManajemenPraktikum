@@ -2,6 +2,30 @@
  * Modul fungsi bantuan (utils) untuk format waktu dan pembuatan kode presensi.
  */
 
+import { SesiPraktikum, StatusSesi } from '@/types';
+
+const URUTAN_STATUS: Record<StatusSesi, number> = {
+  DIBUKA: 0,
+  BELUM_DIBUKA: 1,
+  DITUTUP: 2,
+};
+
+/**
+ * Pembanding untuk mengurutkan jadwal: Dibuka, lalu Belum Dibuka, lalu Ditutup.
+ * Dibuka dan Belum Dibuka diurutkan dari jadwal terdekat, Ditutup dari yang terbaru.
+ */
+export function bandingkanSesiJadwal(a: SesiPraktikum, b: SesiPraktikum): number {
+  const selisihStatus = URUTAN_STATUS[a.status] - URUTAN_STATUS[b.status];
+  if (selisihStatus !== 0) {
+    return selisihStatus;
+  }
+  const waktuA = `${a.tanggal}-${a.jamMulai}`;
+  const waktuB = `${b.tanggal}-${b.jamMulai}`;
+  return a.status === 'DITUTUP'
+    ? waktuB.localeCompare(waktuA)
+    : waktuA.localeCompare(waktuB);
+}
+
 /**
  * Menghasilkan kode presensi 4 digit acak.
  */

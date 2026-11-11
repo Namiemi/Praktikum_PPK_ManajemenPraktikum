@@ -48,6 +48,11 @@ export default function PraktikanProfilScreen() {
         </View>
 
         <View style={styles.row}>
+          <Text style={styles.label}>Email</Text>
+          <Text style={styles.value}>{currentUser.email}</Text>
+        </View>
+
+        <View style={styles.row}>
           <Text style={styles.label}>Peran</Text>
           <Text style={styles.value}>Praktikan</Text>
         </View>

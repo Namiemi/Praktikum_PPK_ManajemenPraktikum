@@ -2,31 +2,35 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    // Helper Functions
     function signedIn() {
       return request.auth != null;
     }
 
-    function currentUserData() {
+    function currentUserDoc() {
       return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
     }
 
     function isAsisten() {
-      return signedIn() && currentUserData().peran == 'asisten';
+      return signedIn() && currentUserDoc().peran == 'asisten';
     }
 
     function isPraktikan() {
-      return signedIn() && currentUserData().peran == 'praktikan';
+      return signedIn() && currentUserDoc().peran == 'praktikan';
     }
 
-    function sesiData(sesiId) {
+    function sesiDoc(sesiId) {
       return get(/databases/$(database)/documents/sesi/$(sesiId)).data;
     }
 
-    // Koleksi Users (FR-16, SRS-15)
+    // 1. Koleksi Users (FR-16, SRS-15, SRS-32)
     match /users/{uid} {
       allow read: if signedIn() && (request.auth.uid == uid || isAsisten());
+
       allow create: if signedIn() && request.auth.uid == uid
         && request.resource.data.keys().hasOnly(['nama', 'nim', 'email', 'peran', 'kelas', 'dibuatPada'])
+        && request.resource.data.nama is string && request.resource.data.nama.size() >= 3
+        && request.resource.data.nim is string && request.resource.data.nim.size() >= 8
         && request.resource.data.email == request.auth.token.email
         && request.resource.data.kelas == null
         && (
@@ -36,79 +40,124 @@ service cloud.firestore {
             exists(/databases/$(database)/documents/asistenWhitelist/$(request.auth.token.email))
           )
         );
+
       allow update: if (
         // Praktikan/Asisten mengubah profilnya sendiri (hanya nama/nim)
         signedIn() && request.auth.uid == uid
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['nama', 'nim'])
+        && request.resource.data.nama is string && request.resource.data.nama.size() >= 3
+        && request.resource.data.nim is string && request.resource.data.nim.size() >= 8
       ) || (
         // Asisten menugaskan kelas ke praktikan (hanya field kelas)
         isAsisten()
         && resource.data.peran == 'praktikan'
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['kelas'])
       );
+
       allow delete: if false;
     }
 
-    // Koleksi Whitelist Email Asisten (FR-16, SRS-15)
+    // 2. Koleksi Whitelist Email Asisten (FR-16, SRS-15)
     match /asistenWhitelist/{email} {
       allow get: if signedIn() && request.auth.token.email == email;
       allow list, write: if false;
     }
 
-    // Koleksi Kelas Praktikum (FR-21, SRS-18)
+    // 3. Koleksi Kelas Praktikum (FR-21, SRS-17, SRS-18)
     match /kelas/{kelasId} {
       allow read: if signedIn();
-      allow create: if isAsisten() && request.resource.data.asistenId == request.auth.uid;
-      allow update, delete: if isAsisten() && resource.data.asistenId == request.auth.uid;
+
+      allow create: if isAsisten()
+        && request.resource.data.asistenId == request.auth.uid
+        && request.resource.data.keys().hasOnly(['nama', 'mataKuliah', 'asistenId', 'asistenNama', 'dibuatPada'])
+        && request.resource.data.nama is string && request.resource.data.nama.size() > 0
+        && request.resource.data.mataKuliah is string && request.resource.data.mataKuliah.size() > 0;
+
+      allow update: if isAsisten()
+        && resource.data.asistenId == request.auth.uid
+        && request.resource.data.asistenId == request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['nama', 'mataKuliah']);
+
+      allow delete: if isAsisten() && resource.data.asistenId == request.auth.uid;
     }
 
-    // Koleksi Sesi Praktikum (FR-21, FR-22, SRS-18, SRS-20)
+    // 4. Koleksi Sesi Praktikum (FR-21, FR-22, SRS-18, SRS-20)
     match /sesi/{sesiId} {
       allow read: if signedIn();
-      allow create: if isAsisten() && request.resource.data.asistenId == request.auth.uid
-        && request.resource.data.status == 'BELUM_DIBUKA';
-      allow update: if isAsisten() && resource.data.asistenId == request.auth.uid;
+
+      allow create: if isAsisten()
+        && request.resource.data.asistenId == request.auth.uid
+        && request.resource.data.status == 'BELUM_DIBUKA'
+        && request.resource.data.keys().hasOnly([
+          'mataKuliah', 'pertemuan', 'topik', 'kelasId', 'kelas',
+          'tanggal', 'jamMulai', 'jamSelesai', 'ruang', 'catatan',
+          'asistenId', 'asistenNama', 'status', 'dibuatPada'
+        ]);
+
+      allow update: if isAsisten()
+        && resource.data.asistenId == request.auth.uid
+        && request.resource.data.asistenId == request.auth.uid
+        && (
+          // Skenario A: Transisi siklus hidup sesi (BELUM_DIBUKA -> DIBUKA atau DIBUKA -> DITUTUP)
+          (resource.data.status == 'BELUM_DIBUKA' && request.resource.data.status == 'DIBUKA') ||
+          (resource.data.status == 'DIBUKA' && request.resource.data.status == 'DITUTUP') ||
+          // Skenario B: Ubah rincian sesi sebelum dibuka
+          (resource.data.status == 'BELUM_DIBUKA' && request.resource.data.status == 'BELUM_DIBUKA')
+        );
+
       allow delete: if isAsisten() && resource.data.asistenId == request.auth.uid;
 
       // Subkoleksi Kode Rahasia Presensi (SRS-20, FR-22)
-      // Hanya asisten pemilik sesi yang boleh membaca atau menulis kode
+      // Hanya asisten pemilik sesi yang boleh membaca atau menulis kode presensi
       match /rahasia/{docId} {
-        allow read, write: if isAsisten() && sesiData(sesiId).asistenId == request.auth.uid;
+        allow read, write: if isAsisten() && sesiDoc(sesiId).asistenId == request.auth.uid;
       }
 
       // Subkoleksi Presensi Kehadiran (FR-26, SRS-21, SRS-22)
       match /presensi/{uid} {
         allow read: if signedIn() && (
           request.auth.uid == uid ||
-          (isAsisten() && sesiData(sesiId).asistenId == request.auth.uid)
+          (isAsisten() && sesiDoc(sesiId).asistenId == request.auth.uid)
         );
-        allow create: if isPraktikan() && request.auth.uid == uid
-          && sesiData(sesiId).status == 'DIBUKA'
-          && request.resource.data.kode == get(/databases/$(database)/documents/sesi/$(sesiId)/rahasia/kode).data.kode;
-        allow update: if false; // Anti presensi ganda (SRS-22)
-        allow delete: if isAsisten() && sesiData(sesiId).asistenId == request.auth.uid;
+
+        allow create: if isPraktikan()
+          && request.auth.uid == uid
+          && uid == request.resource.data.praktikanId
+          && sesiDoc(sesiId).status == 'DIBUKA'
+          && request.resource.data.kode == get(/databases/$(database)/documents/sesi/$(sesiId)/rahasia/kode).data.kode
+          && request.resource.data.keys().hasOnly(['praktikanId', 'praktikanNama', 'praktikanNim', 'kode', 'waktu']);
+
+        // Anti presensi ganda (SRS-22): Update dilarang sepenuhnya
+        allow update: if false;
+
+        allow delete: if isAsisten() && sesiDoc(sesiId).asistenId == request.auth.uid;
       }
     }
 
-    // Koleksi Pengajuan Izin Praktikan (FR-28, FR-24, SRS-25, SRS-28)
+    // 5. Koleksi Pengajuan Izin Praktikan (FR-28, FR-24, SRS-25, SRS-28)
     match /izin/{izinId} {
       allow read: if signedIn() && (
         resource.data.praktikanId == request.auth.uid ||
         resource.data.asistenId == request.auth.uid
       );
+
       allow create: if isPraktikan()
         && izinId == request.resource.data.sesiId + '_' + request.auth.uid
         && request.resource.data.praktikanId == request.auth.uid
         && request.resource.data.status == 'menunggu'
+        && request.resource.data.alasan is string
         && request.resource.data.alasan.size() >= 10
         && request.resource.data.alasan.size() <= 300
-        && sesiData(request.resource.data.sesiId).status != 'DITUTUP';
+        && sesiDoc(request.resource.data.sesiId).status != 'DITUTUP'
+        && !exists(/databases/$(database)/documents/sesi/$(request.resource.data.sesiId)/presensi/$(request.auth.uid));
+
       allow update: if isAsisten()
         && resource.data.asistenId == request.auth.uid
         && request.resource.data.diff(resource.data).affectedKeys()
              .hasOnly(['status', 'catatanAsisten', 'diputuskanOleh', 'diputuskanPada'])
         && request.resource.data.status in ['diterima', 'ditolak']
         && request.resource.data.diputuskanOleh == request.auth.uid;
+
       allow delete: if isAsisten() && resource.data.asistenId == request.auth.uid;
     }
   }

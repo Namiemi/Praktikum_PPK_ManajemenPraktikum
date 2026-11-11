@@ -62,9 +62,9 @@ export default function DetailSesiScreen() {
     setConfirmOpen(true);
   };
 
-  const handleKonfirmasiPresensi = () => {
-    const result = presensi(sesi.id, kodeInput.trim());
+  const handleKonfirmasiPresensi = async () => {
     setConfirmOpen(false);
+    const result = await presensi(sesi.id, kodeInput.trim());
     if (result.success && result.data) {
       setWaktuSukses(result.data.waktuPresensi);
       setSuccessOpen(true);

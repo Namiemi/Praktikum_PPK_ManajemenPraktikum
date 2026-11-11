@@ -15,9 +15,9 @@ export default function AsistenProfilScreen() {
   const { currentUser, logout } = usePraktikum();
   const [confirmOpen, setConfirmOpen] = useState(false);
 
-  const handleKeluar = () => {
+  const handleKeluar = async () => {
     setConfirmOpen(false);
-    logout();
+    await logout();
     router.replace('/');
   };
 
@@ -37,7 +37,6 @@ export default function AsistenProfilScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.card}>
-
         <View style={styles.row}>
           <Text style={styles.label}>Nama</Text>
           <Text style={styles.value}>{currentUser.nama}</Text>
@@ -54,21 +53,25 @@ export default function AsistenProfilScreen() {
         </View>
 
         <View style={styles.row}>
-          <Text style={styles.label}>Mata Kuliah</Text>
-          <Text style={styles.value}>{currentUser.mataKuliah || '-'}</Text>
+          <Text style={styles.label}>Kelas Diampu</Text>
+          <Text style={styles.value}>
+            {currentUser.kelasDiampu && currentUser.kelasDiampu.length > 0
+              ? currentUser.kelasDiampu.join(', ')
+              : '-'}
+          </Text>
         </View>
       </View>
 
       <Pressable style={styles.gantiButton} onPress={() => setConfirmOpen(true)}>
-        <Text style={styles.gantiButtonText}>Ganti Peran</Text>
+        <Text style={styles.gantiButtonText}>Keluar</Text>
       </Pressable>
 
       <ConfirmModal
         visible={confirmOpen}
         onCancel={() => setConfirmOpen(false)}
         onConfirm={handleKeluar}
-        title="Ganti Peran"
-        message="Apakah Anda yakin ingin keluar dan berganti peran?"
+        title="Keluar"
+        message="Apakah Anda yakin ingin keluar dari akun ini?"
         confirmText="Keluar"
         cancelText="Batal"
         variant="danger"
@@ -90,16 +93,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#e8e8e8',
     marginBottom: 16,
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#111111',
-  },
-  divider: {
-    height: 1,
-    backgroundColor: '#eeeeee',
-    marginVertical: 12,
   },
   row: {
     flexDirection: 'row',

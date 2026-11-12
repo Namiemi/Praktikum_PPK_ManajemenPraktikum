@@ -1,73 +1,83 @@
-import { SafeAreaView, FlatList, StyleSheet, Text, View } from 'react-native';
+import { FlatList, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { usePraktikum } from '@/context/praktikum-context';
 import { EmptyState } from '@/components/empty-state';
+import { ErrorState } from '@/components/error-state';
+import { LoadingState } from '@/components/loading-state';
+import { usePraktikum } from '@/context/praktikum-context';
+import { SesiPraktikum } from '@/types';
 import { formatDateIndo } from '@/utils';
+import { getStatusKehadiran, StatusKehadiran } from '@/utils/kehadiran';
+
+interface ItemRiwayat {
+  sesi: SesiPraktikum;
+  status: StatusKehadiran;
+  keterangan: string;
+}
+
+const LABEL_STATUS: Record<StatusKehadiran, string> = {
+  hadir: 'Hadir',
+  izin: 'Izin',
+  tidak_hadir: 'Tidak Hadir',
+  menunggu: 'Menunggu',
+};
 
 export default function RiwayatPraktikanScreen() {
-  const { currentUser, sesiList, getPresensiByPraktikan } = usePraktikum();
+  const { sesiList, presensiList, izinList, loading, error, retry } =
+    usePraktikum();
 
-  const praktikanId = currentUser?.id ?? '';
-  const kelas = currentUser?.kelas;
+  if (loading) {
+    return <LoadingState pesan="Memuat riwayat kehadiran..." />;
+  }
 
-  const presensiSaya = getPresensiByPraktikan(praktikanId);
+  if (error) {
+    return <ErrorState pesan={error} onRetry={retry} />;
+  }
 
-  const sesiKelas = kelas
-    ? sesiList.filter((sesi) => sesi.kelas === kelas)
-    : sesiList;
-
-  const daftar = sesiKelas
+  // Sesi dan presensi sudah dibatasi ke kelas dan akun praktikan oleh PraktikumProvider.
+  const daftar: ItemRiwayat[] = sesiList
     .map((sesi) => {
-      const pres = presensiSaya.find((p) => p.sesiId === sesi.id);
-
-      let status: 'hadir' | 'tidak_hadir' | 'menunggu';
-      let keterangan = '';
-
-      if (pres) {
-        status = 'hadir';
-        keterangan = pres.waktuPresensi;
-      } else if (sesi.status === 'DITUTUP') {
-        status = 'tidak_hadir';
-        keterangan = 'Tidak hadir';
-      } else {
-        status = 'menunggu';
-        keterangan = 'Menunggu presensi';
-      }
-
+      const pres = presensiList.find((p) => p.sesiId === sesi.id);
+      const status = getStatusKehadiran(
+        sesi,
+        pres,
+        izinList.find((i) => i.sesiId === sesi.id)
+      );
+      const keterangan =
+        status === 'hadir'
+          ? `Pukul ${pres?.waktuPresensi}`
+          : status === 'izin'
+            ? 'Izin diterima'
+            : status === 'menunggu'
+              ? sesi.status === 'DIBUKA'
+                ? 'Sesi sedang dibuka'
+                : 'Belum dimulai'
+              : '';
       return { sesi, status, keterangan };
     })
-    .sort((a, b) => b.sesi.tanggal.localeCompare(a.sesi.tanggal));
+    .sort((a, b) =>
+      `${b.sesi.tanggal}-${b.sesi.jamMulai}`.localeCompare(
+        `${a.sesi.tanggal}-${a.sesi.jamMulai}`
+      )
+    );
 
   const hadirCount = daftar.filter((item) => item.status === 'hadir').length;
+  const izinCount = daftar.filter((item) => item.status === 'izin').length;
   const totalSesi = daftar.filter((item) => item.status !== 'menunggu').length;
 
-  const renderItem = ({ item }: { item: { sesi: any; status: string; keterangan: string } }) => {
-    const chipBg =
-      item.status === 'hadir'
-        ? styles.chipHadir
-        : item.status === 'tidak_hadir'
-          ? styles.chipTidakHadir
-          : styles.chipMenunggu;
-
-    const chipTextColor =
-      item.status === 'hadir'
-        ? styles.chipTextHadir
-        : item.status === 'tidak_hadir'
-          ? styles.chipTextTidakHadir
-          : styles.chipTextMenunggu;
-
-    const label =
-      item.status === 'hadir'
-        ? 'Hadir'
-        : item.status === 'tidak_hadir'
-          ? 'Tidak Hadir'
-          : 'Menunggu';
+  const renderItem = ({ item }: { item: ItemRiwayat }) => {
+    const chipStyle = {
+      hadir: [styles.chipHadir, styles.chipTextHadir] as const,
+      izin: [styles.chipIzin, styles.chipTextIzin] as const,
+      tidak_hadir: [styles.chipTidakHadir, styles.chipTextTidakHadir] as const,
+      menunggu: [styles.chipMenunggu, styles.chipTextMenunggu] as const,
+    }[item.status];
 
     return (
       <View style={styles.itemCard}>
         <View style={styles.itemInfo}>
           <Text style={styles.itemMataKuliah}>
-            {item.sesi.mataKuliah} - Pertemuan {item.sesi.pertemuan}
+            {item.sesi.mataKuliah} · Pertemuan {item.sesi.pertemuan}
           </Text>
           <Text style={styles.itemTanggal}>
             {formatDateIndo(item.sesi.tanggal)}
@@ -77,22 +87,28 @@ export default function RiwayatPraktikanScreen() {
           </Text>
         </View>
         <View style={styles.itemStatus}>
-          <View style={[styles.chip, chipBg]}>
-            <Text style={[styles.chipText, chipTextColor]}>{label}</Text>
+          <View style={[styles.chip, chipStyle[0]]}>
+            <Text style={[styles.chipText, chipStyle[1]]}>
+              {LABEL_STATUS[item.status]}
+            </Text>
           </View>
-          <Text style={styles.itemKeterangan}>{item.keterangan}</Text>
+          {item.keterangan ? (
+            <Text style={styles.itemKeterangan}>{item.keterangan}</Text>
+          ) : null}
         </View>
       </View>
     );
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={styles.safeArea} edges={['left', 'right']}>
       <View style={styles.headerRingkasan}>
-        <Text style={styles.judulRingkasan}>Riwayat Kehadiran</Text>
         <Text style={styles.ringkasan}>
           Hadir {hadirCount} dari {totalSesi} sesi
         </Text>
+        {izinCount > 0 ? (
+          <Text style={styles.ringkasanSub}>Izin {izinCount} sesi</Text>
+        ) : null}
       </View>
 
       {daftar.length === 0 ? (
@@ -126,14 +142,14 @@ const styles = StyleSheet.create({
     borderColor: '#e8e8e8',
     margin: 16,
   },
-  judulRingkasan: {
-    fontSize: 18,
+  ringkasan: {
+    fontSize: 16,
     fontWeight: '700',
     color: '#111111',
   },
-  ringkasan: {
-    fontSize: 14,
-    color: '#666666',
+  ringkasanSub: {
+    fontSize: 13,
+    color: '#555555',
     marginTop: 4,
   },
   listContent: {
@@ -185,6 +201,9 @@ const styles = StyleSheet.create({
   chipTidakHadir: {
     backgroundColor: '#ffebee',
   },
+  chipIzin: {
+    backgroundColor: '#E3EEF9',
+  },
   chipMenunggu: {
     backgroundColor: '#fff9c4',
   },
@@ -197,6 +216,9 @@ const styles = StyleSheet.create({
   },
   chipTextTidakHadir: {
     color: '#c62828',
+  },
+  chipTextIzin: {
+    color: '#1E5A96',
   },
   chipTextMenunggu: {
     color: '#f57f17',

@@ -1,53 +1,61 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { StatusBadge } from './status-badge';
+import { SesiPraktikum, StatusSesi } from '@/types';
+import { formatDateIndo } from '@/utils';
 
-// TODO: ganti dengan import dari src/types.ts
-export interface Sesi {
-  id: string;
-  praktikum: string;
-  pertemuan: number;
-  kelas: string;
-  tanggal: string;
-  jamMulai: string;
-  jamSelesai: string;
-  ruang: string;
-  status: 'belum_dibuka' | 'dibuka' | 'ditutup';
-}
+import { StatusBadge, StatusBadgeProps } from './status-badge';
+
+const BADGE_STATUS: Record<StatusSesi, StatusBadgeProps['status']> = {
+  BELUM_DIBUKA: 'belum_dibuka',
+  DIBUKA: 'dibuka',
+  DITUTUP: 'ditutup',
+};
 
 export interface SesiCardProps {
-  sesi: Sesi;
+  sesi: SesiPraktikum;
   onPress: () => void;
-  hadir?: boolean;
+  /** Tanda kehadiran praktikan pada sesi ini */
+  tanda?: 'hadir' | 'izin';
 }
 
-export function SesiCard({ sesi, onPress, hadir = false }: SesiCardProps) {
+export function SesiCard({ sesi, onPress, tanda }: SesiCardProps) {
+  const tandaLabel = tanda === 'hadir' ? 'Hadir' : tanda === 'izin' ? 'Izin' : null;
+
   return (
     <Pressable
       style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
       onPress={onPress}
       accessibilityRole="button"
-      accessibilityLabel={`${sesi.praktikum} pertemuan ${sesi.pertemuan}`}
+      accessibilityLabel={`${sesi.mataKuliah} pertemuan ${sesi.pertemuan}${
+        tandaLabel ? `, ${tandaLabel}` : ''
+      }`}
     >
       <View style={styles.cardHeader}>
-        {hadir ? (
-          <View style={styles.hadirBadge}>
-            <Text style={styles.hadirText}>Hadir</Text>
+        {tandaLabel ? (
+          <View style={[styles.tandaBadge, tanda === 'izin' && styles.izinBadge]}>
+            <Text style={[styles.tandaText, tanda === 'izin' && styles.izinText]}>
+              {tandaLabel}
+            </Text>
           </View>
         ) : null}
         <Text style={styles.cardTitle} numberOfLines={2}>
-          {sesi.praktikum} + Pertemuan {sesi.pertemuan}
+          {sesi.mataKuliah} · Pertemuan {sesi.pertemuan}
         </Text>
-        <StatusBadge status={sesi.status} />
+        <StatusBadge status={BADGE_STATUS[sesi.status]} />
       </View>
 
       <View style={styles.cardBody}>
-        <Text style={styles.detailText}>Kelas {sesi.kelas}</Text>
-        <Text style={styles.detailText}>Tanggal {sesi.tanggal}</Text>
+        {sesi.topik ? (
+          <Text style={styles.topikText} numberOfLines={1}>
+            {sesi.topik}
+          </Text>
+        ) : null}
         <Text style={styles.detailText}>
-          Jam {sesi.jamMulai} - {sesi.jamSelesai}
+          {formatDateIndo(sesi.tanggal)} · {sesi.jamMulai} - {sesi.jamSelesai} WIB
         </Text>
-        <Text style={styles.detailText}>Ruang {sesi.ruang}</Text>
+        <Text style={styles.detailText}>
+          Kelas {sesi.kelas} · {sesi.ruang}
+        </Text>
       </View>
     </Pressable>
   );
@@ -80,20 +88,33 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     color: '#1C281C',
   },
-  hadirBadge: {
+  tandaBadge: {
     backgroundColor: '#E4F2E4',
     borderRadius: 999,
     paddingHorizontal: 8,
     paddingVertical: 3,
     marginRight: 8,
   },
-  hadirText: {
+  tandaText: {
     fontSize: 11,
     fontWeight: '700',
     color: '#2E7D32',
   },
+  izinBadge: {
+    backgroundColor: '#E3EEF9',
+  },
+  izinText: {
+    color: '#1E5A96',
+  },
   cardBody: {
     marginTop: 8,
+  },
+  topikText: {
+    fontSize: 14,
+    fontWeight: '500',
+    lineHeight: 20,
+    color: '#1C281C',
+    marginBottom: 2,
   },
   detailText: {
     fontSize: 13,

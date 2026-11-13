@@ -15,7 +15,16 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import {
+  DatePickerModal,
+  TimePickerModal,
+} from '@/components/date-time-picker-modal';
+import {
+  CalendarIcon,
+  ClockIcon,
+} from '@/components/icons/praktikum-theme-icons';
 import { Kelas, SesiInput, SesiPraktikum } from '@/types';
+import { formatDateIndo } from '@/utils';
 import {
   validateBilanganPositif,
   validateJam,
@@ -36,7 +45,6 @@ export interface SesiFormModalProps {
 
 interface SesiErrors {
   kelas?: string | null;
-  mataKuliah?: string | null;
   pertemuan?: string | null;
   ruang?: string | null;
   topik?: string | null;
@@ -45,13 +53,7 @@ interface SesiErrors {
   jamSelesai?: string | null;
 }
 
-type SesiFieldScrollKey =
-  | 'mataKuliah'
-  | 'pertemuanRuang'
-  | 'topik'
-  | 'tanggal'
-  | 'jamRentang'
-  | 'catatan';
+type SesiFieldScrollKey = 'pertemuanRuang' | 'topik' | 'catatan';
 
 function SesiFormContent({
   editingSesi,
@@ -87,6 +89,9 @@ function SesiFormContent({
   const [jamSelesai, setJamSelesai] = useState(editingSesi?.jamSelesai ?? '');
   const [catatan, setCatatan] = useState(editingSesi?.catatan ?? '');
   const [errors, setErrors] = useState<SesiErrors>({});
+  const [activePicker, setActivePicker] = useState<
+    'tanggal' | 'jamMulai' | 'jamSelesai' | null
+  >(null);
 
   const scrollFieldToCenter = (
     key: SesiFieldScrollKey,
@@ -170,7 +175,7 @@ function SesiFormContent({
     setKelasId(selected.id);
     setKelasNama(selected.nama);
     setMataKuliah(selected.mataKuliah);
-    setErrors((prev) => ({ ...prev, kelas: null, mataKuliah: null }));
+    setErrors((prev) => ({ ...prev, kelas: null }));
   };
 
   const handleSave = async () => {
@@ -183,7 +188,6 @@ function SesiFormContent({
 
     const nextErrors: SesiErrors = {
       kelas: validateRequired(kelasId, 'Kelas'),
-      mataKuliah: validateRequired(mataKuliah, 'Mata kuliah'),
       pertemuan: validateBilanganPositif(pertemuan, 'Pertemuan'),
       ruang: validateRequired(ruang, 'Ruang'),
       topik: validateRequired(topik, 'Topik'),
@@ -293,30 +297,6 @@ function SesiFormContent({
           </View>
 
           <View
-            style={styles.fieldGroup}
-            onLayout={handleGroupLayout('mataKuliah')}
-          >
-            <Text style={styles.label}>Mata Kuliah</Text>
-            <TextInput
-              style={[styles.input, !!errors.mataKuliah && styles.inputError]}
-              placeholder="Contoh: Pemrograman Mobile"
-              placeholderTextColor="#8C9786"
-              value={mataKuliah}
-              onChangeText={(text) => {
-                setMataKuliah(text);
-                clearError('mataKuliah');
-              }}
-              onFocus={() => handleFieldFocus('mataKuliah')}
-              onPressIn={() => handleFieldFocus('mataKuliah')}
-              onBlur={() => setIsInputFocused(false)}
-              editable={!submitting}
-            />
-            {errors.mataKuliah ? (
-              <Text style={styles.fieldError}>{errors.mataKuliah}</Text>
-            ) : null}
-          </View>
-
-          <View
             style={styles.twoColRow}
             onLayout={handleGroupLayout('pertemuanRuang')}
           >
@@ -385,50 +365,59 @@ function SesiFormContent({
             ) : null}
           </View>
 
-          <View
-            style={styles.fieldGroup}
-            onLayout={handleGroupLayout('tanggal')}
-          >
+          <View style={styles.fieldGroup}>
             <Text style={styles.label}>Tanggal</Text>
-            <TextInput
-              style={[styles.input, !!errors.tanggal && styles.inputError]}
-              placeholder="YYYY-MM-DD"
-              placeholderTextColor="#8C9786"
-              value={tanggal}
-              onChangeText={(text) => {
-                setTanggal(text);
-                clearError('tanggal');
+            <Pressable
+              style={[
+                styles.pickerField,
+                !!errors.tanggal && styles.inputError,
+              ]}
+              onPress={() => {
+                Keyboard.dismiss();
+                setActivePicker('tanggal');
               }}
-              onFocus={() => handleFieldFocus('tanggal')}
-              onPressIn={() => handleFieldFocus('tanggal')}
-              onBlur={() => setIsInputFocused(false)}
-              editable={!submitting}
-            />
+              disabled={submitting}
+              accessibilityRole="button"
+              accessibilityLabel="Pilih Tanggal"
+            >
+              <Text
+                style={tanggal ? styles.pickerText : styles.pickerPlaceholder}
+                numberOfLines={1}
+              >
+                {tanggal
+                  ? `${formatDateIndo(tanggal)} (${tanggal})`
+                  : 'Pilih tanggal'}
+              </Text>
+              <CalendarIcon size={16} color="#4A5D4A" />
+            </Pressable>
             {errors.tanggal ? (
               <Text style={styles.fieldError}>{errors.tanggal}</Text>
             ) : null}
           </View>
 
-          <View
-            style={styles.twoColRow}
-            onLayout={handleGroupLayout('jamRentang')}
-          >
+          <View style={styles.twoColRow}>
             <View style={[styles.fieldGroup, styles.colHalf]}>
               <Text style={styles.label}>Jam Mulai</Text>
-              <TextInput
-                style={[styles.input, !!errors.jamMulai && styles.inputError]}
-                placeholder="08:00"
-                placeholderTextColor="#8C9786"
-                value={jamMulai}
-                onChangeText={(text) => {
-                  setJamMulai(text);
-                  clearError('jamMulai');
+              <Pressable
+                style={[
+                  styles.pickerField,
+                  !!errors.jamMulai && styles.inputError,
+                ]}
+                onPress={() => {
+                  Keyboard.dismiss();
+                  setActivePicker('jamMulai');
                 }}
-                onFocus={() => handleFieldFocus('jamRentang')}
-                onPressIn={() => handleFieldFocus('jamRentang')}
-                onBlur={() => setIsInputFocused(false)}
-                editable={!submitting}
-              />
+                disabled={submitting}
+                accessibilityRole="button"
+                accessibilityLabel="Pilih Jam Mulai"
+              >
+                <Text
+                  style={jamMulai ? styles.pickerText : styles.pickerPlaceholder}
+                >
+                  {jamMulai || 'Pilih jam'}
+                </Text>
+                <ClockIcon size={15} color="#4A5D4A" />
+              </Pressable>
               {errors.jamMulai ? (
                 <Text style={styles.fieldError}>{errors.jamMulai}</Text>
               ) : null}
@@ -436,20 +425,28 @@ function SesiFormContent({
 
             <View style={[styles.fieldGroup, styles.colHalf]}>
               <Text style={styles.label}>Jam Selesai</Text>
-              <TextInput
-                style={[styles.input, !!errors.jamSelesai && styles.inputError]}
-                placeholder="10:00"
-                placeholderTextColor="#8C9786"
-                value={jamSelesai}
-                onChangeText={(text) => {
-                  setJamSelesai(text);
-                  clearError('jamSelesai');
+              <Pressable
+                style={[
+                  styles.pickerField,
+                  !!errors.jamSelesai && styles.inputError,
+                ]}
+                onPress={() => {
+                  Keyboard.dismiss();
+                  setActivePicker('jamSelesai');
                 }}
-                onFocus={() => handleFieldFocus('jamRentang')}
-                onPressIn={() => handleFieldFocus('jamRentang')}
-                onBlur={() => setIsInputFocused(false)}
-                editable={!submitting}
-              />
+                disabled={submitting}
+                accessibilityRole="button"
+                accessibilityLabel="Pilih Jam Selesai"
+              >
+                <Text
+                  style={
+                    jamSelesai ? styles.pickerText : styles.pickerPlaceholder
+                  }
+                >
+                  {jamSelesai || 'Pilih jam'}
+                </Text>
+                <ClockIcon size={15} color="#4A5D4A" />
+              </Pressable>
               {errors.jamSelesai ? (
                 <Text style={styles.fieldError}>{errors.jamSelesai}</Text>
               ) : null}
@@ -511,6 +508,44 @@ function SesiFormContent({
           </Pressable>
         </View>
       </View>
+
+      <DatePickerModal
+        visible={activePicker === 'tanggal'}
+        value={tanggal}
+        onSelect={(val) => {
+          setTanggal(val);
+          clearError('tanggal');
+          setActivePicker(null);
+        }}
+        onClose={() => setActivePicker(null)}
+      />
+
+      <TimePickerModal
+        visible={activePicker === 'jamMulai'}
+        title="Pilih Jam Mulai"
+        value={jamMulai}
+        defaultTime="08:00"
+        onSelect={(val) => {
+          setJamMulai(val);
+          clearError('jamMulai');
+          clearError('jamSelesai');
+          setActivePicker(null);
+        }}
+        onClose={() => setActivePicker(null)}
+      />
+
+      <TimePickerModal
+        visible={activePicker === 'jamSelesai'}
+        title="Pilih Jam Selesai"
+        value={jamSelesai}
+        defaultTime="10:00"
+        onSelect={(val) => {
+          setJamSelesai(val);
+          clearError('jamSelesai');
+          setActivePicker(null);
+        }}
+        onClose={() => setActivePicker(null)}
+      />
     </KeyboardAvoidingView>
   );
 }
@@ -664,6 +699,29 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#1C281C',
     fontVariant: ['tabular-nums'],
+  },
+  pickerField: {
+    height: 46,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E6E4DD',
+    paddingHorizontal: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+  },
+  pickerText: {
+    flex: 1,
+    fontSize: 14,
+    color: '#1C281C',
+    fontVariant: ['tabular-nums'],
+  },
+  pickerPlaceholder: {
+    flex: 1,
+    fontSize: 14,
+    color: '#8C9786',
   },
   multilineInput: {
     height: 76,

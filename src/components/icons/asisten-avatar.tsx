@@ -55,11 +55,47 @@ export function AsistenAvatar({
   );
 }
 
+export function UserAvatar({
+  userId,
+  nama = 'User',
+  size = 38,
+}: AsistenAvatarProps) {
+  const isFemale =
+    nama.toLowerCase().includes('rina') ||
+    nama.toLowerCase().includes('citra') ||
+    nama.toLowerCase().includes('dewi') ||
+    nama.toLowerCase().includes('sari') ||
+    userId === 'ast-3';
+
+  return (
+    <View
+      style={[
+        styles.userAvatarContainer,
+        { width: size, height: size, borderRadius: size / 2 },
+      ]}
+    >
+      <Image
+        source={isFemale ? rinaAvatarAsset : dimasAvatarAsset}
+        style={{ width: size, height: size }}
+        contentFit="cover"
+      />
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   avatarContainer: {
     backgroundColor: '#E2EAD8',
     borderWidth: 1.5,
     borderColor: '#9AB394',
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  userAvatarContainer: {
+    backgroundColor: '#EAEFE5',
+    borderWidth: 1,
+    borderColor: '#DFE8D9',
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',

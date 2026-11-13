@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { router } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { ConfirmModal } from '@/components/confirm-modal';
@@ -7,41 +8,157 @@ import {
   CardCornerLeafOrnament,
   ClockIcon,
   MapPinIcon,
+  PencilIcon,
+  TrashIcon,
 } from '@/components/icons/praktikum-theme-icons';
 import { RekapKehadiranCard } from '@/components/rekap-kehadiran-card';
+import { SesiFormModal } from '@/components/sesi-form';
 import { usePraktikum } from '@/context/praktikum-context';
-import { SesiPraktikum } from '@/types';
+import { hapusSesi, ubahSesi } from '@/services';
+import { SesiInput, SesiPraktikum } from '@/types';
+import { getErrorMessage } from '@/utils/errors';
 
 export interface AsistenPanelProps {
   sesi: SesiPraktikum;
 }
 
+type ConfirmActionType = 'buka' | 'tutup' | 'hapus' | null;
+
 /**
- * Panel Kontrol Asisten pada Halaman Detail Sesi (FR-08 & FR-09).
- * Mengelola siklus hidup sesi (BELUM_DIBUKA -> DIBUKA -> DITUTUP) dan rekap kehadiran.
+ * Panel Kontrol Asisten pada Halaman Detail Sesi (FR-08, FR-09, FR-21, FR-22, FR-23).
+ * Mengelola siklus hidup sesi (BELUM_DIBUKA -> DIBUKA -> DITUTUP), edit/hapus sesi, dan rekap kehadiran.
  */
 export function AsistenPanel({ sesi }: AsistenPanelProps) {
-  const { bukaSesi, tutupSesi, getPresensiBySesi } = usePraktikum();
-  const [confirmType, setConfirmType] = useState<'buka' | 'tutup' | null>(null);
+  const { bukaSesi, tutupSesi, getPresensiBySesi, getIzinBySesi, kelasList } =
+    usePraktikum();
+  const [confirmType, setConfirmType] = useState<ConfirmActionType>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [editError, setEditError] = useState<string | null>(null);
 
   // ponytail: derived state langsung dari context tanpa sinkronisasi useEffect
   const daftarHadir = [...getPresensiBySesi(sesi.id)].sort((a, b) =>
     a.waktuPresensi.localeCompare(b.waktuPresensi)
   );
+  const daftarIzinDiterima = getIzinBySesi(sesi.id).filter(
+    (item) => item.status === 'diterima'
+  );
 
-  const isConfirmDanger = confirmType === 'tutup';
+  const isConfirmDanger = confirmType === 'tutup' || confirmType === 'hapus';
 
-  const handleConfirmAction = () => {
-    if (confirmType === 'buka') {
-      bukaSesi(sesi.id);
-    } else if (confirmType === 'tutup') {
-      tutupSesi(sesi.id);
-    }
+  const handleConfirmAction = async () => {
+    const activeType = confirmType;
     setConfirmType(null);
+    setActionError(null);
+
+    if (activeType === 'buka') {
+      const result = await bukaSesi(sesi.id);
+      if (!result.success) {
+        setActionError(result.message);
+      }
+      return;
+    }
+
+    if (activeType === 'tutup') {
+      const result = await tutupSesi(sesi.id);
+      if (!result.success) {
+        setActionError(result.message);
+      }
+      return;
+    }
+
+    if (activeType === 'hapus') {
+      try {
+        await hapusSesi(sesi.id);
+        router.back();
+      } catch (err) {
+        setActionError(getErrorMessage(err, 'Gagal menghapus sesi.'));
+      }
+    }
   };
+
+  const handleEditSubmit = async (input: SesiInput): Promise<boolean> => {
+    setSubmitting(true);
+    setEditError(null);
+    try {
+      await ubahSesi(sesi.id, input);
+      setIsEditOpen(false);
+      return true;
+    } catch (err) {
+      setEditError(getErrorMessage(err, 'Gagal memperbarui sesi.'));
+      return false;
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const confirmConfig = (() => {
+    if (confirmType === 'tutup') {
+      return {
+        title: 'Tutup Sesi Praktikum?',
+        message:
+          'Apakah Anda yakin ingin menutup sesi ini? Sesi yang ditutup tidak dapat dibuka kembali dan praktikan tidak bisa presensi lagi.',
+        confirmText: 'Ya, Tutup Sesi',
+      };
+    }
+    if (confirmType === 'hapus') {
+      return {
+        title: 'Hapus Sesi Praktikum?',
+        message: `Apakah Anda yakin ingin menghapus sesi '${sesi.mataKuliah} - Kelas ${sesi.kelas}'?`,
+        confirmText: 'Ya, Hapus Sesi',
+      };
+    }
+    return {
+      title: 'Buka Sesi Praktikum?',
+      message: `Apakah Anda yakin ingin membuka sesi untuk '${sesi.mataKuliah} - Kelas ${sesi.kelas}'? Kode presensi 4 digit akan digenerate otomatis.`,
+      confirmText: 'Ya, Buka Sesi',
+    };
+  })();
 
   return (
     <View style={styles.container}>
+      {actionError !== null && (
+        <View style={styles.errorBanner}>
+          <Text style={styles.errorBannerText}>{actionError}</Text>
+        </View>
+      )}
+
+      <View style={styles.topActionRow}>
+        {sesi.status === 'BELUM_DIBUKA' && (
+          <Pressable
+            style={({ pressed }) => [
+              styles.actionPill,
+              styles.editPill,
+              pressed && styles.buttonPressed,
+            ]}
+            onPress={() => {
+              setEditError(null);
+              setIsEditOpen(true);
+            }}
+            accessibilityRole="button"
+            accessibilityLabel="Ubah sesi"
+          >
+            <PencilIcon size={13} color="#3E543E" />
+            <Text style={styles.editPillText}>Ubah</Text>
+          </Pressable>
+        )}
+
+        <Pressable
+          style={({ pressed }) => [
+            styles.actionPill,
+            styles.deletePill,
+            pressed && styles.buttonPressed,
+          ]}
+          onPress={() => setConfirmType('hapus')}
+          accessibilityRole="button"
+          accessibilityLabel="Hapus sesi"
+        >
+          <TrashIcon size={13} color="#9E3B2B" />
+          <Text style={styles.deletePillText}>Hapus</Text>
+        </Pressable>
+      </View>
+
       {/* Kondisi 03: Sesi Belum Dibuka */}
       {sesi.status === 'BELUM_DIBUKA' && (
         <>
@@ -98,6 +215,7 @@ export function AsistenPanel({ sesi }: AsistenPanelProps) {
 
           <RekapKehadiranCard
             daftarHadir={daftarHadir}
+            daftarIzin={daftarIzinDiterima}
             totalPraktikan={sesi.totalPraktikan}
             statusSesi={sesi.status}
           />
@@ -143,29 +261,34 @@ export function AsistenPanel({ sesi }: AsistenPanelProps) {
 
           <RekapKehadiranCard
             daftarHadir={daftarHadir}
+            daftarIzin={daftarIzinDiterima}
             totalPraktikan={sesi.totalPraktikan}
             statusSesi={sesi.status}
           />
         </>
       )}
 
-      {/* Modal Konfirmasi Buka / Tutup Sesi */}
+      {/* Modal Konfirmasi Buka / Tutup / Hapus Sesi */}
       <ConfirmModal
         visible={confirmType !== null}
-        title={
-          isConfirmDanger ? 'Tutup Sesi Praktikum?' : 'Buka Sesi Praktikum?'
-        }
-        message={
-          isConfirmDanger
-            ? 'Apakah Anda yakin ingin menutup sesi ini? Sesi yang ditutup tidak dapat dibuka kembali dan praktikan tidak bisa presensi lagi.'
-            : `Apakah Anda yakin ingin membuka sesi untuk '${sesi.mataKuliah} - Kelas ${sesi.kelas}'? Kode presensi 4 digit akan digenerate otomatis.`
-        }
-        confirmText={isConfirmDanger ? 'Ya, Tutup Sesi' : 'Ya, Buka Sesi'}
+        title={confirmConfig.title}
+        message={confirmConfig.message}
+        confirmText={confirmConfig.confirmText}
         cancelText="Batal"
         variant={isConfirmDanger ? 'danger' : 'primary'}
         isDestructive={isConfirmDanger}
         onConfirm={handleConfirmAction}
         onCancel={() => setConfirmType(null)}
+      />
+
+      <SesiFormModal
+        visible={isEditOpen}
+        editingSesi={sesi}
+        kelasList={kelasList}
+        submitting={submitting}
+        errorMessage={editError}
+        onSubmit={handleEditSubmit}
+        onClose={() => setIsEditOpen(false)}
       />
     </View>
   );
@@ -174,6 +297,50 @@ export function AsistenPanel({ sesi }: AsistenPanelProps) {
 const styles = StyleSheet.create({
   container: {
     gap: 14,
+  },
+  errorBanner: {
+    backgroundColor: '#F4DFDA',
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+  },
+  errorBannerText: {
+    fontSize: 13,
+    fontWeight: '500',
+    lineHeight: 18,
+    color: '#9E3B2B',
+  },
+  topActionRow: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    gap: 8,
+  },
+  actionPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 999,
+  },
+  editPill: {
+    backgroundColor: '#F5F2EB',
+    borderWidth: 1,
+    borderColor: '#D5E0D5',
+  },
+  editPillText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#3E543E',
+  },
+  deletePill: {
+    backgroundColor: '#F4DFDA',
+  },
+  deletePillText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#9E3B2B',
   },
   locationCard: {
     backgroundColor: '#FFFFFF',

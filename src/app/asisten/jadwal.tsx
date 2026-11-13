@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import React, { useState } from 'react';
+import React from 'react';
 import {
   FlatList,
   Pressable,
@@ -10,16 +10,17 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AsistenSesiCard } from '@/components/asisten-sesi-card';
+import { ConfirmModal } from '@/components/confirm-modal';
+import { ErrorState } from '@/components/error-state';
 import { AsistenAvatar } from '@/components/icons/asisten-avatar';
 import {
   EmptyScheduleIllustration,
   HeaderBotanicalBlob,
+  PlusIcon,
 } from '@/components/icons/praktikum-theme-icons';
-import { usePraktikum } from '@/context/praktikum-context';
-import { StatusSesi } from '@/types';
-import { bandingkanSesiJadwal } from '@/utils';
-
-type FilterStatus = 'SEMUA' | StatusSesi;
+import { LoadingState } from '@/components/loading-state';
+import { SesiFormModal } from '@/components/sesi-form';
+import { FilterStatus, useKelolaSesi } from '@/hooks/use-kelola-sesi';
 
 const FILTER_OPTIONS: { value: FilterStatus; label: string }[] = [
   { value: 'SEMUA', label: 'Semua' },
@@ -29,18 +30,37 @@ const FILTER_OPTIONS: { value: FilterStatus; label: string }[] = [
 ];
 
 export default function JadwalAsistenScreen() {
-  const { currentUser, sesiList } = usePraktikum();
-  const [selectedFilter, setSelectedFilter] = useState<FilterStatus>('SEMUA');
+  const {
+    currentUser,
+    kelasList,
+    loading,
+    error,
+    retry,
+    selectedFilter,
+    setSelectedFilter,
+    sesiMilikAsisten,
+    filteredSesi,
+    formOpen,
+    editingSesi,
+    deletingSesi,
+    submitting,
+    actionError,
+    handleOpenTambah,
+    handleOpenUbah,
+    handleCloseForm,
+    handleSimpanSesi,
+    handleRequestHapus,
+    handleCancelHapus,
+    handleConfirmHapus,
+  } = useKelolaSesi();
 
-  // ponytail: derived state langsung tanpa sinkronisasi useEffect
-  const sesiMilikAsisten = sesiList
-    .filter((s) => s.asistenId === currentUser?.id)
-    .sort(bandingkanSesiJadwal);
+  if (loading) {
+    return <LoadingState pesan="Memuat jadwal praktikum..." />;
+  }
 
-  const filteredSesi =
-    selectedFilter === 'SEMUA'
-      ? sesiMilikAsisten
-      : sesiMilikAsisten.filter((s) => s.status === selectedFilter);
+  if (error) {
+    return <ErrorState pesan={error} onRetry={retry} />;
+  }
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -66,7 +86,27 @@ export default function JadwalAsistenScreen() {
               </Text>
             </View>
 
-            <Text style={styles.pageTitle}>Jadwal Praktikum</Text>
+            <View style={styles.titleRow}>
+              <Text style={styles.pageTitle}>Jadwal Praktikum</Text>
+              <Pressable
+                style={({ pressed }) => [
+                  styles.addButton,
+                  pressed && styles.pressed,
+                ]}
+                onPress={handleOpenTambah}
+                accessibilityRole="button"
+                accessibilityLabel="Tambah Sesi"
+              >
+                <PlusIcon size={14} color="#FFFFFF" />
+                <Text style={styles.addButtonText}>Sesi</Text>
+              </Pressable>
+            </View>
+
+            {actionError && !formOpen && !deletingSesi ? (
+              <View style={styles.errorBanner}>
+                <Text style={styles.errorBannerText}>{actionError}</Text>
+              </View>
+            ) : null}
 
             {sesiMilikAsisten.length > 0 && (
               <View style={styles.chipRow}>
@@ -105,6 +145,8 @@ export default function JadwalAsistenScreen() {
             <AsistenSesiCard
               sesi={item}
               onPress={() => router.push(`/sesi/${item.id}`)}
+              onEdit={() => handleOpenUbah(item)}
+              onDelete={() => handleRequestHapus(item)}
             />
           </View>
         )}
@@ -119,6 +161,32 @@ export default function JadwalAsistenScreen() {
             </Text>
           </View>
         }
+      />
+
+      <SesiFormModal
+        visible={formOpen}
+        editingSesi={editingSesi}
+        kelasList={kelasList}
+        submitting={submitting}
+        errorMessage={actionError}
+        onSubmit={handleSimpanSesi}
+        onClose={handleCloseForm}
+      />
+
+      <ConfirmModal
+        visible={deletingSesi !== null}
+        title="Hapus Sesi Praktikum?"
+        message={
+          deletingSesi
+            ? `Hapus '${deletingSesi.mataKuliah} - Kelas ${deletingSesi.kelas}' (Pertemuan ${deletingSesi.pertemuan})? Seluruh data presensi sesi ini akan ikut terhapus.`
+            : ''
+        }
+        confirmText="Ya, Hapus"
+        cancelText="Batal"
+        variant="danger"
+        isDestructive
+        onConfirm={() => handleConfirmHapus()}
+        onCancel={handleCancelHapus}
       />
     </SafeAreaView>
   );
@@ -157,12 +225,47 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     color: '#2E3E2E',
   },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
   pageTitle: {
     fontSize: 22,
     fontWeight: '700',
     lineHeight: 28,
     color: '#1C281C',
     letterSpacing: -0.5,
+  },
+  addButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: '#344E38',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 999,
+  },
+  addButtonText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  pressed: {
+    opacity: 0.82,
+  },
+  errorBanner: {
+    backgroundColor: '#F4DFDA',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginTop: 12,
+  },
+  errorBannerText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#9E3B2B',
   },
   chipRow: {
     flexDirection: 'row',

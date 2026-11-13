@@ -38,6 +38,16 @@ export default function PraktikanTabLayout() {
         }}
       />
       <Tabs.Screen
+        name="izin"
+        options={{
+          title: 'Pengajuan Izin',
+          tabBarLabel: 'Izin',
+          tabBarIcon: ({ color }) => (
+            <Text style={{ fontSize: 18, color }}>📝</Text>
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="profil"
         options={{
           title: 'Profil Praktikan',

@@ -21,3 +21,19 @@ export function getStatusKehadiran(
   if (sesi.status === 'DITUTUP') return 'tidak_hadir';
   return 'menunggu';
 }
+
+/**
+ * Sesi yang masih boleh diajukan izin (FR-28): belum ditutup, belum presensi,
+ * dan belum pernah diajukan izin. Sama dengan syarat di Security Rules.
+ */
+export function bisaAjukanIzin(
+  sesi: SesiPraktikum,
+  presensiList: Presensi[],
+  izinList: Izin[]
+): boolean {
+  return (
+    sesi.status !== 'DITUTUP' &&
+    !presensiList.some((p) => p.sesiId === sesi.id) &&
+    !izinList.some((i) => i.sesiId === sesi.id)
+  );
+}

@@ -5,24 +5,27 @@ import {
   CheckIcon,
   EmptyAttendanceIllustration,
 } from '@/components/icons/praktikum-theme-icons';
-import { Presensi, StatusSesi } from '@/types';
+import { Izin, Presensi, StatusSesi } from '@/types';
 
 export interface RekapKehadiranCardProps {
   daftarHadir: Presensi[];
+  daftarIzin?: Izin[];
   totalPraktikan: number;
   statusSesi: StatusSesi;
 }
 
 /**
- * Kartu Rekap Kehadiran Praktikan (FR-09 & SRS-09, SRS-12).
- * Menampilkan counter x/y, progress bar, empty state daun botani, atau daftar praktikan hadir.
+ * Kartu Rekap Kehadiran Praktikan (FR-09 & SRS-09, SRS-12, FR-23).
+ * Menampilkan counter x/y, progress bar, empty state daun botani, daftar hadir, dan izin diterima.
  */
 export function RekapKehadiranCard({
   daftarHadir,
+  daftarIzin = [],
   totalPraktikan,
   statusSesi,
 }: RekapKehadiranCardProps) {
   const jumlahHadir = daftarHadir.length;
+  const jumlahIzin = daftarIzin.length;
   const persentase =
     totalPraktikan > 0
       ? Math.min(100, Math.round((jumlahHadir / totalPraktikan) * 100))
@@ -37,6 +40,7 @@ export function RekapKehadiranCard({
         <Text style={styles.counterSecondary}>
           {' '}
           / {totalPraktikan} Praktikan Hadir
+          {jumlahIzin > 0 ? ` • ${jumlahIzin} Izin` : ''}
         </Text>
       </View>
 
@@ -45,8 +49,8 @@ export function RekapKehadiranCard({
         <View style={[styles.progressFill, { width: `${persentase}%` }]} />
       </View>
 
-      {/* Daftar Hadir atau Empty State */}
-      {jumlahHadir === 0 ? (
+      {/* Daftar Hadir / Izin atau Empty State */}
+      {jumlahHadir === 0 && jumlahIzin === 0 ? (
         <View style={styles.emptyContainer}>
           <EmptyAttendanceIllustration width={128} height={128} />
           <Text style={styles.emptyDescription}>
@@ -60,7 +64,8 @@ export function RekapKehadiranCard({
               key={item.id}
               style={[
                 styles.attendeeRow,
-                index < jumlahHadir - 1 && styles.attendeeDivider,
+                (index < jumlahHadir - 1 || jumlahIzin > 0) &&
+                  styles.attendeeDivider,
               ]}
             >
               <View
@@ -86,6 +91,29 @@ export function RekapKehadiranCard({
                   <CheckIcon size={15} color="#4A5D4A" />
                 </View>
               )}
+            </View>
+          ))}
+
+          {daftarIzin.map((item, index) => (
+            <View
+              key={item.id}
+              style={[
+                styles.attendeeRow,
+                index < jumlahIzin - 1 && styles.attendeeDivider,
+              ]}
+            >
+              <View style={[styles.avatarBadge, styles.avatarBadgeIzin]} />
+
+              <View style={styles.attendeeInfo}>
+                <Text style={styles.attendeeName}>{item.praktikanNama}</Text>
+                <Text style={styles.attendeeMeta}>
+                  ({item.praktikanNim}) - Izin diterima
+                </Text>
+              </View>
+
+              <View style={styles.izinPill}>
+                <Text style={styles.izinPillText}>IZIN</Text>
+              </View>
             </View>
           ))}
         </View>
@@ -171,6 +199,9 @@ const styles = StyleSheet.create({
   avatarBadgeClosed: {
     backgroundColor: '#EAE4D7',
   },
+  avatarBadgeIzin: {
+    backgroundColor: '#E5EAD7',
+  },
   attendeeInfo: {
     flex: 1,
     marginHorizontal: 12,
@@ -191,5 +222,17 @@ const styles = StyleSheet.create({
   },
   trailingCheck: {
     paddingLeft: 4,
+  },
+  izinPill: {
+    backgroundColor: '#E5EAD7',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 999,
+  },
+  izinPillText: {
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 0.5,
+    color: '#2D3E2D',
   },
 });

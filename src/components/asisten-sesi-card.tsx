@@ -4,6 +4,8 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import {
   CardCornerLeafOrnament,
   MapPinIcon,
+  PencilIcon,
+  TrashIcon,
 } from '@/components/icons/praktikum-theme-icons';
 import { SesiPraktikum, StatusSesi } from '@/types';
 import { formatDateIndo } from '@/utils';
@@ -11,6 +13,8 @@ import { formatDateIndo } from '@/utils';
 export interface AsistenSesiCardProps {
   sesi: SesiPraktikum;
   onPress: () => void;
+  onEdit?: () => void;
+  onDelete?: () => void;
 }
 
 const STATUS_BADGE_MAP: Record<
@@ -37,8 +41,14 @@ const STATUS_BADGE_MAP: Record<
 /**
  * Kartu item jadwal sesi praktikum untuk daftar Jadwal Asisten (Layar 01 - FR-07).
  */
-export function AsistenSesiCard({ sesi, onPress }: AsistenSesiCardProps) {
+export function AsistenSesiCard({
+  sesi,
+  onPress,
+  onEdit,
+  onDelete,
+}: AsistenSesiCardProps) {
   const badge = STATUS_BADGE_MAP[sesi.status];
+  const showEdit = Boolean(onEdit && sesi.status === 'BELUM_DIBUKA');
 
   return (
     <Pressable
@@ -68,10 +78,48 @@ export function AsistenSesiCard({ sesi, onPress }: AsistenSesiCardProps) {
         </Text>
       </View>
 
-      <View style={[styles.statusBadge, { backgroundColor: badge.bg }]}>
-        <Text style={[styles.statusBadgeText, { color: badge.text }]}>
-          {badge.label}
-        </Text>
+      <View style={styles.footerRow}>
+        <View style={[styles.statusBadge, { backgroundColor: badge.bg }]}>
+          <Text style={[styles.statusBadgeText, { color: badge.text }]}>
+            {badge.label}
+          </Text>
+        </View>
+
+        {(showEdit || onDelete) && (
+          <View style={styles.actionRow}>
+            {showEdit && onEdit ? (
+              <Pressable
+                style={({ pressed }) => [
+                  styles.actionPill,
+                  styles.editPill,
+                  pressed && styles.actionPressed,
+                ]}
+                onPress={onEdit}
+                accessibilityRole="button"
+                accessibilityLabel={`Ubah sesi ${sesi.mataKuliah}`}
+              >
+                <PencilIcon size={12} color="#3E543E" />
+                <Text style={styles.editPillText}>Ubah</Text>
+              </Pressable>
+            ) : null}
+
+            {onDelete ? (
+              <Pressable
+                style={({ pressed }) => [
+                  styles.actionPill,
+                  styles.deletePill,
+                  pressed && styles.actionPressed,
+                ]}
+                onPress={onDelete}
+                accessibilityRole="button"
+                accessibilityLabel={`Hapus sesi ${sesi.mataKuliah}`}
+              >
+                <TrashIcon size={12} color="#9E3B2B" />
+                <Text style={styles.deletePillText}>Hapus</Text>
+              </Pressable>
+            ) : null}
+          </View>
+        )}
       </View>
 
       <View style={styles.cornerOrnament} pointerEvents="none">
@@ -140,12 +188,53 @@ const styles = StyleSheet.create({
     lineHeight: 16,
     color: '#5A6B5A',
   },
+  footerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+    marginTop: 10,
+    paddingRight: 44,
+  },
   statusBadge: {
     alignSelf: 'flex-start',
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 999,
-    marginTop: 10,
+  },
+  actionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  actionPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 9,
+    paddingVertical: 4,
+    borderRadius: 999,
+  },
+  actionPressed: {
+    opacity: 0.8,
+  },
+  editPill: {
+    backgroundColor: '#F5F2EB',
+    borderWidth: 1,
+    borderColor: '#D5E0D5',
+  },
+  editPillText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#3E543E',
+  },
+  deletePill: {
+    backgroundColor: '#F4DFDA',
+  },
+  deletePillText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#9E3B2B',
   },
   statusBadgeText: {
     fontSize: 10,

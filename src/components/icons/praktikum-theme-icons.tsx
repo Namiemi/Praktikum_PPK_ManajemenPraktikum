@@ -45,12 +45,24 @@ function TintedSvgIcon({
   color?: ColorValue | string | null;
   fallbackColor: string;
 }) {
+  const resolvedColor = resolveTintColor(color, fallbackColor);
   return (
-    <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
+    <View
+      style={{
+        width: size,
+        height: size,
+        minWidth: size,
+        minHeight: size,
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+    >
       <Image
         source={source}
         style={{ width: size, height: size }}
-        tintColor={resolveTintColor(color, fallbackColor)}
+        tintColor={resolvedColor}
+        cachePolicy="none"
+        recyclingKey={`${source}-${resolvedColor ?? 'default'}-${size}`}
         contentFit="contain"
       />
     </View>

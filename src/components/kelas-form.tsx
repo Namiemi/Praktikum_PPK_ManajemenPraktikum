@@ -59,6 +59,7 @@ function KelasFormContent({
       <View
         style={[
           styles.sheetContainer,
+          styles.kelasFormSheet,
           { paddingBottom: Math.max(insets.bottom, 16) + 12 },
         ]}
       >
@@ -346,6 +347,9 @@ const styles = StyleSheet.create({
   },
   pesertaSheet: {
     maxHeight: '85%',
+  },
+  kelasFormSheet: {
+    minHeight: '72%',
   },
   dragHandle: {
     width: 38,

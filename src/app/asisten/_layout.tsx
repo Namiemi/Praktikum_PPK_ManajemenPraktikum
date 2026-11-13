@@ -24,7 +24,7 @@ export default function AsistenTabLayout() {
           paddingTop: 8,
         },
         tabBarActiveTintColor: '#FDFBF7',
-        tabBarInactiveTintColor: 'rgba(253, 251, 247, 0.55)',
+        tabBarInactiveTintColor: '#A0A79A',
         tabBarLabelStyle: {
           fontSize: 12,
           fontWeight: '600',

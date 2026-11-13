@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  Keyboard,
   KeyboardAvoidingView,
+  LayoutChangeEvent,
   Modal,
   Platform,
   Pressable,
@@ -43,6 +45,14 @@ interface SesiErrors {
   jamSelesai?: string | null;
 }
 
+type SesiFieldScrollKey =
+  | 'mataKuliah'
+  | 'pertemuanRuang'
+  | 'topik'
+  | 'tanggal'
+  | 'jamRentang'
+  | 'catatan';
+
 function SesiFormContent({
   editingSesi,
   kelasList,
@@ -52,6 +62,17 @@ function SesiFormContent({
   onClose,
 }: Omit<SesiFormModalProps, 'visible'>) {
   const insets = useSafeAreaInsets();
+  const scrollViewRef = useRef<React.ComponentRef<typeof ScrollView>>(null);
+  const scrollViewportHeightRef = useRef<number>(360);
+  const fieldLayoutsRef = useRef<
+    Partial<Record<SesiFieldScrollKey, { y: number; height: number }>>
+  >({});
+  const focusedFieldRef = useRef<SesiFieldScrollKey | null>(null);
+  const keyboardHeightRef = useRef<number>(0);
+  const focusTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+  const [isInputFocused, setIsInputFocused] = useState(false);
 
   const [kelasId, setKelasId] = useState(editingSesi?.kelasId ?? '');
   const [kelasNama, setKelasNama] = useState(editingSesi?.kelas ?? '');
@@ -66,6 +87,78 @@ function SesiFormContent({
   const [jamSelesai, setJamSelesai] = useState(editingSesi?.jamSelesai ?? '');
   const [catatan, setCatatan] = useState(editingSesi?.catatan ?? '');
   const [errors, setErrors] = useState<SesiErrors>({});
+
+  const scrollFieldToCenter = (
+    key: SesiFieldScrollKey,
+    kbHeightOverride?: number
+  ) => {
+    const layout = fieldLayoutsRef.current[key];
+    if (!layout || !scrollViewRef.current) return;
+    const kbHeight =
+      kbHeightOverride ??
+      (keyboardHeightRef.current > 0 ? keyboardHeightRef.current : 280);
+    const viewportHeight = scrollViewportHeightRef.current;
+    const visibleScrollHeight = Math.max(
+      160,
+      viewportHeight - Math.max(0, kbHeight - 80)
+    );
+    const targetCenterOffset = visibleScrollHeight * 0.42;
+    const fieldCenter = layout.y + layout.height / 2;
+    const targetY = Math.max(0, fieldCenter - targetCenterOffset);
+    scrollViewRef.current.scrollTo({ y: targetY, animated: true });
+  };
+
+  useEffect(() => {
+    const handleShow = (event: { endCoordinates: { height: number } }) => {
+      const nextHeight = event.endCoordinates.height;
+      keyboardHeightRef.current = nextHeight;
+      setKeyboardHeight(nextHeight);
+      if (focusedFieldRef.current) {
+        scrollFieldToCenter(focusedFieldRef.current, nextHeight);
+      }
+    };
+
+    const handleHide = () => {
+      keyboardHeightRef.current = 0;
+      setKeyboardHeight(0);
+    };
+
+    const subs = [
+      Keyboard.addListener('keyboardDidShow', handleShow),
+      Keyboard.addListener('keyboardDidHide', handleHide),
+    ];
+    if (Platform.OS === 'ios') {
+      subs.push(
+        Keyboard.addListener('keyboardWillShow', handleShow),
+        Keyboard.addListener('keyboardWillHide', handleHide)
+      );
+    }
+
+    return () => {
+      subs.forEach((sub) => sub.remove());
+      if (focusTimerRef.current) {
+        clearTimeout(focusTimerRef.current);
+      }
+    };
+  }, []);
+
+  const handleFieldFocus = (key: SesiFieldScrollKey) => {
+    focusedFieldRef.current = key;
+    setIsInputFocused(true);
+    scrollFieldToCenter(key);
+    if (focusTimerRef.current) {
+      clearTimeout(focusTimerRef.current);
+    }
+    focusTimerRef.current = setTimeout(() => {
+      scrollFieldToCenter(key);
+    }, 120);
+  };
+
+  const handleGroupLayout =
+    (key: SesiFieldScrollKey) => (e: LayoutChangeEvent) => {
+      const { y, height } = e.nativeEvent.layout;
+      fieldLayoutsRef.current[key] = { y, height };
+    };
 
   const clearError = (key: keyof SesiErrors) => {
     if (errors[key]) {
@@ -135,9 +228,19 @@ function SesiFormContent({
         <View style={styles.divider} />
 
         <ScrollView
+          ref={scrollViewRef}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
           style={styles.formScroll}
+          onLayout={(e) => {
+            scrollViewportHeightRef.current = e.nativeEvent.layout.height;
+          }}
+          contentContainerStyle={[
+            styles.formScrollContent,
+            (isInputFocused || keyboardHeight > 0) && {
+              paddingBottom: Math.max(keyboardHeight, 280),
+            },
+          ]}
         >
           {errorMessage ? (
             <View style={styles.errorBanner}>
@@ -189,7 +292,10 @@ function SesiFormContent({
             ) : null}
           </View>
 
-          <View style={styles.fieldGroup}>
+          <View
+            style={styles.fieldGroup}
+            onLayout={handleGroupLayout('mataKuliah')}
+          >
             <Text style={styles.label}>Mata Kuliah</Text>
             <TextInput
               style={[styles.input, !!errors.mataKuliah && styles.inputError]}
@@ -200,6 +306,9 @@ function SesiFormContent({
                 setMataKuliah(text);
                 clearError('mataKuliah');
               }}
+              onFocus={() => handleFieldFocus('mataKuliah')}
+              onPressIn={() => handleFieldFocus('mataKuliah')}
+              onBlur={() => setIsInputFocused(false)}
               editable={!submitting}
             />
             {errors.mataKuliah ? (
@@ -207,7 +316,10 @@ function SesiFormContent({
             ) : null}
           </View>
 
-          <View style={styles.twoColRow}>
+          <View
+            style={styles.twoColRow}
+            onLayout={handleGroupLayout('pertemuanRuang')}
+          >
             <View style={[styles.fieldGroup, styles.colHalf]}>
               <Text style={styles.label}>Pertemuan</Text>
               <TextInput
@@ -220,6 +332,9 @@ function SesiFormContent({
                   setPertemuan(text.replace(/\D/g, ''));
                   clearError('pertemuan');
                 }}
+                onFocus={() => handleFieldFocus('pertemuanRuang')}
+                onPressIn={() => handleFieldFocus('pertemuanRuang')}
+                onBlur={() => setIsInputFocused(false)}
                 editable={!submitting}
               />
               {errors.pertemuan ? (
@@ -238,6 +353,9 @@ function SesiFormContent({
                   setRuang(text);
                   clearError('ruang');
                 }}
+                onFocus={() => handleFieldFocus('pertemuanRuang')}
+                onPressIn={() => handleFieldFocus('pertemuanRuang')}
+                onBlur={() => setIsInputFocused(false)}
                 editable={!submitting}
               />
               {errors.ruang ? (
@@ -246,7 +364,7 @@ function SesiFormContent({
             </View>
           </View>
 
-          <View style={styles.fieldGroup}>
+          <View style={styles.fieldGroup} onLayout={handleGroupLayout('topik')}>
             <Text style={styles.label}>Topik</Text>
             <TextInput
               style={[styles.input, !!errors.topik && styles.inputError]}
@@ -257,6 +375,9 @@ function SesiFormContent({
                 setTopik(text);
                 clearError('topik');
               }}
+              onFocus={() => handleFieldFocus('topik')}
+              onPressIn={() => handleFieldFocus('topik')}
+              onBlur={() => setIsInputFocused(false)}
               editable={!submitting}
             />
             {errors.topik ? (
@@ -264,7 +385,10 @@ function SesiFormContent({
             ) : null}
           </View>
 
-          <View style={styles.fieldGroup}>
+          <View
+            style={styles.fieldGroup}
+            onLayout={handleGroupLayout('tanggal')}
+          >
             <Text style={styles.label}>Tanggal</Text>
             <TextInput
               style={[styles.input, !!errors.tanggal && styles.inputError]}
@@ -275,6 +399,9 @@ function SesiFormContent({
                 setTanggal(text);
                 clearError('tanggal');
               }}
+              onFocus={() => handleFieldFocus('tanggal')}
+              onPressIn={() => handleFieldFocus('tanggal')}
+              onBlur={() => setIsInputFocused(false)}
               editable={!submitting}
             />
             {errors.tanggal ? (
@@ -282,7 +409,10 @@ function SesiFormContent({
             ) : null}
           </View>
 
-          <View style={styles.twoColRow}>
+          <View
+            style={styles.twoColRow}
+            onLayout={handleGroupLayout('jamRentang')}
+          >
             <View style={[styles.fieldGroup, styles.colHalf]}>
               <Text style={styles.label}>Jam Mulai</Text>
               <TextInput
@@ -294,6 +424,9 @@ function SesiFormContent({
                   setJamMulai(text);
                   clearError('jamMulai');
                 }}
+                onFocus={() => handleFieldFocus('jamRentang')}
+                onPressIn={() => handleFieldFocus('jamRentang')}
+                onBlur={() => setIsInputFocused(false)}
                 editable={!submitting}
               />
               {errors.jamMulai ? (
@@ -312,6 +445,9 @@ function SesiFormContent({
                   setJamSelesai(text);
                   clearError('jamSelesai');
                 }}
+                onFocus={() => handleFieldFocus('jamRentang')}
+                onPressIn={() => handleFieldFocus('jamRentang')}
+                onBlur={() => setIsInputFocused(false)}
                 editable={!submitting}
               />
               {errors.jamSelesai ? (
@@ -320,7 +456,10 @@ function SesiFormContent({
             </View>
           </View>
 
-          <View style={styles.fieldGroup}>
+          <View
+            style={styles.fieldGroup}
+            onLayout={handleGroupLayout('catatan')}
+          >
             <Text style={styles.label}>Catatan (Opsional)</Text>
             <TextInput
               style={[styles.input, styles.multilineInput]}
@@ -328,6 +467,9 @@ function SesiFormContent({
               placeholderTextColor="#8C9786"
               value={catatan}
               onChangeText={setCatatan}
+              onFocus={() => handleFieldFocus('catatan')}
+              onPressIn={() => handleFieldFocus('catatan')}
+              onBlur={() => setIsInputFocused(false)}
               multiline
               editable={!submitting}
             />
@@ -411,7 +553,7 @@ const styles = StyleSheet.create({
   sheetContainer: {
     width: '100%',
     maxWidth: 540,
-    maxHeight: '88%',
+    height: '88%',
     alignSelf: 'center',
     backgroundColor: '#FAF9F5',
     borderTopLeftRadius: 24,
@@ -445,7 +587,10 @@ const styles = StyleSheet.create({
     marginVertical: 14,
   },
   formScroll: {
-    flexGrow: 0,
+    flex: 1,
+  },
+  formScrollContent: {
+    paddingBottom: 8,
   },
   errorBanner: {
     backgroundColor: '#F4DFDA',

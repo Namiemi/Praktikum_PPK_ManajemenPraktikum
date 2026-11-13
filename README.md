@@ -32,7 +32,7 @@ README ini memuat dokumen **Sprint 1** (antarmuka dan alur dengan data dummy) da
 | State | React Context dan `useState` |
 | Tata letak | Flexbox (`StyleSheet`) |
 | Interaksi | `TextInput`, `Pressable`, `FlatList`, dan `Modal` (juga dipakai sebagai Bottom Sheet) |
-| Klasifikasi izin | API model AI dari pengajar (URL dan key lewat `.env`) |
+| Klasifikasi izin | Model AI dari pengajar (`sentiment.js` + `model-edom.json`), berjalan langsung di perangkat tanpa internet |
 | Menjalankan aplikasi | Expo Go (Sprint 1); development build dengan `expo-dev-client` (Sprint 2) |
 
 ---
@@ -92,12 +92,12 @@ Pengguna registrasi dengan memilih peran (praktikan/asisten), lalu login. Asiste
 | 23  | SRS-23 | Perubahan status sesi, presensi, dan rekap kehadiran tampil real-time pada pengguna terkait tanpa restart aplikasi                                 | Asisten, Praktikan | Tinggi    |
 | 24  | SRS-24 | Data tetap tersedia setelah aplikasi ditutup dan dibuka kembali                                                                                    | Sistem             | Tinggi    |
 | 25  | SRS-25 | Praktikan dapat mengajukan izin untuk sesi tertentu dengan mengisi alasan; pengajuan tersimpan di Firestore dengan status yang dapat dipantau      | Praktikan          | Tinggi    |
-| 26  | SRS-26 | Alasan izin dikirim ke API AI untuk prediksi kategori; hasil klasifikasi ditampilkan dan disimpan bersama pengajuan                                | Sistem             | Tinggi    |
+| 26  | SRS-26 | Alasan izin dianalisis model AI dari pengajar (berjalan di perangkat) untuk mendapat label klasifikasi; hasilnya ditampilkan dan disimpan bersama pengajuan| Sistem             | Tinggi    |
 | 27  | SRS-27 | Model AI tidak menentukan diterima/ditolaknya izin; status awal selalu "Menunggu"                                                                  | Sistem             | Tinggi    |
 | 28  | SRS-28 | Asisten dapat melihat daftar pengajuan izin beserta alasan dan hasil klasifikasi, lalu menerima atau menolak                                       | Asisten            | Tinggi    |
 | 29  | SRS-29 | Keputusan izin tersimpan di Firestore dan terlihat oleh praktikan yang mengajukan                                                                  | Asisten, Praktikan | Tinggi    |
 | 30  | SRS-30 | Aplikasi memvalidasi input (email, password, NIM, alasan izin, kode presensi) dan menampilkan pesan error yang jelas                               | Asisten, Praktikan | Tinggi    |
-| 31  | SRS-31 | Aplikasi menangani kegagalan autentikasi, kesalahan Firestore, dan API AI tidak merespons (pengajuan izin tetap tersimpan tanpa klasifikasi)      | Sistem             | Tinggi    |
+| 31  | SRS-31 | Aplikasi menangani kegagalan autentikasi, kesalahan Firestore, dan alasan yang tidak dapat dikenali model AI (pengajuan izin tetap tersimpan tanpa klasifikasi)| Sistem             | Tinggi    |
 | 32  | SRS-32 | Akses dan perubahan data dibatasi sesuai identitas dan peran melalui Firebase Security Rules                                                       | Sistem             | Tinggi    |
 | 33  | SRS-33 | Aplikasi menampilkan kondisi khusus: belum login, loading, data kosong, koneksi terganggu, AI tidak merespons, presensi sudah tercatat              | Asisten, Praktikan | Sedang    |
 
@@ -128,7 +128,7 @@ Pengguna registrasi dengan memilih peran (praktikan/asisten), lalu login. Asiste
 
 | No  | Kode  | Nama Fitur                       | Deskripsi Fungsional                                                                                                                                                                                                                            | Ref SRS                        |
 | --- | ----- | -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------ |
-| 15  | FR-15 | Konfigurasi Firebase | `app.json` memuat `android.package` (sama dengan yang didaftarkan di Firebase), `android.googleServicesFile`, dan plugin `@react-native-firebase/app`. `src/lib/firebase.ts` mengekspor `auth` dan `db` (API modular). `google-services.json` dan `.env` masuk `.gitignore`; `.env.example` di-commit (hanya berisi URL & key API AI) | SRS-16, SRS-17, SRS-24 |
+| 15  | FR-15 | Konfigurasi Firebase | `app.json` memuat `android.package` (sama dengan yang didaftarkan di Firebase), `android.googleServicesFile`, dan plugin `@react-native-firebase/app`. `src/lib/firebase.ts` mengekspor `auth` dan `db` (API modular). `google-services.json` masuk `.gitignore` dan tidak di-commit | SRS-16, SRS-17, SRS-24 |
 | 16  | FR-16 | Autentikasi & Profil | Registrasi (nama, NIM, email, password, konfirmasi password, pilihan peran) membuat akun Auth lalu dokumen `users/{uid}`; peran asisten hanya diterima bila email terdaftar di whitelist (dicek di Security Rules). Login dengan pesan error ramah (`auth/invalid-credential`, `auth/network-request-failed`, dll) dan logout lewat `signOut()`. `AuthProvider` (`onAuthStateChanged`) mengarahkan ke login bila belum login, atau ke Tabs sesuai peran. Layar Profil menampilkan nama, NIM, email, peran, kelas, dan tombol Keluar | SRS-14, SRS-15, SRS-16, SRS-30, SRS-33 |
 | 17  | FR-17 | Service Layer & State Real-time | `src/services/` berisi fungsi CRUD dan listener per koleksi (`kelas`, `sesi`, `presensi`, `izin`); UI tidak memanggil Firestore langsung. `PraktikumProvider` berlangganan `onSnapshot` sesuai peran (asisten: sesi miliknya; praktikan: sesi kelasnya) dan menyediakan `data`, `loading`, `error`, serta aksi (`bukaSesi`, `tutupSesi`, `presensi`, `ajukanIzin`, `putuskanIzin`). Listener di-unsubscribe saat unmount/logout | SRS-17, SRS-23, SRS-24, SRS-33 |
 | 18  | FR-18 | Komponen Bersama Baru | `LoadingState`, `ErrorState` (dengan tombol coba lagi), `FormField` (label, input, pesan error), `Toast`/banner offline. Komponen Sprint 1 (`SesiCard`, `StatusBadge`, `EmptyState`, `ConfirmModal`, `BottomSheet`) dipakai ulang | SRS-30, SRS-33 |
@@ -142,7 +142,7 @@ Pengguna registrasi dengan memilih peran (praktikan/asisten), lalu login. Asiste
 | 26  | FR-26 | Presensi & Anti Presensi Ganda | Input kode presensi dengan validasi (kosong/salah), konfirmasi `ConfirmModal`, lalu tulis ke `sesi/{sesiId}/presensi/{uid}` dengan `serverTimestamp()`; Bottom Sheet sukses memuat jam tercatat. Dokumen memakai `uid` sebagai ID sehingga satu praktikan hanya punya satu dokumen per sesi; `presensi()` mengecek dokumen yang sudah ada dan Security Rules menolak `create` ganda. UI mengganti form dengan kartu "Presensi tercatat" | SRS-21, SRS-22, SRS-30 |
 | 27  | FR-27 | Riwayat Kehadiran | Ringkasan "Hadir x dari y sesi" dan daftar sesi dengan status Hadir (jam) / Izin / Tidak Hadir / Menunggu, dari data Firestore | SRS-21, SRS-25 |
 | 28  | FR-28 | Pengajuan Izin & Status | Praktikan memilih sesi (belum ditutup dan belum presensi) dan mengisi alasan (min. 10, maks. 300 karakter); satu pengajuan per sesi, konfirmasi lewat `ConfirmModal`, status awal `menunggu`. Daftar pengajuan milik praktikan (real-time) dengan badge Menunggu (abu) / Diterima (hijau) / Ditolak (merah) dan catatan asisten bila ada | SRS-25, SRS-27, SRS-29, SRS-30 |
-| 29  | FR-29 | Integrasi AI | `src/services/ai.ts` mengirim alasan izin ke endpoint pengajar dengan timeout (mis. 10 detik) dan mengembalikan `{kategori, skor}`. Hasilnya (`kategoriAI`, `skorAI`, `statusAI`) disimpan bersama dokumen izin dan ditampilkan sebagai chip informasi ke praktikan dan asisten. Jika gagal/timeout, pengajuan tetap tersimpan dengan `statusAI: "gagal"` dan UI menampilkan "Klasifikasi tidak tersedia". Hasil AI tidak pernah mengubah status izin | SRS-26, SRS-27, SRS-31 |
+| 29  | FR-29 | Integrasi AI | `sentiment.js` dan `model-edom.json` dari pengajar disalin ke `src/lib/ai/`. `src/services/ai.ts` membungkus `createSentimentClassifier(model)` dan mengembalikan `{label, skor}`; prediksi berjalan di perangkat tanpa internet. Hasilnya (`kategoriAI`, `skorAI`, `statusAI`) disimpan bersama dokumen izin dan ditampilkan sebagai chip informasi ke praktikan dan asisten. Jika alasan kosong atau tidak dikenali (`label: null`), pengajuan tetap tersimpan dengan `statusAI: "tidak_dikenali"` dan UI menampilkan "Klasifikasi tidak tersedia". Hasil AI tidak pernah mengubah status izin | SRS-26, SRS-27, SRS-31 |
 
 ---
 
@@ -152,7 +152,7 @@ Pengguna registrasi dengan memilih peran (praktikan/asisten), lalu login. Asiste
 
 | Programmer       | Fitur (Ref FR)                                             | Branch                                         | Folder/Modul                                                                                                                                           | Catatan Dependency                                                                                                                                            |
 | ---------------- | ---------------------------------------------------------- | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Abhista** (PM) | -                                                          | Merge branch lain                              | Repo, collaborator, proteksi branch `main`, `README.md`                                                                                                | -                                                                                                                                                             |
+| **Abhista** (PM) | -                                                          | Merge branch lain                              | Repo, collaborator, proteksi branch `main`, `README.md`, `src/lib/ai/` | -                                                                                                                                                             |
 | **Rafif**        | FR-01, FR-02, FR-03, FR-06 (header), FR-12 (logika), FR-14 | `feature/fondasi`, lalu `feature/pilih-peran`  | `src/types.ts`, `src/data/`, `src/context/`, `src/utils/`, `src/app/_layout.tsx`, `src/app/index.tsx`, `src/app/sesi/[id].tsx`, `src/app/*/profil.tsx` | Fondasi (tipe, data dummy, context, root layout, halaman placeholder) di-merge paling awal karena semua modul bergantung pada `usePraktikum()` dan `types.ts` |
 | **Sofwan**       | FR-05, FR-07, FR-08, FR-09                                 | `feature/modal`, lalu `feature/asisten`        | `src/components/confirm-modal.tsx`, `bottom-sheet.tsx`, `src/app/asisten/`, `src/components/asisten-panel.tsx`                                         | `ConfirmModal` dan `BottomSheet` di-merge lebih dulu karena dipakai Naufal. Butuh `SesiCard` dari Naufal                                                      |
 | **Naufal**       | FR-04, FR-10, FR-11, FR-12 (UI), FR-13                     | `feature/kartu-sesi`, lalu `feature/praktikan` | `src/components/sesi-card.tsx`, `status-badge.tsx`, `empty-state.tsx`, `src/app/praktikan/`, `src/components/praktikan-panel.tsx`                      | `SesiCard`, `StatusBadge`, dan `EmptyState` di-merge lebih dulu karena dipakai Sofwan. Butuh `ConfirmModal` dan `BottomSheet` dari Sofwan                     |
@@ -162,9 +162,9 @@ Pengguna registrasi dengan memilih peran (praktikan/asisten), lalu login. Asiste
 | Programmer   | Fitur (Ref FR)                                                    | Branch                                            | Folder/Modul                                                                                                                                                                  | Catatan Dependency                                                                                                                                                                         |
 | ------------ | ----------------------------------------------------------------- | ------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Akbar** (PM) | - | Merge branch lain | Project Firebase, pendaftaran Android app & unduh `google-services.json`, whitelist asisten, deploy `firestore.rules`, `README.md` | Membagikan `google-services.json` ke tim (lewat chat pribadi) sebelum sprint dimulai |
-| **Rafif**    | FR-15, FR-16, FR-17, FR-18, FR-19, FR-20 | `feature/fondasi-firebase`, lalu `feature/auth`, `feature/keamanan` | `app.json`, `.gitignore`, `.env.example`, `src/lib/firebase.ts`, `src/services/`, `src/context/`, `src/types.ts`, `src/utils/validation.ts`, `errors.ts`, `src/components/` (`loading-state`, `error-state`, `form-field`), `src/app/_layout.tsx`, `src/app/(auth)/`, `firestore.rules`, `src/app/*/profil.tsx` | **Di-merge paling awal.** Rafif juga memastikan development build bisa dijalankan semua anggota. Semua modul bergantung pada `services/`, `usePraktikum()`, tipe, dan komponen bersama. Hapus `src/data/dummy.ts` setelah semua modul pindah ke Firestore            |
+| **Rafif**    | FR-15, FR-16, FR-17, FR-18, FR-19, FR-20 | `feature/fondasi-firebase`, lalu `feature/auth`, `feature/keamanan` | `app.json`, `.gitignore`, `src/lib/firebase.ts`, `src/services/`, `src/context/`, `src/types.ts`, `src/utils/validation.ts`, `errors.ts`, `src/components/` (`loading-state`, `error-state`, `form-field`), `src/app/_layout.tsx`, `src/app/(auth)/`, `firestore.rules`, `src/app/*/profil.tsx` | **Di-merge paling awal.** Rafif juga memastikan development build bisa dijalankan semua anggota. Semua modul bergantung pada `services/`, `usePraktikum()`, tipe, dan komponen bersama. Hapus `src/data/dummy.ts` setelah semua modul pindah ke Firestore            |
 | **Sofwan**  | FR-21, FR-22, FR-23, FR-24 | `feature/asisten-crud`, lalu `feature/asisten-izin` | `src/app/asisten/` (kelas, jadwal, form sesi, rekap, izin), `src/components/asisten-panel.tsx`, `kelas-form.tsx`, `sesi-form.tsx`, `izin-review-card.tsx`                      | Butuh `services/` dan `FormField` dari Rafif. Hasil FR-22 (status sesi) dibutuhkan Abhista untuk uji presensi. FR-24 butuh data izin dari Abhista, bisa diuji dengan dokumen manual di Console |
-| **Abhista**  | FR-25, FR-26, FR-27, FR-28, FR-29 | `feature/presensi`, lalu `feature/izin`           | `src/app/praktikan/` (jadwal, riwayat, izin), `src/components/praktikan-panel.tsx`, `presensi-form.tsx`, `izin-form.tsx`, `izin-card.tsx`, `sesi/[id].tsx` (panel praktikan), `src/services/ai.ts` | Butuh `services/` dan komponen bersama dari Rafif, serta sesi berstatus dibuka dari Sofwan untuk uji presensi. `ai.ts` punya mode tiruan (`EXPO_PUBLIC_AI_MOCK=true`) untuk dipakai selama API pengajar belum bisa diakses |
+| **Abhista**  | FR-25, FR-26, FR-27, FR-28, FR-29 | `feature/presensi`, lalu `feature/izin`           | `src/app/praktikan/` (jadwal, riwayat, izin), `src/components/praktikan-panel.tsx`, `presensi-form.tsx`, `izin-form.tsx`, `izin-card.tsx`, `sesi/[id].tsx` (panel praktikan), `src/services/ai.ts` | Butuh `services/` dan komponen bersama dari Rafif, serta sesi berstatus dibuka dari Sofwan untuk uji presensi. `sentiment.js` dan `model-edom.json` dari pengajar disalin ke `src/lib/ai/`; model berjalan di perangkat, jadi tidak butuh API atau koneksi internet |
 
 ### Urutan Merge
 
@@ -255,19 +255,13 @@ Mulai Sprint 2 aplikasi memakai Firebase native (React Native Firebase), sehingg
 Prasyarat tambahan: **Android Studio** (emulator + Android SDK) dan **JDK 17**, atau HP Android dengan USB debugging aktif.
 
 1. Taruh `google-services.json` di folder paling luar proyek (minta ke Akbar, jangan di-commit).
-2. Buat `.env` dari `.env.example`, lalu isi `EXPO_PUBLIC_AI_API_URL` dan `EXPO_PUBLIC_AI_API_KEY` dari pengajar (jangan di-commit):
-
-   ```bash
-   cp .env.example .env
-   ```
-
-3. Paket baru (dipasang Rafif pada `feature/fondasi-firebase`):
+2. Paket baru (dipasang Rafif pada `feature/fondasi-firebase`):
 
    ```bash
    npx expo install @react-native-firebase/app @react-native-firebase/auth @react-native-firebase/firestore expo-dev-client
    ```
 
-4. Build dan jalankan di Android (pertama kali agak lama), lalu seterusnya cukup `npx expo start --dev-client`:
+3. Build dan jalankan di Android (pertama kali agak lama), lalu seterusnya cukup `npx expo start --dev-client`:
 
    ```bash
    npx expo run:android
@@ -288,6 +282,6 @@ Nama package Android harus sama persis di Firebase Console dan di `app.json` (`a
 - Sertakan screenshot setiap kondisi tampilan (kosong, normal, sukses) di deskripsi Pull Request.
 - Merge ke `main` hanya dilakukan oleh PM setelah branch fitur direview.
 - Scope tambahan Sprint 2: `firebase`, `auth`, `izin`, `rules`.
-- Jangan commit `.env`, `google-services.json`, API key AI, atau service account; hanya `.env.example` yang di-commit.
+- Jangan commit `google-services.json` atau file rahasia lain (misalnya service account).
 - Perubahan struktur data Firestore dikabarkan ke tim dan diperbarui di README ini.
-- Layar tidak memanggil Firestore atau API AI langsung, hanya lewat folder `src/services/`.
+- Layar tidak memanggil Firestore atau model AI langsung, hanya lewat folder `src/services/`.

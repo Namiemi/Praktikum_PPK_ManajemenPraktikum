@@ -4,8 +4,9 @@
  * Menampilkan form presensi, kartu presensi tercatat, atau info sesuai status sesi.
  */
 
+import { router } from 'expo-router';
 import React, { useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { BottomSheet } from '@/components/bottom-sheet';
 import { PresensiForm } from '@/components/presensi-form';
@@ -72,9 +73,41 @@ export function PraktikanPanel({ sesi }: PraktikanPanelProps) {
     );
   }
 
+  let infoIzin: React.ReactNode = null;
+  if (!presensiSaya && izinSaya && izinSaya.status !== 'diterima') {
+    infoIzin = (
+      <View style={[styles.card, styles.cardInfo, styles.izinInfo]}>
+        <Text style={styles.judulInfo}>
+          {izinSaya.status === 'menunggu' ? 'Izin Menunggu Keputusan' : 'Izin Ditolak'}
+        </Text>
+        <Text style={styles.teksInfo}>
+          {izinSaya.status === 'menunggu'
+            ? 'Pengajuan izin Anda sedang diperiksa asisten.'
+            : izinSaya.catatanAsisten
+              ? `Catatan asisten: ${izinSaya.catatanAsisten}`
+              : 'Silakan hadir dan lakukan presensi bila sesi dibuka.'}
+        </Text>
+      </View>
+    );
+  } else if (!presensiSaya && !izinSaya && sesi.status !== 'DITUTUP') {
+    infoIzin = (
+      <Pressable
+        style={({ pressed }) => [styles.linkIzin, pressed && styles.linkPressed]}
+        onPress={() =>
+          router.push({ pathname: '/izin/ajukan', params: { sesiId: sesi.id } })
+        }
+        accessibilityRole="button"
+        accessibilityLabel="Ajukan izin untuk sesi ini"
+      >
+        <Text style={styles.linkIzinText}>Tidak bisa hadir? Ajukan izin</Text>
+      </Pressable>
+    );
+  }
+
   return (
     <>
       {konten}
+      {infoIzin}
 
       <BottomSheet
         visible={waktuSukses !== null}
@@ -141,6 +174,25 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#5A6B5A',
     marginTop: 4,
+  },
+  izinInfo: {
+    marginTop: 12,
+  },
+  linkIzin: {
+    marginTop: 12,
+    paddingVertical: 12,
+    alignItems: 'center',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#C9CEC4',
+  },
+  linkPressed: {
+    opacity: 0.7,
+  },
+  linkIzinText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#2D3E2D',
   },
   sheetBody: {
     alignItems: 'center',

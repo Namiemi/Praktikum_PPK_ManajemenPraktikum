@@ -9,3 +9,4 @@ export * from './kelas';
 export * from './sesi';
 export * from './presensi';
 export * from './izin';
+export * from './ai';

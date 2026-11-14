@@ -5,6 +5,7 @@ import {
   CalendarIcon,
   UserIcon,
   UsersIcon,
+  ClipboardListIcon
 } from '@/components/icons/praktikum-theme-icons';
 
 export default function AsistenTabLayout() {
@@ -50,6 +51,17 @@ export default function AsistenTabLayout() {
           tabBarLabel: 'Kelas',
           tabBarIcon: ({ color, size }) => (
             <UsersIcon size={size ?? 22} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="izin"
+        options={{
+          title: 'Pengajuan Izin',
+          headerShown: false,
+          tabBarLabel: 'Izin',
+          tabBarIcon: ({ color, size }) => (
+            <ClipboardListIcon size={size ?? 22} color={color} />
           ),
         }}
       />

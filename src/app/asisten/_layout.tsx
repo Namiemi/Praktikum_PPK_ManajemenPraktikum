@@ -7,8 +7,10 @@ import {
   UsersIcon,
   ClipboardListIcon
 } from '@/components/icons/praktikum-theme-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function AsistenTabLayout() {
+  const insets = useSafeAreaInsets();
   return (
     <Tabs
       screenOptions={{
@@ -20,9 +22,9 @@ export default function AsistenTabLayout() {
           backgroundColor: '#2E4028',
           borderTopColor: '#202D1D',
           borderTopWidth: 1,
-          height: 60,
-          paddingBottom: 8,
-          paddingTop: 8,
+          height: 60 + insets.bottom,
+          paddingBottom: insets.bottom + 6,
+          paddingTop: 6,
         },
         tabBarActiveTintColor: '#FDFBF7',
         tabBarInactiveTintColor: '#A0A79A',

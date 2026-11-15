@@ -100,6 +100,23 @@ export function validateRentangJam(
     : 'Jam selesai harus setelah jam mulai.';
 }
 
+/**
+ * Jadwal (tanggal YYYY-MM-DD + jam mulai HH:MM, keduanya valid) tidak boleh
+ * berada di masa lalu, termasuk jam yang sudah lewat pada hari ini.
+ */
+export function validateJadwalBelumLewat(
+  tanggal: string,
+  jamMulai: string,
+  sekarang: Date = new Date()
+): ValidationResult {
+  const [y, m, d] = tanggal.trim().split('-').map(Number);
+  const [jam, menit] = jamMulai.trim().split(':').map(Number);
+  const mulai = new Date(y, m - 1, d, jam, menit);
+  return mulai.getTime() > sekarang.getTime()
+    ? null
+    : 'Jadwal sudah lewat. Pilih tanggal atau jam mulai setelah waktu sekarang.';
+}
+
 /** Bilangan bulat positif (misal nomor pertemuan). */
 export function validateBilanganPositif(value: string, label: string): ValidationResult {
   const teks = value.trim();

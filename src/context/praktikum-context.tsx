@@ -391,7 +391,8 @@ export const PraktikumProvider: React.FC<{ children: React.ReactNode }> = ({
       if (isPermissionDenied(err)) {
         return {
           success: false,
-          message: 'Kode presensi salah atau sesi belum dibuka.',
+          message:
+            'Kode presensi salah atau sesi sudah tidak dibuka. Periksa kembali kode dari asisten.',
         };
       }
       return {

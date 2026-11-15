@@ -27,6 +27,7 @@ import { Kelas, SesiInput, SesiPraktikum } from '@/types';
 import { formatDateIndo } from '@/utils';
 import {
   validateBilanganPositif,
+  validateJadwalBelumLewat,
   validateJam,
   validateRentangJam,
   validateRequired,
@@ -186,13 +187,24 @@ function SesiFormContent({
         ? validateRentangJam(jamMulai, jamSelesai)
         : null;
 
+    const errTanggal = validateTanggal(tanggal);
+    // Saat mengubah sesi lama, jadwal yang tidak diubah tetap boleh disimpan.
+    const jadwalBerubah =
+      !editingSesi ||
+      editingSesi.tanggal !== tanggal.trim() ||
+      editingSesi.jamMulai !== jamMulai.trim();
+    const errLewat =
+      !errTanggal && !errJamMulai && jadwalBerubah
+        ? validateJadwalBelumLewat(tanggal, jamMulai)
+        : null;
+
     const nextErrors: SesiErrors = {
       kelas: validateRequired(kelasId, 'Kelas'),
       pertemuan: validateBilanganPositif(pertemuan, 'Pertemuan'),
       ruang: validateRequired(ruang, 'Ruang'),
       topik: validateRequired(topik, 'Topik'),
-      tanggal: validateTanggal(tanggal),
-      jamMulai: errJamMulai,
+      tanggal: errTanggal,
+      jamMulai: errJamMulai ?? errLewat,
       jamSelesai: errJamSelesaiFormat ?? errRentang,
     };
 

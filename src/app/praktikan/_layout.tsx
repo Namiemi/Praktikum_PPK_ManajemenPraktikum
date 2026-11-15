@@ -1,8 +1,10 @@
 import { Tabs } from 'expo-router';
 import React from 'react';
 import { Text } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function PraktikanTabLayout() {
+  const insets = useSafeAreaInsets();
   return (
     <Tabs
       screenOptions={{
@@ -13,6 +15,9 @@ export default function PraktikanTabLayout() {
         tabBarStyle: {
           backgroundColor: '#ffffff',
           borderTopColor: '#e0e0e0',
+          height: 60 + insets.bottom,
+          paddingBottom: insets.bottom + 6,
+          paddingTop: 6,
         },
         tabBarActiveTintColor: '#111111',
         tabBarInactiveTintColor: '#888888',

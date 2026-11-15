@@ -21,12 +21,14 @@ export function PresensiForm({ sesiId, onSuccess }: PresensiFormProps) {
   const { presensi } = usePraktikum();
   const [kode, setKode] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [errorKirim, setErrorKirim] = useState<string | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   const handleChange = (value: string) => {
     setKode(value.replace(/\D/g, ''));
     if (error) setError(null);
+    if (errorKirim) setErrorKirim(null);
   };
 
   const handleKonfirmasi = () => {
@@ -48,7 +50,8 @@ export function PresensiForm({ sesiId, onSuccess }: PresensiFormProps) {
       setKode('');
       onSuccess(result.data);
     } else {
-      setError(result.message);
+      setKode('');
+      setErrorKirim(result.message);
     }
   };
 
@@ -58,6 +61,17 @@ export function PresensiForm({ sesiId, onSuccess }: PresensiFormProps) {
       <Text style={styles.deskripsi}>
         Masukkan 4 digit kode presensi yang ditunjukkan asisten.
       </Text>
+
+      {errorKirim ? (
+        <View
+          style={styles.alert}
+          accessibilityRole="alert"
+          accessibilityLiveRegion="assertive"
+        >
+          <Text style={styles.alertJudul}>Presensi gagal</Text>
+          <Text style={styles.alertTeks}>{errorKirim}</Text>
+        </View>
+      ) : null}
 
       <FormField
         label="Kode Presensi"
@@ -124,6 +138,24 @@ const styles = StyleSheet.create({
     color: '#5A6B5A',
     marginTop: 4,
     marginBottom: 12,
+  },
+  alert: {
+    backgroundColor: '#FDECEA',
+    borderLeftWidth: 4,
+    borderLeftColor: '#B3261E',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 12,
+  },
+  alertJudul: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#B3261E',
+  },
+  alertTeks: {
+    fontSize: 13,
+    color: '#7A1B14',
+    marginTop: 2,
   },
   tombol: {
     backgroundColor: '#2D3E2D',

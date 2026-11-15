@@ -75,7 +75,14 @@ export function subscribePresensiSaya(
   const ref = doc(db, 'sesi', sesiId, 'presensi', uid);
   return onSnapshot(
     ref,
+    { includeMetadataChanges: true },
     (snap) => {
+      // Tulisan lokal yang belum dikonfirmasi server diabaikan. Kalau kode salah,
+      // server menolaknya; tanpa ini panel sempat berganti ke "Presensi Tercatat"
+      // dan form beserta pesan error-nya ikut hilang.
+      if (snap.metadata.hasPendingWrites) {
+        return;
+      }
       if (!snap.exists()) {
         callback(null);
         return;

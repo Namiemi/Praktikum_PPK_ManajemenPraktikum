@@ -9,8 +9,16 @@ import { EmptyState } from '@/components/empty-state';
 import { ErrorState } from '@/components/error-state';
 import { LoadingState } from '@/components/loading-state';
 import { PraktikanPanel } from '@/components/praktikan-panel';
+import { StatusBadge, StatusBadgeProps } from '@/components/status-badge';
 import { usePraktikum } from '@/context/praktikum-context';
+import { StatusSesi } from '@/types';
 import { formatDateIndo } from '@/utils';
+
+const BADGE_STATUS: Record<StatusSesi, StatusBadgeProps['status']> = {
+  BELUM_DIBUKA: 'belum_dibuka',
+  DIBUKA: 'dibuka',
+  DITUTUP: 'ditutup',
+};
 
 export default function DetailSesiScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -40,35 +48,21 @@ export default function DetailSesiScreen() {
 
   const isAsisten = currentUser?.peran === 'asisten';
 
-  const getStatusColor = () => {
-    switch (sesi.status) {
-      case 'DIBUKA':
-        return { bg: '#e8f5e9', text: '#2e7d32', label: 'Dibuka' };
-      case 'DITUTUP':
-        return { bg: '#ffebee', text: '#c62828', label: 'Ditutup' };
-      default:
-        return { bg: '#f5f5f5', text: '#616161', label: 'Belum Dibuka' };
-    }
-  };
-
-  const status = getStatusColor();
-
   return (
     <ScrollView
       style={styles.container}
       contentContainerStyle={[
         styles.content,
         { paddingBottom: styles.content.padding + insets.bottom },
-      ]}>
+      ]}
+    >
       {/* Header Detail Sesi (FR-06) */}
       <View style={styles.headerCard}>
         <View style={styles.headerTop}>
-          <Text style={styles.mataKuliah}>{sesi.mataKuliah}</Text>
-          <View style={[styles.badge, { backgroundColor: status.bg }]}>
-            <Text style={[styles.badgeText, { color: status.text }]}>
-              {status.label}
-            </Text>
-          </View>
+          <Text style={styles.mataKuliah} numberOfLines={2}>
+            {sesi.mataKuliah}
+          </Text>
+          <StatusBadge status={BADGE_STATUS[sesi.status]} />
         </View>
 
         <Text style={styles.topikTitle}>
@@ -117,15 +111,21 @@ export default function DetailSesiScreen() {
 
           {isAsisten && sesi.status === 'DIBUKA' && sesi.kodePresensi && (
             <View style={styles.kodeContainer}>
-              <Text style={styles.kodeTitle}>Kode Presensi Aktif:</Text>
+              <Text style={styles.kodeTitle}>Kode Presensi Aktif</Text>
               <Text style={styles.kodeNumber}>{sesi.kodePresensi}</Text>
             </View>
           )}
         </View>
 
         <Pressable
-          style={styles.infoButton}
-          onPress={() => setModalCatatanOpen(true)}>
+          style={({ pressed }) => [
+            styles.infoButton,
+            pressed && styles.buttonPressed,
+          ]}
+          onPress={() => setModalCatatanOpen(true)}
+          accessibilityRole="button"
+          accessibilityLabel="Lihat Catatan Sesi"
+        >
           <Text style={styles.infoButtonText}>Lihat Catatan Sesi</Text>
         </Pressable>
       </View>
@@ -140,7 +140,8 @@ export default function DetailSesiScreen() {
         visible={modalCatatanOpen}
         title="Catatan Sesi Praktikum"
         closeText="Tutup"
-        onClose={() => setModalCatatanOpen(false)}>
+        onClose={() => setModalCatatanOpen(false)}
+      >
         <Text style={styles.modalBody}>
           {sesi.catatan || 'Tidak ada catatan tambahan untuk sesi ini.'}
         </Text>
@@ -152,104 +153,112 @@ export default function DetailSesiScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f7f7f7',
+    backgroundColor: '#FDFBF7',
   },
   content: {
-    padding: 16,
+    padding: 18,
   },
   headerCard: {
-    backgroundColor: '#ffffff',
-    borderRadius: 8,
-    padding: 16,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 18,
+    padding: 18,
     borderWidth: 1,
-    borderColor: '#e8e8e8',
+    borderColor: '#E6E4DD',
     marginBottom: 16,
   },
   headerTop: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: 'flex-start',
+    gap: 10,
   },
   mataKuliah: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#666666',
-    textTransform: 'uppercase',
-  },
-  badge: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 4,
-  },
-  badgeText: {
+    flex: 1,
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: '700',
+    color: '#4A5D4A',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   topikTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#111111',
-    marginTop: 6,
+    lineHeight: 24,
+    color: '#1C281C',
+    marginTop: 8,
   },
   divider: {
     height: 1,
-    backgroundColor: '#eeeeee',
-    marginVertical: 12,
+    backgroundColor: '#F0EFE9',
+    marginVertical: 14,
   },
   infoList: {
-    gap: 8,
+    gap: 10,
   },
   infoRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    gap: 12,
   },
   infoLabel: {
-    fontSize: 14,
-    color: '#666666',
+    fontSize: 13,
+    fontWeight: '500',
+    color: '#5A6B5A',
   },
   infoValue: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#111111',
+    flex: 1,
+    textAlign: 'right',
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#1C281C',
+    fontVariant: ['tabular-nums'],
   },
   kodeContainer: {
-    backgroundColor: '#f0f0f0',
-    padding: 10,
-    borderRadius: 6,
+    backgroundColor: '#F4F1EA',
+    padding: 12,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#E6E4DD',
     alignItems: 'center',
     marginVertical: 4,
   },
   kodeTitle: {
     fontSize: 12,
-    color: '#666666',
+    fontWeight: '600',
+    color: '#4A5D4A',
   },
   kodeNumber: {
     fontSize: 22,
-    fontWeight: '700',
-    color: '#111111',
+    fontWeight: '800',
+    color: '#1C281C',
     letterSpacing: 2,
+    fontVariant: ['tabular-nums'],
     marginTop: 2,
   },
   infoButton: {
-    marginTop: 12,
-    paddingVertical: 8,
+    marginTop: 14,
+    paddingVertical: 11,
     alignItems: 'center',
-    borderRadius: 6,
+    borderRadius: 12,
+    backgroundColor: '#F5F2EB',
     borderWidth: 1,
-    borderColor: '#dddddd',
+    borderColor: '#D5E0D5',
+  },
+  buttonPressed: {
+    opacity: 0.82,
   },
   infoButtonText: {
     fontSize: 13,
-    color: '#444444',
-    fontWeight: '500',
+    color: '#3E543E',
+    fontWeight: '600',
   },
   panelContainer: {
-    marginTop: 4,
+    marginTop: 2,
   },
   modalBody: {
     fontSize: 14,
-    color: '#444444',
-    lineHeight: 20,
-    marginBottom: 16,
+    color: '#4A5D4A',
+    lineHeight: 21,
+    marginBottom: 8,
   },
 });

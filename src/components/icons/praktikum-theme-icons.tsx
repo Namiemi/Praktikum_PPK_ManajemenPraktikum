@@ -29,10 +29,15 @@ const plusAsset = require('../../../assets/icons/plus.svg');
 const pencilAsset = require('../../../assets/icons/pencil.svg');
 const trashAsset = require('../../../assets/icons/trash.svg');
 const searchAsset = require('../../../assets/icons/search.svg');
+const fileTextAsset = require('../../../assets/icons/file-text.svg');
+const eyeAsset = require('../../../assets/icons/eye.svg');
+const eyeOffAsset = require('../../../assets/icons/eye-off.svg');
+const wifiOffAsset = require('../../../assets/icons/wifi-off.svg');
 const cardCornerAsset = require('../../../assets/illustrations/card-corner-leaves.svg');
 const emptyScheduleAsset = require('../../../assets/illustrations/empty-schedule-calendar.svg');
 const emptyAttendanceAsset = require('../../../assets/illustrations/empty-attendance-leaf.svg');
-const headerBlobAsset = require('../../../assets/illustrations/header-botanical-blob.svg');
+const waveTopAsset = require('../../../assets/illustrations/pilih-peran-wave-top.svg');
+const waveBottomAsset = require('../../../assets/illustrations/pilih-peran-wave-bottom.svg');
 
 function TintedSvgIcon({
   source,
@@ -154,6 +159,34 @@ export function SearchIcon({ size = 16, color = '#8C9786' }: ThemeIconProps) {
 }
 
 /**
+ * 5i. File Text / Izin Icon
+ */
+export function FileTextIcon({ size = 20, color = '#FDFBF7' }: ThemeIconProps) {
+  return <TintedSvgIcon source={fileTextAsset} size={size} color={color} fallbackColor="#FDFBF7" />;
+}
+
+/**
+ * 5j. Eye / Show Password Icon
+ */
+export function EyeIcon({ size = 18, color = '#5A6B5A' }: ThemeIconProps) {
+  return <TintedSvgIcon source={eyeAsset} size={size} color={color} fallbackColor="#5A6B5A" />;
+}
+
+/**
+ * 5k. Eye Off / Hide Password Icon
+ */
+export function EyeOffIcon({ size = 18, color = '#5A6B5A' }: ThemeIconProps) {
+  return <TintedSvgIcon source={eyeOffAsset} size={size} color={color} fallbackColor="#5A6B5A" />;
+}
+
+/**
+ * 5l. Wifi Off / Offline Banner Icon
+ */
+export function WifiOffIcon({ size = 14, color = '#FFFFFF' }: ThemeIconProps) {
+  return <TintedSvgIcon source={wifiOffAsset} size={size} color={color} fallbackColor="#FFFFFF" />;
+}
+
+/**
  * 6. Card Corner Botanical Leaves & Contour Lines
  */
 export function CardCornerLeafOrnament({
@@ -217,21 +250,39 @@ export function EmptyAttendanceIllustration({
 }
 
 /**
- * 9. Top-Right Botanical Blob & Grid Header Ornament
+ * 9. Organic Wave Backgrounds
  */
-export function HeaderBotanicalBlob({
-  width = 160,
-  height = 115,
+export function PilihPeranWaveTop({
+  width = '100%',
+  height = 220,
 }: {
-  width?: number;
+  width?: number | `${number}%`;
   height?: number;
 }) {
   return (
     <View style={{ width, height, overflow: 'hidden' }}>
       <Image
-        source={headerBlobAsset}
-        style={{ width, height }}
-        contentFit="contain"
+        source={waveTopAsset}
+        style={{ width: '100%', height }}
+        contentFit="fill"
+      />
+    </View>
+  );
+}
+
+export function PilihPeranWaveBottom({
+  width = '100%',
+  height = 140,
+}: {
+  width?: number | `${number}%`;
+  height?: number;
+}) {
+  return (
+    <View style={{ width, height, overflow: 'hidden' }}>
+      <Image
+        source={waveBottomAsset}
+        style={{ width: '100%', height }}
+        contentFit="fill"
       />
     </View>
   );

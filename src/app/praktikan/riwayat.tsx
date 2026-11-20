@@ -1,9 +1,17 @@
+import React from 'react';
 import { FlatList, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { EmptyState } from '@/components/empty-state';
 import { ErrorState } from '@/components/error-state';
+import {
+  CalendarIcon,
+  CardCornerLeafOrnament,
+  ClockIcon,
+  PilihPeranWaveTop,
+} from '@/components/icons/praktikum-theme-icons';
 import { LoadingState } from '@/components/loading-state';
+import { TabHeader } from '@/components/tab-header';
 import { usePraktikum } from '@/context/praktikum-context';
 import { SesiPraktikum } from '@/types';
 import { formatDateIndo } from '@/utils';
@@ -15,15 +23,18 @@ interface ItemRiwayat {
   keterangan: string;
 }
 
-const LABEL_STATUS: Record<StatusKehadiran, string> = {
-  hadir: 'Hadir',
-  izin: 'Izin',
-  tidak_hadir: 'Tidak Hadir',
-  menunggu: 'Menunggu',
+const STATUS_BADGE_MAP: Record<
+  StatusKehadiran,
+  { label: string; bg: string; text: string }
+> = {
+  hadir: { label: 'HADIR', bg: '#C8D7B8', text: '#1C281C' },
+  izin: { label: 'IZIN', bg: '#EFE6CD', text: '#5A4922' },
+  tidak_hadir: { label: 'TIDAK HADIR', bg: '#F4DFDA', text: '#9E3B2B' },
+  menunggu: { label: 'MENUNGGU', bg: '#EAE8E1', text: '#5A6B5A' },
 };
 
 export default function RiwayatPraktikanScreen() {
-  const { sesiList, presensiList, izinList, loading, error, retry } =
+  const { currentUser, sesiList, presensiList, izinList, loading, error, retry } =
     usePraktikum();
 
   if (loading) {
@@ -45,7 +56,7 @@ export default function RiwayatPraktikanScreen() {
       );
       const keterangan =
         status === 'hadir'
-          ? `Pukul ${pres?.waktuPresensi}`
+          ? `Tercatat pukul ${pres?.waktuPresensi} WIB`
           : status === 'izin'
             ? 'Izin diterima'
             : status === 'menunggu'
@@ -64,167 +75,213 @@ export default function RiwayatPraktikanScreen() {
   const hadirCount = daftar.filter((item) => item.status === 'hadir').length;
   const izinCount = daftar.filter((item) => item.status === 'izin').length;
   const totalSesi = daftar.filter((item) => item.status !== 'menunggu').length;
+  const persentase =
+    totalSesi > 0 ? Math.min(100, Math.round((hadirCount / totalSesi) * 100)) : 0;
 
   const renderItem = ({ item }: { item: ItemRiwayat }) => {
-    const chipStyle = {
-      hadir: [styles.chipHadir, styles.chipTextHadir] as const,
-      izin: [styles.chipIzin, styles.chipTextIzin] as const,
-      tidak_hadir: [styles.chipTidakHadir, styles.chipTextTidakHadir] as const,
-      menunggu: [styles.chipMenunggu, styles.chipTextMenunggu] as const,
-    }[item.status];
+    const badge = STATUS_BADGE_MAP[item.status];
 
     return (
       <View style={styles.itemCard}>
-        <View style={styles.itemInfo}>
-          <Text style={styles.itemMataKuliah}>
+        <View style={styles.cardHeaderRow}>
+          <Text style={styles.itemMataKuliah} numberOfLines={2}>
             {item.sesi.mataKuliah} · Pertemuan {item.sesi.pertemuan}
           </Text>
-          <Text style={styles.itemTanggal}>
-            {formatDateIndo(item.sesi.tanggal)}
-          </Text>
-          <Text style={styles.itemJam}>
-            {item.sesi.jamMulai} - {item.sesi.jamSelesai} WIB
-          </Text>
-        </View>
-        <View style={styles.itemStatus}>
-          <View style={[styles.chip, chipStyle[0]]}>
-            <Text style={[styles.chipText, chipStyle[1]]}>
-              {LABEL_STATUS[item.status]}
+          <View style={[styles.chip, { backgroundColor: badge.bg }]}>
+            <Text style={[styles.chipText, { color: badge.text }]}>
+              {badge.label}
             </Text>
           </View>
+        </View>
+
+        <View style={styles.metaList}>
+          <View style={styles.metaRow}>
+            <CalendarIcon size={13} color="#5A6B5A" />
+            <Text style={styles.metaText}>
+              {formatDateIndo(item.sesi.tanggal)} ({item.sesi.jamMulai} -{' '}
+              {item.sesi.jamSelesai} WIB)
+            </Text>
+          </View>
+
           {item.keterangan ? (
-            <Text style={styles.itemKeterangan}>{item.keterangan}</Text>
+            <View style={styles.metaRow}>
+              <ClockIcon size={13} color="#5A6B5A" />
+              <Text style={styles.metaText}>{item.keterangan}</Text>
+            </View>
           ) : null}
+        </View>
+
+        <View style={styles.cornerOrnament} pointerEvents="none">
+          <CardCornerLeafOrnament width={64} height={64} />
         </View>
       </View>
     );
   };
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['left', 'right']}>
-      <View style={styles.headerRingkasan}>
-        <Text style={styles.ringkasan}>
-          Hadir {hadirCount} dari {totalSesi} sesi
-        </Text>
-        {izinCount > 0 ? (
-          <Text style={styles.ringkasanSub}>Izin {izinCount} sesi</Text>
-        ) : null}
+    <SafeAreaView style={styles.container} edges={['top']}>
+      <View style={styles.waveTopWrapper} pointerEvents="none">
+        <PilihPeranWaveTop width="100%" height={175} />
       </View>
 
-      {daftar.length === 0 ? (
-        <EmptyState
-          judul="Belum Ada Riwayat Praktikum"
-          deskripsi="Belum ada sesi praktikum untuk kelas Anda."
-        />
-      ) : (
-        <FlatList
-          data={daftar}
-          keyExtractor={(item) => item.sesi.id}
-          renderItem={renderItem}
-          contentContainerStyle={styles.listContent}
-          showsVerticalScrollIndicator={false}
-        />
-      )}
+      <FlatList
+        data={daftar}
+        style={styles.list}
+        keyExtractor={(item) => item.sesi.id}
+        renderItem={renderItem}
+        contentContainerStyle={styles.listContent}
+        showsVerticalScrollIndicator={false}
+        ListHeaderComponent={
+          <TabHeader
+            userId={currentUser?.id}
+            nama={currentUser?.nama ?? 'Praktikan'}
+            title="Riwayat Kehadiran"
+          >
+            <View style={styles.summaryCard}>
+              <View style={styles.counterRow}>
+                <Text style={styles.counterPrimary}>{hadirCount}</Text>
+                <Text style={styles.counterSecondary}>
+                  {' '}
+                  / {totalSesi} Sesi Hadir
+                  {izinCount > 0 ? ` • ${izinCount} Izin` : ''}
+                </Text>
+              </View>
+
+              <View style={styles.progressTrack}>
+                <View style={[styles.progressFill, { width: `${persentase}%` }]} />
+              </View>
+            </View>
+          </TabHeader>
+        }
+        ListEmptyComponent={
+          <EmptyState
+            variant="attendance"
+            judul="Belum Ada Riwayat Praktikum"
+            deskripsi="Belum ada sesi praktikum untuk kelas Anda."
+          />
+        }
+      />
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
+  container: {
     flex: 1,
-    backgroundColor: '#f7f7f7',
+    backgroundColor: '#FDFBF7',
+    position: 'relative',
   },
-  headerRingkasan: {
-    backgroundColor: '#ffffff',
-    borderRadius: 8,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: '#e8e8e8',
-    margin: 16,
+  waveTopWrapper: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 0,
   },
-  ringkasan: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#111111',
-  },
-  ringkasanSub: {
-    fontSize: 13,
-    color: '#555555',
-    marginTop: 4,
+  list: {
+    flex: 1,
+    zIndex: 1,
   },
   listContent: {
-    paddingHorizontal: 16,
-    paddingBottom: 16,
+    paddingHorizontal: 18,
+    paddingTop: 18,
+    paddingBottom: 32,
+    flexGrow: 1,
+  },
+  summaryCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: '#E6E4DD',
+    padding: 18,
+    marginTop: 14,
+  },
+  counterRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+  },
+  counterPrimary: {
+    fontSize: 20,
+    fontWeight: '700',
+    lineHeight: 26,
+    color: '#1C281C',
+    fontVariant: ['tabular-nums'],
+  },
+  counterSecondary: {
+    fontSize: 13,
+    fontWeight: '500',
+    lineHeight: 18,
+    color: '#5A6B5A',
+  },
+  progressTrack: {
+    height: 8,
+    backgroundColor: '#E2E8DF',
+    borderRadius: 999,
+    overflow: 'hidden',
+    marginTop: 10,
+  },
+  progressFill: {
+    height: '100%',
+    backgroundColor: '#4A6B4A',
+    borderRadius: 999,
   },
   itemCard: {
-    backgroundColor: '#ffffff',
-    borderRadius: 8,
-    padding: 14,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#e8e8e8',
+    borderColor: '#E6E4DD',
+    padding: 16,
     marginBottom: 12,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    overflow: 'hidden',
+    position: 'relative',
   },
-  itemInfo: {
-    flex: 1,
+  cardHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: 10,
   },
   itemMataKuliah: {
+    flex: 1,
     fontSize: 15,
     fontWeight: '700',
-    color: '#111111',
-  },
-  itemTanggal: {
-    fontSize: 13,
-    color: '#666666',
-    marginTop: 2,
-  },
-  itemJam: {
-    fontSize: 13,
-    color: '#666666',
-    marginTop: 2,
-  },
-  itemStatus: {
-    alignItems: 'flex-end',
+    lineHeight: 20,
+    color: '#1C281C',
   },
   chip: {
-    paddingHorizontal: 8,
+    alignSelf: 'flex-start',
+    paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 999,
-    marginBottom: 4,
-    alignSelf: 'flex-end',
-  },
-  chipHadir: {
-    backgroundColor: '#e8f5e9',
-  },
-  chipTidakHadir: {
-    backgroundColor: '#ffebee',
-  },
-  chipIzin: {
-    backgroundColor: '#E3EEF9',
-  },
-  chipMenunggu: {
-    backgroundColor: '#fff9c4',
   },
   chipText: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '700',
+    lineHeight: 14,
+    textTransform: 'uppercase',
+    letterSpacing: 0.6,
   },
-  chipTextHadir: {
-    color: '#2e7d32',
+  metaList: {
+    marginTop: 8,
+    gap: 5,
+    paddingRight: 44,
   },
-  chipTextTidakHadir: {
-    color: '#c62828',
+  metaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
-  chipTextIzin: {
-    color: '#1E5A96',
-  },
-  chipTextMenunggu: {
-    color: '#f57f17',
-  },
-  itemKeterangan: {
+  metaText: {
+    flex: 1,
     fontSize: 12,
-    color: '#666666',
+    fontWeight: '400',
+    lineHeight: 16,
+    color: '#5A6B5A',
+    fontVariant: ['tabular-nums'],
+  },
+  cornerOrnament: {
+    position: 'absolute',
+    right: 0,
+    bottom: 0,
   },
 });

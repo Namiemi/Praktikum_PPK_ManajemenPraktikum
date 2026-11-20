@@ -44,6 +44,7 @@ export default function AjukanIzinScreen() {
   if (currentUser?.peran !== 'praktikan') {
     konten = (
       <EmptyState
+        variant="attendance"
         judul="Khusus Praktikan"
         deskripsi="Pengajuan izin hanya dapat dilakukan oleh praktikan."
       />
@@ -55,6 +56,7 @@ export default function AjukanIzinScreen() {
   } else if (sesiPilihan.length === 0 && !izinBaru) {
     konten = (
       <EmptyState
+        variant="attendance"
         judul="Tidak Ada Sesi"
         deskripsi="Semua sesi sudah ditutup, sudah Anda hadiri, atau sudah diajukan izin."
       />
@@ -66,8 +68,9 @@ export default function AjukanIzinScreen() {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <ScrollView
-          contentContainerStyle={[styles.content, { paddingBottom: 16 + insets.bottom }]}
+          contentContainerStyle={[styles.content, { paddingBottom: 18 + insets.bottom }]}
           keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
         >
           <IzinForm
             sesiPilihan={sesiPilihan}
@@ -109,10 +112,10 @@ export default function AjukanIzinScreen() {
 const styles = StyleSheet.create({
   flex: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#FDFBF7',
   },
   content: {
-    padding: 16,
+    padding: 18,
   },
   sheetBody: {
     alignItems: 'center',
@@ -133,7 +136,7 @@ const styles = StyleSheet.create({
   sheetAI: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#3A4D3A',
+    color: '#344E38',
     marginTop: 4,
   },
 });

@@ -1,12 +1,14 @@
 import { router } from 'expo-router';
-import { useMemo } from 'react';
-import { FlatList, StyleSheet } from 'react-native';
+import React, { useMemo } from 'react';
+import { FlatList, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { EmptyState } from '@/components/empty-state';
 import { ErrorState } from '@/components/error-state';
+import { PilihPeranWaveTop } from '@/components/icons/praktikum-theme-icons';
 import { LoadingState } from '@/components/loading-state';
 import { SesiCard } from '@/components/sesi-card';
+import { TabHeader } from '@/components/tab-header';
 import { usePraktikum } from '@/context/praktikum-context';
 import { SesiPraktikum } from '@/types';
 import { bandingkanSesiJadwal } from '@/utils';
@@ -37,50 +39,102 @@ export default function JadwalPraktikanScreen() {
       izinList.find((i) => i.sesiId === item.id)
     );
     return (
-      <SesiCard
-        sesi={item}
-        onPress={() => router.push(`/sesi/${item.id}`)}
-        tanda={status === 'hadir' || status === 'izin' ? status : undefined}
-      />
+      <View style={styles.cardWrapper}>
+        <SesiCard
+          sesi={item}
+          onPress={() => router.push(`/sesi/${item.id}`)}
+          tanda={status === 'hadir' || status === 'izin' ? status : undefined}
+        />
+      </View>
     );
   };
 
   const belumTerdaftar = !currentUser?.kelasId;
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['left', 'right']}>
+    <SafeAreaView style={styles.container} edges={['top']}>
+      <View style={styles.waveTopWrapper} pointerEvents="none">
+        <PilihPeranWaveTop width="100%" height={175} />
+      </View>
+
       <FlatList
         data={sesiTerurut}
+        style={styles.list}
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
         contentContainerStyle={styles.listContent}
+        showsVerticalScrollIndicator={false}
+        ListHeaderComponent={
+          <TabHeader
+            userId={currentUser?.id}
+            nama={currentUser?.nama ?? 'Praktikan'}
+            title="Jadwal Praktikum"
+            rightSlot={
+              currentUser?.kelas ? (
+                <View style={styles.kelasPill}>
+                  <Text style={styles.kelasPillText}>
+                    Kelas {currentUser.kelas}
+                  </Text>
+                </View>
+              ) : undefined
+            }
+          />
+        }
         ListEmptyComponent={
           belumTerdaftar ? (
             <EmptyState
+              variant="schedule"
               judul="Belum Terdaftar di Kelas"
               deskripsi="Akun Anda belum dimasukkan ke kelas praktikum. Hubungi asisten pengampu."
             />
           ) : (
             <EmptyState
+              variant="schedule"
               judul="Belum Ada Jadwal Praktikum"
               deskripsi="Belum ada sesi praktikum yang dijadwalkan untuk kelas Anda."
             />
           )
         }
-        showsVerticalScrollIndicator={false}
       />
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
+  container: {
     flex: 1,
-    backgroundColor: '#ffffff',
+    backgroundColor: '#FDFBF7',
+    position: 'relative',
+  },
+  waveTopWrapper: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 0,
+  },
+  list: {
+    flex: 1,
+    zIndex: 1,
   },
   listContent: {
+    paddingHorizontal: 18,
+    paddingTop: 18,
+    paddingBottom: 32,
     flexGrow: 1,
-    padding: 16,
-    gap: 12,
+  },
+  kelasPill: {
+    backgroundColor: '#E5EAD7',
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: 999,
+  },
+  kelasPillText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#2D3E2D',
+  },
+  cardWrapper: {
+    marginBottom: 12,
   },
 });

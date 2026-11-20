@@ -1,6 +1,8 @@
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { AlertCircleIcon } from '@/components/icons/modal-icons';
+
 export interface ErrorStateProps {
   judul?: string;
   pesan: string;
@@ -16,7 +18,7 @@ export function ErrorState({
 }: ErrorStateProps) {
   return (
     <View style={styles.container}>
-      <Text style={styles.icon}>⚠️</Text>
+      <AlertCircleIcon size={64} />
       <Text style={styles.title}>{judul}</Text>
       <Text style={styles.description}>{pesan}</Text>
       {onRetry ? (
@@ -39,14 +41,11 @@ export function ErrorState({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#FDFBF7',
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 32,
     paddingVertical: 24,
-  },
-  icon: {
-    fontSize: 48,
-    textAlign: 'center',
   },
   title: {
     fontSize: 18,
@@ -60,19 +59,19 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '400',
     lineHeight: 20,
-    color: '#6B7280',
+    color: '#5A6B5A',
     textAlign: 'center',
     marginTop: 8,
     marginBottom: 20,
   },
   button: {
-    backgroundColor: '#208AEF',
-    paddingVertical: 10,
+    backgroundColor: '#344E38',
+    paddingVertical: 12,
     paddingHorizontal: 24,
-    borderRadius: 8,
+    borderRadius: 14,
   },
   buttonPressed: {
-    opacity: 0.8,
+    opacity: 0.85,
   },
   buttonText: {
     color: '#FFFFFF',

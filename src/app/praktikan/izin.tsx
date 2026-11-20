@@ -1,17 +1,22 @@
 import { router } from 'expo-router';
-import { useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { EmptyState } from '@/components/empty-state';
 import { ErrorState } from '@/components/error-state';
+import {
+  PilihPeranWaveTop,
+  PlusIcon,
+} from '@/components/icons/praktikum-theme-icons';
 import { IzinCard } from '@/components/izin-card';
 import { LoadingState } from '@/components/loading-state';
+import { TabHeader } from '@/components/tab-header';
 import { usePraktikum } from '@/context/praktikum-context';
 import { bisaAjukanIzin } from '@/utils/kehadiran';
 
 export default function IzinPraktikanScreen() {
-  const { sesiList, presensiList, izinList, loading, error, retry } =
+  const { currentUser, sesiList, presensiList, izinList, loading, error, retry } =
     usePraktikum();
 
   const izinTerurut = useMemo(
@@ -36,82 +41,124 @@ export default function IzinPraktikanScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['left', 'right']}>
+    <SafeAreaView style={styles.container} edges={['top']}>
+      <View style={styles.waveTopWrapper} pointerEvents="none">
+        <PilihPeranWaveTop width="100%" height={175} />
+      </View>
+
       <FlatList
         data={izinTerurut}
+        style={styles.list}
         keyExtractor={(item) => item.id}
-        renderItem={({ item }) => <IzinCard izin={item} />}
-        contentContainerStyle={styles.listContent}
-        ListHeaderComponent={
-          <View style={styles.header}>
-            <Pressable
-              style={({ pressed }) => [
-                styles.tombol,
-                !adaSesiTersedia && styles.tombolDisabled,
-                pressed && styles.tombolPressed,
-              ]}
-              onPress={() => router.push('/izin/ajukan')}
-              disabled={!adaSesiTersedia}
-              accessibilityRole="button"
-              accessibilityLabel="Ajukan izin baru"
-              accessibilityState={{ disabled: !adaSesiTersedia }}
-            >
-              <Text style={styles.tombolText}>+ Ajukan Izin</Text>
-            </Pressable>
-            {!adaSesiTersedia ? (
-              <Text style={styles.headerInfo}>
-                Tidak ada sesi yang bisa diajukan izin saat ini.
-              </Text>
-            ) : null}
+        renderItem={({ item }) => (
+          <View style={styles.cardWrapper}>
+            <IzinCard izin={item} />
           </View>
+        )}
+        contentContainerStyle={styles.listContent}
+        showsVerticalScrollIndicator={false}
+        ListHeaderComponent={
+          <TabHeader
+            userId={currentUser?.id}
+            nama={currentUser?.nama ?? 'Praktikan'}
+            title="Pengajuan Izin"
+            rightSlot={
+              <Pressable
+                style={({ pressed }) => [
+                  styles.addButton,
+                  !adaSesiTersedia && styles.addButtonDisabled,
+                  pressed && adaSesiTersedia && styles.pressed,
+                ]}
+                onPress={() => router.push('/izin/ajukan')}
+                disabled={!adaSesiTersedia}
+                accessibilityRole="button"
+                accessibilityLabel="Ajukan izin baru"
+                accessibilityState={{ disabled: !adaSesiTersedia }}
+              >
+                <PlusIcon size={14} color="#FFFFFF" />
+                <Text style={styles.addButtonText}>Ajukan</Text>
+              </Pressable>
+            }
+          >
+            {!adaSesiTersedia ? (
+              <View style={styles.infoNote}>
+                <Text style={styles.infoNoteText}>
+                  Tidak ada sesi yang bisa diajukan izin saat ini.
+                </Text>
+              </View>
+            ) : null}
+          </TabHeader>
         }
         ListEmptyComponent={
           <EmptyState
+            variant="attendance"
             judul="Belum Ada Pengajuan Izin"
             deskripsi="Pengajuan izin yang Anda kirim akan tampil di sini beserta statusnya."
           />
         }
-        showsVerticalScrollIndicator={false}
       />
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
+  container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#FDFBF7',
+    position: 'relative',
+  },
+  waveTopWrapper: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 0,
+  },
+  list: {
+    flex: 1,
+    zIndex: 1,
   },
   listContent: {
+    paddingHorizontal: 18,
+    paddingTop: 18,
+    paddingBottom: 32,
     flexGrow: 1,
-    padding: 16,
-    gap: 12,
   },
-  header: {
-    marginBottom: 4,
-  },
-  tombol: {
-    backgroundColor: '#2D3E2D',
-    height: 48,
-    borderRadius: 12,
+  addButton: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    gap: 5,
+    backgroundColor: '#344E38',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 999,
   },
-  tombolDisabled: {
+  addButtonDisabled: {
     backgroundColor: '#C9CEC4',
   },
-  tombolPressed: {
-    opacity: 0.85,
-  },
-  tombolText: {
-    color: '#FFFFFF',
-    fontSize: 15,
+  addButtonText: {
+    fontSize: 12,
     fontWeight: '700',
+    color: '#FFFFFF',
   },
-  headerInfo: {
+  pressed: {
+    opacity: 0.82,
+  },
+  infoNote: {
+    backgroundColor: '#F5F2EB',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E6E4DD',
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+    marginTop: 12,
+  },
+  infoNoteText: {
     fontSize: 12,
     color: '#5A6B5A',
     textAlign: 'center',
-    marginTop: 6,
+  },
+  cardWrapper: {
+    marginBottom: 12,
   },
 });

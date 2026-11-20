@@ -69,7 +69,7 @@ export function IzinForm({ sesiPilihan, sesiIdAwal, onSuccess }: IzinFormProps) 
   };
 
   return (
-    <View>
+    <View style={styles.card}>
       <Text style={styles.label}>
         Sesi Praktikum <Text style={styles.wajib}>*</Text>
       </Text>
@@ -172,14 +172,21 @@ export function IzinForm({ sesiPilihan, sesiIdAwal, onSuccess }: IzinFormProps) 
 }
 
 const styles = StyleSheet.create({
+  card: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: '#E6E4DD',
+    padding: 18,
+  },
   label: {
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: '600',
-    color: '#374151',
-    marginBottom: 6,
+    color: '#2E3E2E',
+    marginBottom: 8,
   },
   wajib: {
-    color: '#DC2626',
+    color: '#9E3B2B',
   },
   sesiList: {
     gap: 8,
@@ -189,32 +196,32 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 12,
     padding: 12,
-    borderRadius: 12,
+    borderRadius: 14,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
-    backgroundColor: '#FFFFFF',
+    borderColor: '#E6E4DD',
+    backgroundColor: '#FAF9F5',
   },
   sesiItemAktif: {
-    borderColor: '#2D3E2D',
-    backgroundColor: '#F3F6EE',
+    borderColor: '#344E38',
+    backgroundColor: '#EDF3E6',
   },
   radio: {
     width: 20,
     height: 20,
     borderRadius: 10,
     borderWidth: 2,
-    borderColor: '#9CA3AF',
+    borderColor: '#A0A79A',
     alignItems: 'center',
     justifyContent: 'center',
   },
   radioAktif: {
-    borderColor: '#2D3E2D',
+    borderColor: '#344E38',
   },
   radioDot: {
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: '#2D3E2D',
+    backgroundColor: '#344E38',
   },
   sesiInfo: {
     flex: 1,
@@ -230,42 +237,45 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   error: {
-    marginTop: 4,
+    marginTop: 6,
     fontSize: 12,
-    color: '#DC2626',
+    color: '#9E3B2B',
   },
   alasanWrap: {
     marginTop: 16,
   },
   alasanInput: {
     height: 110,
-    paddingTop: 10,
+    paddingTop: 12,
   },
   counter: {
     position: 'absolute',
     right: 0,
     top: 0,
     fontSize: 12,
-    color: '#6B7280',
+    color: '#5A6B5A',
+    fontVariant: ['tabular-nums'],
   },
   catatanAI: {
     fontSize: 12,
-    lineHeight: 17,
+    lineHeight: 18,
     color: '#5A6B5A',
-    marginBottom: 12,
+    marginBottom: 14,
   },
   errorKirim: {
-    fontSize: 13,
-    color: '#B3261E',
-    backgroundColor: '#FDECEA',
-    borderRadius: 8,
-    padding: 10,
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#9E3B2B',
+    backgroundColor: '#F4DFDA',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
     marginBottom: 12,
   },
   tombol: {
-    backgroundColor: '#2D3E2D',
+    backgroundColor: '#344E38',
     height: 48,
-    borderRadius: 12,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -277,7 +287,7 @@ const styles = StyleSheet.create({
   },
   tombolText: {
     color: '#FFFFFF',
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '700',
   },
 });

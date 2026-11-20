@@ -5,7 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { EmptyState } from '@/components/empty-state';
 import { ErrorState } from '@/components/error-state';
-import { HeaderBotanicalBlob } from '@/components/icons/praktikum-theme-icons';
+import { PilihPeranWaveTop } from '@/components/icons/praktikum-theme-icons';
 import { LoadingState } from '@/components/loading-state';
 import { SesiCard } from '@/components/sesi-card';
 import { TabHeader } from '@/components/tab-header';
@@ -53,12 +53,13 @@ export default function JadwalPraktikanScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <View style={styles.headerOrnament} pointerEvents="none">
-        <HeaderBotanicalBlob width={160} height={115} />
+      <View style={styles.waveTopWrapper} pointerEvents="none">
+        <PilihPeranWaveTop width="100%" height={175} />
       </View>
 
       <FlatList
         data={sesiTerurut}
+        style={styles.list}
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
         contentContainerStyle={styles.listContent}
@@ -105,11 +106,16 @@ const styles = StyleSheet.create({
     backgroundColor: '#FDFBF7',
     position: 'relative',
   },
-  headerOrnament: {
+  waveTopWrapper: {
     position: 'absolute',
     top: 0,
+    left: 0,
     right: 0,
     zIndex: 0,
+  },
+  list: {
+    flex: 1,
+    zIndex: 1,
   },
   listContent: {
     paddingHorizontal: 18,

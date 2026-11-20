@@ -8,7 +8,7 @@ import {
   CalendarIcon,
   CardCornerLeafOrnament,
   ClockIcon,
-  HeaderBotanicalBlob,
+  PilihPeranWaveTop,
 } from '@/components/icons/praktikum-theme-icons';
 import { LoadingState } from '@/components/loading-state';
 import { TabHeader } from '@/components/tab-header';
@@ -120,12 +120,13 @@ export default function RiwayatPraktikanScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <View style={styles.headerOrnament} pointerEvents="none">
-        <HeaderBotanicalBlob width={160} height={115} />
+      <View style={styles.waveTopWrapper} pointerEvents="none">
+        <PilihPeranWaveTop width="100%" height={175} />
       </View>
 
       <FlatList
         data={daftar}
+        style={styles.list}
         keyExtractor={(item) => item.sesi.id}
         renderItem={renderItem}
         contentContainerStyle={styles.listContent}
@@ -170,11 +171,16 @@ const styles = StyleSheet.create({
     backgroundColor: '#FDFBF7',
     position: 'relative',
   },
-  headerOrnament: {
+  waveTopWrapper: {
     position: 'absolute',
     top: 0,
+    left: 0,
     right: 0,
     zIndex: 0,
+  },
+  list: {
+    flex: 1,
+    zIndex: 1,
   },
   listContent: {
     paddingHorizontal: 18,

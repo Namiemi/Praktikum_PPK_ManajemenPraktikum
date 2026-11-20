@@ -136,7 +136,7 @@ export default function LoginScreen() {
               accessibilityLabel="Tombol Masuk"
             >
               {isSubmitting ? (
-                <ActivityIndicator color="#FDFBF7" size="small" />
+                <ActivityIndicator color="#FFFFFF" size="small" />
               ) : (
                 <Text style={styles.submitButtonText}>Masuk</Text>
               )}
@@ -162,7 +162,7 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#FAF6EB',
+    backgroundColor: '#FDFBF7',
     position: 'relative',
   },
   waveTopWrapper: {
@@ -200,7 +200,7 @@ const styles = StyleSheet.create({
   appTitle: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#3E5033',
+    color: '#344E38',
     textTransform: 'uppercase',
     letterSpacing: 1.2,
     marginBottom: 8,
@@ -208,13 +208,13 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#23311E',
+    color: '#1C281C',
     marginBottom: 6,
     textAlign: 'center',
   },
   subtitle: {
     fontSize: 14,
-    color: '#55634E',
+    color: '#5A6B5A',
     textAlign: 'center',
     lineHeight: 20,
   },
@@ -236,7 +236,7 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     padding: 20,
     borderWidth: 1,
-    borderColor: '#EFE8DC',
+    borderColor: '#E6E4DD',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.06,
@@ -244,7 +244,7 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   submitButton: {
-    backgroundColor: '#3E5033',
+    backgroundColor: '#344E38',
     height: 52,
     borderRadius: 9999,
     alignItems: 'center',
@@ -263,7 +263,7 @@ const styles = StyleSheet.create({
     opacity: 0.85,
   },
   submitButtonText: {
-    color: '#FDFBF7',
+    color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '700',
   },
@@ -276,11 +276,11 @@ const styles = StyleSheet.create({
   },
   footerText: {
     fontSize: 14,
-    color: '#55634E',
+    color: '#5A6B5A',
   },
   registerLink: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#3E5033',
+    color: '#344E38',
   },
 });

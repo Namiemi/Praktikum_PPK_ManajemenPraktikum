@@ -247,7 +247,7 @@ export default function RegisterScreen() {
               accessibilityLabel="Tombol Daftar"
             >
               {isSubmitting ? (
-                <ActivityIndicator color="#FDFBF7" size="small" />
+                <ActivityIndicator color="#FFFFFF" size="small" />
               ) : (
                 <Text style={styles.submitButtonText}>
                   Daftar sebagai {peran === 'asisten' ? 'Asisten' : 'Praktikan'}
@@ -275,7 +275,7 @@ export default function RegisterScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#FAF6EB',
+    backgroundColor: '#FDFBF7',
     position: 'relative',
   },
   waveTopWrapper: {
@@ -313,7 +313,7 @@ const styles = StyleSheet.create({
   appTitle: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#3E5033',
+    color: '#344E38',
     textTransform: 'uppercase',
     letterSpacing: 1.2,
     marginBottom: 8,
@@ -321,13 +321,13 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#23311E',
+    color: '#1C281C',
     marginBottom: 6,
     textAlign: 'center',
   },
   subtitle: {
     fontSize: 14,
-    color: '#55634E',
+    color: '#5A6B5A',
     textAlign: 'center',
     lineHeight: 20,
   },
@@ -348,14 +348,16 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   roleLabel: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '600',
     color: '#2E3E2E',
     marginBottom: 8,
   },
   roleTabContainer: {
     flexDirection: 'row',
-    backgroundColor: '#E4DAC6',
+    backgroundColor: '#F5F2EB',
+    borderWidth: 1,
+    borderColor: '#D5E0D5',
     borderRadius: 9999,
     padding: 4,
     height: 50,
@@ -369,7 +371,7 @@ const styles = StyleSheet.create({
     borderRadius: 9999,
   },
   roleTabButtonActive: {
-    backgroundColor: '#3E5033',
+    backgroundColor: '#344E38',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
@@ -379,22 +381,24 @@ const styles = StyleSheet.create({
   roleTabText: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#34432A',
+    color: '#3E543E',
   },
   roleTabTextActive: {
-    color: '#FDFBF7',
+    color: '#FFFFFF',
     fontWeight: '700',
   },
   whitelistBox: {
-    backgroundColor: '#F4ECD8',
-    borderRadius: 10,
+    backgroundColor: '#F4F1EA',
+    borderWidth: 1,
+    borderColor: '#E6E4DD',
+    borderRadius: 12,
     paddingHorizontal: 12,
     paddingVertical: 8,
     marginTop: 10,
   },
   whitelistNotice: {
     fontSize: 12,
-    color: '#5A4922',
+    color: '#4A5D4A',
     lineHeight: 17,
   },
   formCard: {
@@ -402,7 +406,7 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     padding: 20,
     borderWidth: 1,
-    borderColor: '#EFE8DC',
+    borderColor: '#E6E4DD',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.06,
@@ -410,7 +414,7 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   submitButton: {
-    backgroundColor: '#3E5033',
+    backgroundColor: '#344E38',
     height: 52,
     borderRadius: 9999,
     alignItems: 'center',
@@ -429,7 +433,7 @@ const styles = StyleSheet.create({
     opacity: 0.85,
   },
   submitButtonText: {
-    color: '#FDFBF7',
+    color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '700',
   },
@@ -443,11 +447,11 @@ const styles = StyleSheet.create({
   },
   footerText: {
     fontSize: 14,
-    color: '#55634E',
+    color: '#5A6B5A',
   },
   loginLink: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#3E5033',
+    color: '#344E38',
   },
 });

@@ -36,7 +36,6 @@ const wifiOffAsset = require('../../../assets/icons/wifi-off.svg');
 const cardCornerAsset = require('../../../assets/illustrations/card-corner-leaves.svg');
 const emptyScheduleAsset = require('../../../assets/illustrations/empty-schedule-calendar.svg');
 const emptyAttendanceAsset = require('../../../assets/illustrations/empty-attendance-leaf.svg');
-const headerBlobAsset = require('../../../assets/illustrations/header-botanical-blob.svg');
 const waveTopAsset = require('../../../assets/illustrations/pilih-peran-wave-top.svg');
 const waveBottomAsset = require('../../../assets/illustrations/pilih-peran-wave-bottom.svg');
 
@@ -251,28 +250,7 @@ export function EmptyAttendanceIllustration({
 }
 
 /**
- * 9. Top-Right Botanical Blob & Grid Header Ornament
- */
-export function HeaderBotanicalBlob({
-  width = 160,
-  height = 115,
-}: {
-  width?: number;
-  height?: number;
-}) {
-  return (
-    <View style={{ width, height, overflow: 'hidden' }}>
-      <Image
-        source={headerBlobAsset}
-        style={{ width, height }}
-        contentFit="contain"
-      />
-    </View>
-  );
-}
-
-/**
- * 10. Organic Wave Backgrounds
+ * 9. Organic Wave Backgrounds
  */
 export function PilihPeranWaveTop({
   width = '100%',

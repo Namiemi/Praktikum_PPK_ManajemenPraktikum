@@ -6,7 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { EmptyState } from '@/components/empty-state';
 import { ErrorState } from '@/components/error-state';
 import {
-  HeaderBotanicalBlob,
+  PilihPeranWaveTop,
   PlusIcon,
 } from '@/components/icons/praktikum-theme-icons';
 import { IzinCard } from '@/components/izin-card';
@@ -42,12 +42,13 @@ export default function IzinPraktikanScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <View style={styles.headerOrnament} pointerEvents="none">
-        <HeaderBotanicalBlob width={160} height={115} />
+      <View style={styles.waveTopWrapper} pointerEvents="none">
+        <PilihPeranWaveTop width="100%" height={175} />
       </View>
 
       <FlatList
         data={izinTerurut}
+        style={styles.list}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <View style={styles.cardWrapper}>
@@ -106,11 +107,16 @@ const styles = StyleSheet.create({
     backgroundColor: '#FDFBF7',
     position: 'relative',
   },
-  headerOrnament: {
+  waveTopWrapper: {
     position: 'absolute',
     top: 0,
+    left: 0,
     right: 0,
     zIndex: 0,
+  },
+  list: {
+    flex: 1,
+    zIndex: 1,
   },
   listContent: {
     paddingHorizontal: 18,

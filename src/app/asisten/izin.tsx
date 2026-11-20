@@ -6,7 +6,7 @@ import { ErrorState } from '@/components/error-state';
 import { AsistenAvatar } from '@/components/icons/asisten-avatar';
 import {
   EmptyAttendanceIllustration,
-  HeaderBotanicalBlob,
+  PilihPeranWaveTop,
 } from '@/components/icons/praktikum-theme-icons';
 import {
   IzinKeputusanModal,
@@ -53,12 +53,13 @@ export default function AsistenIzinScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <View style={styles.headerOrnament} pointerEvents="none">
-        <HeaderBotanicalBlob width={160} height={115} />
+      <View style={styles.waveTopWrapper} pointerEvents="none">
+        <PilihPeranWaveTop width="100%" height={175} />
       </View>
 
       <FlatList
         data={filteredIzin}
+        style={styles.list}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
@@ -154,11 +155,16 @@ const styles = StyleSheet.create({
     backgroundColor: '#FDFBF7',
     position: 'relative',
   },
-  headerOrnament: {
+  waveTopWrapper: {
     position: 'absolute',
     top: 0,
+    left: 0,
     right: 0,
     zIndex: 0,
+  },
+  list: {
+    flex: 1,
+    zIndex: 1,
   },
   listContent: {
     paddingHorizontal: 18,

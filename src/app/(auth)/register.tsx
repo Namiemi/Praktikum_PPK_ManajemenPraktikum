@@ -1,4 +1,5 @@
 import { router } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
 import React, { useState } from 'react';
 import {
   ActivityIndicator,
@@ -13,6 +14,10 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { FormField } from '@/components/form-field';
+import {
+  PilihPeranWaveBottom,
+  PilihPeranWaveTop,
+} from '@/components/icons/praktikum-theme-icons';
 import { useAuth } from '@/context/auth-context';
 import { Peran } from '@/types';
 import {
@@ -81,6 +86,16 @@ export default function RegisterScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
+      <StatusBar style="dark" />
+
+      <View style={styles.waveTopWrapper} pointerEvents="none">
+        <PilihPeranWaveTop width="100%" height={210} />
+      </View>
+
+      <View style={styles.waveBottomWrapper} pointerEvents="none">
+        <PilihPeranWaveBottom width="100%" height={130} />
+      </View>
+
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={styles.keyboardView}
@@ -88,6 +103,7 @@ export default function RegisterScreen() {
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
         >
           <View style={styles.header}>
             <Text style={styles.appTitle}>Manajemen Praktikum</Text>
@@ -103,7 +119,7 @@ export default function RegisterScreen() {
             </View>
           ) : null}
 
-          {/* Toggle Pilihan Peran */}
+          {/* Toggle Pilihan Peran (Capsule Segmented Control) */}
           <View style={styles.roleContainer}>
             <Text style={styles.roleLabel}>Pilih Peran Anda:</Text>
             <View style={styles.roleTabContainer}>
@@ -142,9 +158,11 @@ export default function RegisterScreen() {
               </Pressable>
             </View>
             {peran === 'asisten' ? (
-              <Text style={styles.whitelistNotice}>
-                * Email asisten wajib telah didaftarkan dalam whitelist oleh pengajar/PM.
-              </Text>
+              <View style={styles.whitelistBox}>
+                <Text style={styles.whitelistNotice}>
+                  * Email asisten wajib telah didaftarkan dalam whitelist oleh pengajar/PM.
+                </Text>
+              </View>
             ) : null}
           </View>
 
@@ -229,7 +247,7 @@ export default function RegisterScreen() {
               accessibilityLabel="Tombol Daftar"
             >
               {isSubmitting ? (
-                <ActivityIndicator color="#FFFFFF" size="small" />
+                <ActivityIndicator color="#FDFBF7" size="small" />
               ) : (
                 <Text style={styles.submitButtonText}>
                   Daftar sebagai {peran === 'asisten' ? 'Asisten' : 'Praktikan'}
@@ -257,14 +275,32 @@ export default function RegisterScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: '#FAF6EB',
+    position: 'relative',
+  },
+  waveTopWrapper: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 0,
+  },
+  waveBottomWrapper: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    zIndex: 0,
   },
   keyboardView: {
     flex: 1,
+    zIndex: 1,
   },
   scrollContent: {
     flexGrow: 1,
-    padding: 24,
+    paddingHorizontal: 24,
+    paddingTop: 112,
+    paddingBottom: 32,
     justifyContent: 'center',
     maxWidth: 480,
     width: '100%',
@@ -275,130 +311,143 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   appTitle: {
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: '700',
-    color: '#208AEF',
+    color: '#3E5033',
     textTransform: 'uppercase',
-    letterSpacing: 1,
+    letterSpacing: 1.2,
     marginBottom: 8,
   },
   title: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#111827',
+    color: '#23311E',
     marginBottom: 6,
     textAlign: 'center',
   },
   subtitle: {
     fontSize: 14,
-    color: '#6B7280',
+    color: '#55634E',
     textAlign: 'center',
     lineHeight: 20,
   },
   errorBox: {
-    backgroundColor: '#FEF2F2',
-    borderWidth: 1,
-    borderColor: '#F87171',
-    borderRadius: 8,
-    padding: 12,
+    backgroundColor: '#F4DFDA',
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 11,
     marginBottom: 16,
   },
   generalErrorText: {
-    color: '#B91C1C',
+    color: '#9E3B2B',
     fontSize: 13,
-    fontWeight: '500',
+    fontWeight: '600',
     textAlign: 'center',
   },
   roleContainer: {
     marginBottom: 16,
   },
   roleLabel: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '600',
-    color: '#374151',
+    color: '#2E3E2E',
     marginBottom: 8,
   },
   roleTabContainer: {
     flexDirection: 'row',
-    backgroundColor: '#E5E7EB',
-    borderRadius: 8,
+    backgroundColor: '#E4DAC6',
+    borderRadius: 9999,
     padding: 4,
+    height: 50,
+    alignItems: 'center',
   },
   roleTabButton: {
     flex: 1,
-    paddingVertical: 10,
-    borderRadius: 6,
+    height: '100%',
+    justifyContent: 'center',
     alignItems: 'center',
+    borderRadius: 9999,
   },
   roleTabButtonActive: {
-    backgroundColor: '#FFFFFF',
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
+    backgroundColor: '#3E5033',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 3,
     elevation: 2,
   },
   roleTabText: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#6B7280',
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#34432A',
   },
   roleTabTextActive: {
-    color: '#111827',
+    color: '#FDFBF7',
     fontWeight: '700',
+  },
+  whitelistBox: {
+    backgroundColor: '#F4ECD8',
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    marginTop: 10,
   },
   whitelistNotice: {
     fontSize: 12,
-    color: '#D97706',
-    marginTop: 6,
-    fontStyle: 'italic',
+    color: '#5A4922',
+    lineHeight: 17,
   },
   formCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 12,
+    borderRadius: 18,
     padding: 20,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
+    borderColor: '#EFE8DC',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
+    elevation: 2,
   },
   submitButton: {
-    backgroundColor: '#111827',
-    height: 48,
-    borderRadius: 8,
+    backgroundColor: '#3E5033',
+    height: 52,
+    borderRadius: 9999,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 8,
+    marginTop: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   submitButtonDisabled: {
-    backgroundColor: '#9CA3AF',
+    opacity: 0.45,
   },
   submitButtonPressed: {
     opacity: 0.85,
   },
   submitButtonText: {
-    color: '#FFFFFF',
-    fontSize: 15,
-    fontWeight: '600',
+    color: '#FDFBF7',
+    fontSize: 16,
+    fontWeight: '700',
   },
   footer: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 20,
+    marginTop: 22,
     marginBottom: 12,
     gap: 6,
   },
   footerText: {
     fontSize: 14,
-    color: '#6B7280',
+    color: '#55634E',
   },
   loginLink: {
     fontSize: 14,
-    fontWeight: '600',
-    color: '#208AEF',
+    fontWeight: '700',
+    color: '#3E5033',
   },
 });

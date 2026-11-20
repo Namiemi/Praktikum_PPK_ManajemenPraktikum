@@ -29,6 +29,10 @@ const plusAsset = require('../../../assets/icons/plus.svg');
 const pencilAsset = require('../../../assets/icons/pencil.svg');
 const trashAsset = require('../../../assets/icons/trash.svg');
 const searchAsset = require('../../../assets/icons/search.svg');
+const fileTextAsset = require('../../../assets/icons/file-text.svg');
+const eyeAsset = require('../../../assets/icons/eye.svg');
+const eyeOffAsset = require('../../../assets/icons/eye-off.svg');
+const wifiOffAsset = require('../../../assets/icons/wifi-off.svg');
 const cardCornerAsset = require('../../../assets/illustrations/card-corner-leaves.svg');
 const emptyScheduleAsset = require('../../../assets/illustrations/empty-schedule-calendar.svg');
 const emptyAttendanceAsset = require('../../../assets/illustrations/empty-attendance-leaf.svg');
@@ -153,6 +157,34 @@ export function TrashIcon({ size = 14, color = '#9E3B2B' }: ThemeIconProps) {
  */
 export function SearchIcon({ size = 16, color = '#8C9786' }: ThemeIconProps) {
   return <TintedSvgIcon source={searchAsset} size={size} color={color} fallbackColor="#8C9786" />;
+}
+
+/**
+ * 5i. File Text / Izin Icon
+ */
+export function FileTextIcon({ size = 20, color = '#FDFBF7' }: ThemeIconProps) {
+  return <TintedSvgIcon source={fileTextAsset} size={size} color={color} fallbackColor="#FDFBF7" />;
+}
+
+/**
+ * 5j. Eye / Show Password Icon
+ */
+export function EyeIcon({ size = 18, color = '#5A6B5A' }: ThemeIconProps) {
+  return <TintedSvgIcon source={eyeAsset} size={size} color={color} fallbackColor="#5A6B5A" />;
+}
+
+/**
+ * 5k. Eye Off / Hide Password Icon
+ */
+export function EyeOffIcon({ size = 18, color = '#5A6B5A' }: ThemeIconProps) {
+  return <TintedSvgIcon source={eyeOffAsset} size={size} color={color} fallbackColor="#5A6B5A" />;
+}
+
+/**
+ * 5l. Wifi Off / Offline Banner Icon
+ */
+export function WifiOffIcon({ size = 14, color = '#FFFFFF' }: ThemeIconProps) {
+  return <TintedSvgIcon source={wifiOffAsset} size={size} color={color} fallbackColor="#FFFFFF" />;
 }
 
 /**

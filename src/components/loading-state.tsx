@@ -8,7 +8,7 @@ export interface LoadingStateProps {
 export function LoadingState({ pesan = 'Memuat data...' }: LoadingStateProps) {
   return (
     <View style={styles.container}>
-      <ActivityIndicator size="large" color="#208AEF" />
+      <ActivityIndicator size="large" color="#344E38" />
       {pesan ? <Text style={styles.text}>{pesan}</Text> : null}
     </View>
   );
@@ -17,6 +17,7 @@ export function LoadingState({ pesan = 'Memuat data...' }: LoadingStateProps) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#FDFBF7',
     alignItems: 'center',
     justifyContent: 'center',
     padding: 24,
@@ -24,7 +25,8 @@ const styles = StyleSheet.create({
   text: {
     marginTop: 12,
     fontSize: 14,
-    color: '#6B7280',
+    fontWeight: '500',
+    color: '#5A6B5A',
     textAlign: 'center',
   },
 });

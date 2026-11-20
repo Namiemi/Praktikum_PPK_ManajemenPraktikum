@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   CalendarIcon,
   ClipboardListIcon,
+  FileTextIcon,
   UserIcon,
 } from '@/components/icons/praktikum-theme-icons';
 
@@ -37,6 +38,7 @@ export default function PraktikanTabLayout() {
         name="jadwal"
         options={{
           title: 'Jadwal Praktikum',
+          headerShown: false,
           tabBarLabel: 'Jadwal',
           tabBarIcon: ({ color, size }) => (
             <CalendarIcon size={size ?? 22} color={color} />
@@ -47,6 +49,7 @@ export default function PraktikanTabLayout() {
         name="riwayat"
         options={{
           title: 'Riwayat Kehadiran',
+          headerShown: false,
           tabBarLabel: 'Riwayat',
           tabBarIcon: ({ color, size }) => (
             <ClipboardListIcon size={size ?? 22} color={color} />
@@ -57,9 +60,10 @@ export default function PraktikanTabLayout() {
         name="izin"
         options={{
           title: 'Pengajuan Izin',
+          headerShown: false,
           tabBarLabel: 'Izin',
           tabBarIcon: ({ color, size }) => (
-            <ClipboardListIcon size={size ?? 22} color={color} />
+            <FileTextIcon size={size ?? 22} color={color} />
           ),
         }}
       />

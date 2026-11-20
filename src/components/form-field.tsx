@@ -8,6 +8,8 @@ import {
   View,
 } from 'react-native';
 
+import { EyeIcon, EyeOffIcon } from '@/components/icons/praktikum-theme-icons';
+
 export interface FormFieldProps extends TextInputProps {
   label: string;
   error?: string | null;
@@ -37,7 +39,7 @@ export function FormField({
       <View style={[styles.inputWrapper, !!error && styles.inputWrapperError]}>
         <TextInput
           style={[styles.input, style]}
-          placeholderTextColor="#9CA3AF"
+          placeholderTextColor="#8C9786"
           secureTextEntry={isPassword ? !showPassword : inputProps.secureTextEntry}
           {...inputProps}
         />
@@ -48,7 +50,11 @@ export function FormField({
             accessibilityRole="button"
             accessibilityLabel={showPassword ? 'Sembunyikan password' : 'Tampilkan password'}
           >
-            <Text style={styles.eyeIcon}>{showPassword ? '👁️' : '🙈'}</Text>
+            {showPassword ? (
+              <EyeOffIcon size={18} color="#5A6B5A" />
+            ) : (
+              <EyeIcon size={18} color="#5A6B5A" />
+            )}
           </Pressable>
         ) : null}
       </View>
@@ -60,7 +66,7 @@ export function FormField({
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 16,
+    marginBottom: 14,
     width: '100%',
   },
   labelRow: {
@@ -68,41 +74,39 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   label: {
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: '600',
-    color: '#374151',
+    color: '#2E3E2E',
   },
   requiredStar: {
-    color: '#DC2626',
+    color: '#9E3B2B',
   },
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: '#D1D5DB',
-    borderRadius: 8,
-    paddingHorizontal: 12,
+    borderColor: '#E6E4DD',
+    borderRadius: 12,
+    paddingHorizontal: 14,
   },
   inputWrapperError: {
-    borderColor: '#DC2626',
-    backgroundColor: '#FEF2F2',
+    borderColor: '#B84A39',
+    backgroundColor: '#FDF4F2',
   },
   input: {
     flex: 1,
-    height: 44,
-    fontSize: 15,
-    color: '#111827',
+    height: 46,
+    fontSize: 14,
+    color: '#1C281C',
   },
   eyeButton: {
-    padding: 8,
-  },
-  eyeIcon: {
-    fontSize: 16,
+    padding: 6,
+    marginRight: -4,
   },
   errorText: {
     marginTop: 4,
     fontSize: 12,
-    color: '#DC2626',
+    color: '#9E3B2B',
   },
 });

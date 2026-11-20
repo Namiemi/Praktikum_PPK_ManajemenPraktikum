@@ -1,5 +1,11 @@
+import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import {
+  CardCornerLeafOrnament,
+  CheckIcon,
+  MapPinIcon,
+} from '@/components/icons/praktikum-theme-icons';
 import { SesiPraktikum, StatusSesi } from '@/types';
 import { formatDateIndo } from '@/utils';
 
@@ -30,32 +36,56 @@ export function SesiCard({ sesi, onPress, tanda }: SesiCardProps) {
         tandaLabel ? `, ${tandaLabel}` : ''
       }`}
     >
-      <View style={styles.cardHeader}>
-        {tandaLabel ? (
-          <View style={[styles.tandaBadge, tanda === 'izin' && styles.izinBadge]}>
-            <Text style={[styles.tandaText, tanda === 'izin' && styles.izinText]}>
-              {tandaLabel}
-            </Text>
-          </View>
-        ) : null}
-        <Text style={styles.cardTitle} numberOfLines={2}>
-          {sesi.mataKuliah} · Pertemuan {sesi.pertemuan}
+      <View style={styles.headerRow}>
+        <Text style={styles.title} numberOfLines={2}>
+          {sesi.mataKuliah} - Kelas {sesi.kelas}
         </Text>
-        <StatusBadge status={BADGE_STATUS[sesi.status]} />
+        <View style={styles.kelasCircle}>
+          <Text style={styles.kelasCircleText}>{sesi.kelas}</Text>
+        </View>
       </View>
 
-      <View style={styles.cardBody}>
-        {sesi.topik ? (
-          <Text style={styles.topikText} numberOfLines={1}>
-            {sesi.topik}
-          </Text>
-        ) : null}
-        <Text style={styles.detailText}>
-          {formatDateIndo(sesi.tanggal)} · {sesi.jamMulai} - {sesi.jamSelesai} WIB
+      <Text style={styles.topikText} numberOfLines={1}>
+        Pertemuan {sesi.pertemuan}
+        {sesi.topik ? `: ${sesi.topik}` : ''}
+      </Text>
+
+      <View style={styles.locationRow}>
+        <MapPinIcon size={13} color="#5A6B5A" />
+        <Text style={styles.subInfoText}>
+          {sesi.ruang} • {formatDateIndo(sesi.tanggal)} ({sesi.jamMulai} -{' '}
+          {sesi.jamSelesai})
         </Text>
-        <Text style={styles.detailText}>
-          Kelas {sesi.kelas} · {sesi.ruang}
-        </Text>
+      </View>
+
+      <View style={styles.footerRow}>
+        <View style={styles.badgeGroup}>
+          <StatusBadge status={BADGE_STATUS[sesi.status]} />
+          {tandaLabel ? (
+            <View
+              style={[
+                styles.tandaBadge,
+                tanda === 'izin' ? styles.izinBadge : styles.hadirBadge,
+              ]}
+            >
+              {tanda === 'hadir' ? (
+                <CheckIcon size={11} color="#2D3E2D" />
+              ) : null}
+              <Text
+                style={[
+                  styles.tandaText,
+                  tanda === 'izin' ? styles.izinText : styles.hadirText,
+                ]}
+              >
+                {tandaLabel}
+              </Text>
+            </View>
+          ) : null}
+        </View>
+      </View>
+
+      <View style={styles.cornerOrnament} pointerEvents="none">
+        <CardCornerLeafOrnament width={72} height={72} />
       </View>
     </Pressable>
   );
@@ -64,62 +94,106 @@ export function SesiCard({ sesi, onPress, tanda }: SesiCardProps) {
 const styles = StyleSheet.create({
   card: {
     backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#EAECE3',
     borderRadius: 16,
-    padding: 14,
-    shadowColor: '#1C281C',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 12,
-    elevation: 2,
+    borderWidth: 1,
+    borderColor: '#E6E4DD',
+    padding: 16,
+    overflow: 'hidden',
+    position: 'relative',
   },
   cardPressed: {
-    opacity: 0.85,
+    opacity: 0.86,
   },
-  cardHeader: {
+  headerRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: 10,
   },
-  cardTitle: {
+  title: {
     flex: 1,
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '700',
-    lineHeight: 22,
-    color: '#1C281C',
-  },
-  tandaBadge: {
-    backgroundColor: '#E4F2E4',
-    borderRadius: 999,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    marginRight: 8,
-  },
-  tandaText: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#2E7D32',
-  },
-  izinBadge: {
-    backgroundColor: '#E3EEF9',
-  },
-  izinText: {
-    color: '#1E5A96',
-  },
-  cardBody: {
-    marginTop: 8,
-  },
-  topikText: {
-    fontSize: 14,
-    fontWeight: '500',
     lineHeight: 20,
     color: '#1C281C',
-    marginBottom: 2,
   },
-  detailText: {
-    fontSize: 13,
+  kelasCircle: {
+    minWidth: 22,
+    height: 22,
+    paddingHorizontal: 6,
+    borderRadius: 11,
+    backgroundColor: '#344E38',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  kelasCircleText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  topikText: {
+    fontSize: 12,
+    fontWeight: '500',
+    lineHeight: 16,
+    color: '#4A5D4A',
+    marginTop: 3,
+  },
+  locationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    marginTop: 6,
+    paddingRight: 48,
+  },
+  subInfoText: {
+    fontSize: 12,
     fontWeight: '400',
-    lineHeight: 18,
-    color: '#4A4A4A',
+    lineHeight: 16,
+    color: '#5A6B5A',
+  },
+  footerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 10,
+    paddingRight: 48,
+  },
+  badgeGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 6,
+  },
+  tandaBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    borderRadius: 999,
+    paddingHorizontal: 9,
+    paddingVertical: 4,
+  },
+  hadirBadge: {
+    backgroundColor: '#E5EAD7',
+  },
+  izinBadge: {
+    backgroundColor: '#EFE6CD',
+  },
+  tandaText: {
+    fontSize: 10,
+    fontWeight: '700',
+    lineHeight: 14,
+    textTransform: 'uppercase',
+    letterSpacing: 0.6,
+  },
+  hadirText: {
+    color: '#2D3E2D',
+  },
+  izinText: {
+    color: '#5A4922',
+  },
+  cornerOrnament: {
+    position: 'absolute',
+    right: 0,
+    bottom: 0,
   },
 });

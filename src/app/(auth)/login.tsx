@@ -13,6 +13,11 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { FormField } from '@/components/form-field';
+import {
+  CardCornerLeafOrnament,
+  HeaderBotanicalBlob,
+} from '@/components/icons/praktikum-theme-icons';
+import { Botanical } from '@/constants/theme';
 import { useAuth } from '@/context/auth-context';
 import { validateEmail, validatePassword } from '@/utils/validation';
 
@@ -55,6 +60,10 @@ export default function LoginScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
+      <View style={styles.headerOrnament} pointerEvents="none">
+        <HeaderBotanicalBlob width={160} height={115} />
+      </View>
+
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={styles.keyboardView}
@@ -64,7 +73,9 @@ export default function LoginScreen() {
           keyboardShouldPersistTaps="handled"
         >
           <View style={styles.header}>
-            <Text style={styles.appTitle}>Manajemen Praktikum</Text>
+            <View style={styles.appBadge}>
+              <Text style={styles.appTitle}>Manajemen Praktikum</Text>
+            </View>
             <Text style={styles.title}>Masuk ke Akun</Text>
             <Text style={styles.subtitle}>
               Silakan masukkan email dan password untuk melanjutkan ke sesi praktikum.
@@ -125,6 +136,10 @@ export default function LoginScreen() {
                 <Text style={styles.submitButtonText}>Masuk</Text>
               )}
             </Pressable>
+
+            <View style={styles.cornerOrnament} pointerEvents="none">
+              <CardCornerLeafOrnament width={68} height={68} />
+            </View>
           </View>
 
           <View style={styles.footer}>
@@ -146,7 +161,14 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: Botanical.canvas,
+    position: 'relative',
+  },
+  headerOrnament: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    zIndex: 0,
   },
   keyboardView: {
     flex: 1,
@@ -160,66 +182,68 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
   header: {
-    marginBottom: 24,
+    marginBottom: 22,
     alignItems: 'center',
   },
+  appBadge: {
+    backgroundColor: Botanical.sagePill,
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: 999,
+    marginBottom: 10,
+  },
   appTitle: {
-    fontSize: 14,
+    fontSize: 11,
     fontWeight: '700',
-    color: '#208AEF',
+    color: Botanical.primaryDark,
     textTransform: 'uppercase',
-    letterSpacing: 1,
-    marginBottom: 8,
+    letterSpacing: 0.9,
   },
   title: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#111827',
+    color: Botanical.textPrimary,
     marginBottom: 6,
     textAlign: 'center',
+    letterSpacing: -0.5,
   },
   subtitle: {
-    fontSize: 14,
-    color: '#6B7280',
+    fontSize: 13.5,
+    color: Botanical.textMuted,
     textAlign: 'center',
     lineHeight: 20,
   },
   errorBox: {
-    backgroundColor: '#FEF2F2',
-    borderWidth: 1,
-    borderColor: '#F87171',
-    borderRadius: 8,
+    backgroundColor: Botanical.dangerBg,
+    borderRadius: 12,
     padding: 12,
     marginBottom: 16,
   },
   generalErrorText: {
-    color: '#B91C1C',
+    color: Botanical.dangerText,
     fontSize: 13,
-    fontWeight: '500',
+    fontWeight: '600',
     textAlign: 'center',
   },
   formCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
+    backgroundColor: Botanical.surface,
+    borderRadius: 16,
     padding: 20,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
+    borderColor: Botanical.border,
+    overflow: 'hidden',
+    position: 'relative',
   },
   submitButton: {
-    backgroundColor: '#111827',
+    backgroundColor: Botanical.primary,
     height: 48,
-    borderRadius: 8,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 8,
+    marginTop: 6,
   },
   submitButtonDisabled: {
-    backgroundColor: '#9CA3AF',
+    backgroundColor: Botanical.disabled,
   },
   submitButtonPressed: {
     opacity: 0.85,
@@ -227,22 +251,27 @@ const styles = StyleSheet.create({
   submitButtonText: {
     color: '#FFFFFF',
     fontSize: 15,
-    fontWeight: '600',
+    fontWeight: '700',
+  },
+  cornerOrnament: {
+    position: 'absolute',
+    right: 0,
+    bottom: 0,
   },
   footer: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 24,
+    marginTop: 22,
     gap: 6,
   },
   footerText: {
     fontSize: 14,
-    color: '#6B7280',
+    color: Botanical.textMuted,
   },
   registerLink: {
     fontSize: 14,
-    fontWeight: '600',
-    color: '#208AEF',
+    fontWeight: '700',
+    color: Botanical.primary,
   },
 });

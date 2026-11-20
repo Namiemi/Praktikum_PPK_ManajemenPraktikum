@@ -6,15 +6,16 @@ import {
   Text,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
+import {
+  BotanicalPageHeader,
+  BotanicalScreenShell,
+} from '@/components/botanical-header';
 import { ConfirmModal } from '@/components/confirm-modal';
 import { ErrorState } from '@/components/error-state';
-import { AsistenAvatar } from '@/components/icons/asisten-avatar';
 import {
   CardCornerLeafOrnament,
   EmptyScheduleIllustration,
-  HeaderBotanicalBlob,
   PencilIcon,
   PlusIcon,
   TrashIcon,
@@ -22,6 +23,7 @@ import {
 } from '@/components/icons/praktikum-theme-icons';
 import { KelasFormModal, PesertaKelasModal } from '@/components/kelas-form';
 import { LoadingState } from '@/components/loading-state';
+import { Botanical } from '@/constants/theme';
 import { useKelolaKelas } from '@/hooks/use-kelola-kelas';
 
 /**
@@ -66,31 +68,19 @@ export default function KelolaKelasScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <View style={styles.headerOrnament} pointerEvents="none">
-        <HeaderBotanicalBlob width={160} height={115} />
-      </View>
-
+    <BotanicalScreenShell>
       <FlatList
         data={kelasList}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
         ListHeaderComponent={
-          <View style={styles.headerSection}>
-            <View style={styles.profileRow}>
-              <AsistenAvatar
-                userId={currentUser?.id}
-                nama={currentUser?.nama}
-                size={38}
-              />
-              <Text style={styles.profileName}>
-                {currentUser?.nama ?? 'Asisten Praktikum'}
-              </Text>
-            </View>
-
-            <View style={styles.titleRow}>
-              <Text style={styles.pageTitle}>Kelola Kelas</Text>
+          <BotanicalPageHeader
+            userId={currentUser?.id}
+            userName={currentUser?.nama}
+            peran="asisten"
+            title="Kelola Kelas"
+            rightSlot={
               <Pressable
                 style={({ pressed }) => [
                   styles.addButton,
@@ -103,14 +93,13 @@ export default function KelolaKelasScreen() {
                 <PlusIcon size={14} color="#FFFFFF" />
                 <Text style={styles.addButtonText}>Kelas</Text>
               </Pressable>
-            </View>
-
-            {actionError && !formOpen && !pesertaKelas && !deletingKelas ? (
-              <View style={styles.errorBanner}>
-                <Text style={styles.errorBannerText}>{actionError}</Text>
-              </View>
-            ) : null}
-          </View>
+            }
+            errorBanner={
+              actionError && !formOpen && !pesertaKelas && !deletingKelas
+                ? actionError
+                : null
+            }
+          />
         }
         renderItem={({ item }) => {
           const jumlahPeserta = getJumlahPeserta(item.id);
@@ -126,7 +115,7 @@ export default function KelolaKelasScreen() {
               </View>
 
               <View style={styles.infoRow}>
-                <UsersIcon size={13} color="#5A6B5A" />
+                <UsersIcon size={13} color={Botanical.textMuted} />
                 <Text style={styles.subInfoText}>
                   {jumlahPeserta} Praktikan Terdaftar
                 </Text>
@@ -143,7 +132,7 @@ export default function KelolaKelasScreen() {
                   accessibilityRole="button"
                   accessibilityLabel={`Atur peserta kelas ${item.nama}`}
                 >
-                  <UsersIcon size={13} color="#2D3E2D" />
+                  <UsersIcon size={13} color={Botanical.primaryDark} />
                   <Text style={styles.pesertaPillText}>Peserta</Text>
                 </Pressable>
 
@@ -157,7 +146,7 @@ export default function KelolaKelasScreen() {
                   accessibilityRole="button"
                   accessibilityLabel={`Ubah kelas ${item.nama}`}
                 >
-                  <PencilIcon size={13} color="#3E543E" />
+                  <PencilIcon size={13} color={Botanical.chipActive} />
                   <Text style={styles.editPillText}>Ubah</Text>
                 </Pressable>
 
@@ -171,7 +160,7 @@ export default function KelolaKelasScreen() {
                   accessibilityRole="button"
                   accessibilityLabel={`Hapus kelas ${item.nama}`}
                 >
-                  <TrashIcon size={13} color="#9E3B2B" />
+                  <TrashIcon size={13} color={Botanical.dangerText} />
                   <Text style={styles.deletePillText}>Hapus</Text>
                 </Pressable>
               </View>
@@ -225,61 +214,22 @@ export default function KelolaKelasScreen() {
         onConfirm={handleConfirmHapus}
         onCancel={handleCancelHapus}
       />
-    </SafeAreaView>
+    </BotanicalScreenShell>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#FDFBF7',
-    position: 'relative',
-  },
-  headerOrnament: {
-    position: 'absolute',
-    top: 0,
-    right: 0,
-    zIndex: 0,
-  },
   listContent: {
     paddingHorizontal: 18,
     paddingTop: 18,
     paddingBottom: 32,
     flexGrow: 1,
   },
-  headerSection: {
-    marginBottom: 16,
-  },
-  profileRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    marginBottom: 14,
-  },
-  profileName: {
-    fontSize: 14,
-    fontWeight: '600',
-    lineHeight: 20,
-    color: '#2E3E2E',
-  },
-  titleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 12,
-  },
-  pageTitle: {
-    fontSize: 22,
-    fontWeight: '700',
-    lineHeight: 28,
-    color: '#1C281C',
-    letterSpacing: -0.5,
-  },
   addButton: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    backgroundColor: '#344E38',
+    backgroundColor: Botanical.primary,
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 999,
@@ -289,23 +239,11 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#FFFFFF',
   },
-  errorBanner: {
-    backgroundColor: '#F4DFDA',
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    marginTop: 12,
-  },
-  errorBannerText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#9E3B2B',
-  },
   card: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: Botanical.surface,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#E6E4DD',
+    borderColor: Botanical.border,
     padding: 16,
     marginBottom: 12,
     overflow: 'hidden',
@@ -322,14 +260,14 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '700',
     lineHeight: 20,
-    color: '#1C281C',
+    color: Botanical.textPrimary,
   },
   kelasCircle: {
     minWidth: 22,
     height: 22,
     paddingHorizontal: 6,
     borderRadius: 11,
-    backgroundColor: '#344E38',
+    backgroundColor: Botanical.primary,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -348,7 +286,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '400',
     lineHeight: 16,
-    color: '#5A6B5A',
+    color: Botanical.textMuted,
     fontVariant: ['tabular-nums'],
   },
   actionRow: {
@@ -367,30 +305,30 @@ const styles = StyleSheet.create({
     borderRadius: 999,
   },
   pesertaPill: {
-    backgroundColor: '#E5EAD7',
+    backgroundColor: Botanical.sagePill,
   },
   pesertaPillText: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#2D3E2D',
+    color: Botanical.primaryDark,
   },
   editPill: {
-    backgroundColor: '#F5F2EB',
+    backgroundColor: Botanical.surfaceWarm,
     borderWidth: 1,
-    borderColor: '#D5E0D5',
+    borderColor: Botanical.borderChip,
   },
   editPillText: {
     fontSize: 11,
     fontWeight: '600',
-    color: '#3E543E',
+    color: Botanical.chipActive,
   },
   deletePill: {
-    backgroundColor: '#F4DFDA',
+    backgroundColor: Botanical.dangerBg,
   },
   deletePillText: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#9E3B2B',
+    color: Botanical.dangerText,
   },
   pressed: {
     opacity: 0.82,
@@ -410,7 +348,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
     lineHeight: 22,
-    color: '#1C281C',
+    color: Botanical.textPrimary,
     textAlign: 'center',
     marginTop: 12,
   },

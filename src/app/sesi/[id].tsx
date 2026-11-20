@@ -7,8 +7,16 @@ import { AsistenPanel } from '@/components/asisten-panel';
 import { BottomSheet } from '@/components/bottom-sheet';
 import { EmptyState } from '@/components/empty-state';
 import { ErrorState } from '@/components/error-state';
+import {
+  CalendarIcon,
+  CardCornerLeafOrnament,
+  ClockIcon,
+  MapPinIcon,
+} from '@/components/icons/praktikum-theme-icons';
 import { LoadingState } from '@/components/loading-state';
 import { PraktikanPanel } from '@/components/praktikan-panel';
+import { StatusBadge } from '@/components/status-badge';
+import { Botanical } from '@/constants/theme';
 import { usePraktikum } from '@/context/praktikum-context';
 import { formatDateIndo } from '@/utils';
 
@@ -31,44 +39,31 @@ export default function DetailSesiScreen() {
 
   if (!sesi) {
     return (
-      <EmptyState
-        judul="Sesi Tidak Ditemukan"
-        deskripsi="Sesi ini sudah dihapus atau bukan bagian dari kelas Anda."
-      />
+      <View style={styles.emptyWrap}>
+        <EmptyState
+          judul="Sesi Tidak Ditemukan"
+          deskripsi="Sesi ini sudah dihapus atau bukan bagian dari kelas Anda."
+          variant="schedule"
+        />
+      </View>
     );
   }
 
   const isAsisten = currentUser?.peran === 'asisten';
-
-  const getStatusColor = () => {
-    switch (sesi.status) {
-      case 'DIBUKA':
-        return { bg: '#e8f5e9', text: '#2e7d32', label: 'Dibuka' };
-      case 'DITUTUP':
-        return { bg: '#ffebee', text: '#c62828', label: 'Ditutup' };
-      default:
-        return { bg: '#f5f5f5', text: '#616161', label: 'Belum Dibuka' };
-    }
-  };
-
-  const status = getStatusColor();
 
   return (
     <ScrollView
       style={styles.container}
       contentContainerStyle={[
         styles.content,
-        { paddingBottom: styles.content.padding + insets.bottom },
-      ]}>
+        { paddingBottom: 24 + insets.bottom },
+      ]}
+    >
       {/* Header Detail Sesi (FR-06) */}
       <View style={styles.headerCard}>
         <View style={styles.headerTop}>
           <Text style={styles.mataKuliah}>{sesi.mataKuliah}</Text>
-          <View style={[styles.badge, { backgroundColor: status.bg }]}>
-            <Text style={[styles.badgeText, { color: status.text }]}>
-              {status.label}
-            </Text>
-          </View>
+          <StatusBadge status={sesi.status} />
         </View>
 
         <Text style={styles.topikTitle}>
@@ -80,20 +75,31 @@ export default function DetailSesiScreen() {
         <View style={styles.infoList}>
           <View style={styles.infoRow}>
             <Text style={styles.infoLabel}>Kelas</Text>
-            <Text style={styles.infoValue}>Kelas {sesi.kelas}</Text>
+            <View style={styles.kelasPill}>
+              <Text style={styles.kelasPillText}>Kelas {sesi.kelas}</Text>
+            </View>
           </View>
           <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Tanggal</Text>
+            <View style={styles.labelWithIcon}>
+              <CalendarIcon size={13} color={Botanical.textMuted} />
+              <Text style={styles.infoLabel}>Tanggal</Text>
+            </View>
             <Text style={styles.infoValue}>{formatDateIndo(sesi.tanggal)}</Text>
           </View>
           <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Waktu</Text>
+            <View style={styles.labelWithIcon}>
+              <ClockIcon size={13} color={Botanical.textMuted} />
+              <Text style={styles.infoLabel}>Waktu</Text>
+            </View>
             <Text style={styles.infoValue}>
               {sesi.jamMulai} - {sesi.jamSelesai} WIB
             </Text>
           </View>
           <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Ruang</Text>
+            <View style={styles.labelWithIcon}>
+              <MapPinIcon size={13} color={Botanical.textMuted} />
+              <Text style={styles.infoLabel}>Ruang</Text>
+            </View>
             <Text style={styles.infoValue}>{sesi.ruang}</Text>
           </View>
           <View style={styles.infoRow}>
@@ -117,17 +123,27 @@ export default function DetailSesiScreen() {
 
           {isAsisten && sesi.status === 'DIBUKA' && sesi.kodePresensi && (
             <View style={styles.kodeContainer}>
-              <Text style={styles.kodeTitle}>Kode Presensi Aktif:</Text>
+              <Text style={styles.kodeTitle}>Kode Presensi Aktif</Text>
               <Text style={styles.kodeNumber}>{sesi.kodePresensi}</Text>
             </View>
           )}
         </View>
 
         <Pressable
-          style={styles.infoButton}
-          onPress={() => setModalCatatanOpen(true)}>
+          style={({ pressed }) => [
+            styles.infoButton,
+            pressed && styles.buttonPressed,
+          ]}
+          onPress={() => setModalCatatanOpen(true)}
+          accessibilityRole="button"
+          accessibilityLabel="Lihat Catatan Sesi"
+        >
           <Text style={styles.infoButtonText}>Lihat Catatan Sesi</Text>
         </Pressable>
+
+        <View style={styles.cornerOrnament} pointerEvents="none">
+          <CardCornerLeafOrnament width={68} height={68} />
+        </View>
       </View>
 
       {/* Panel Bawah Sesuai Peran Aktif */}
@@ -140,7 +156,8 @@ export default function DetailSesiScreen() {
         visible={modalCatatanOpen}
         title="Catatan Sesi Praktikum"
         closeText="Tutup"
-        onClose={() => setModalCatatanOpen(false)}>
+        onClose={() => setModalCatatanOpen(false)}
+      >
         <Text style={styles.modalBody}>
           {sesi.catatan || 'Tidak ada catatan tambahan untuk sesi ini.'}
         </Text>
@@ -152,104 +169,139 @@ export default function DetailSesiScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f7f7f7',
+    backgroundColor: Botanical.canvas,
+  },
+  emptyWrap: {
+    flex: 1,
+    backgroundColor: Botanical.canvas,
   },
   content: {
-    padding: 16,
+    padding: 18,
   },
   headerCard: {
-    backgroundColor: '#ffffff',
-    borderRadius: 8,
-    padding: 16,
+    backgroundColor: Botanical.surface,
+    borderRadius: 16,
+    padding: 18,
     borderWidth: 1,
-    borderColor: '#e8e8e8',
+    borderColor: Botanical.border,
     marginBottom: 16,
+    overflow: 'hidden',
+    position: 'relative',
   },
   headerTop: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    gap: 10,
   },
   mataKuliah: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#666666',
-    textTransform: 'uppercase',
-  },
-  badge: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 4,
-  },
-  badgeText: {
+    flex: 1,
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: '700',
+    color: Botanical.textSecondary,
+    textTransform: 'uppercase',
+    letterSpacing: 0.6,
   },
   topikTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#111111',
-    marginTop: 6,
+    lineHeight: 24,
+    color: Botanical.textPrimary,
+    marginTop: 8,
   },
   divider: {
     height: 1,
-    backgroundColor: '#eeeeee',
-    marginVertical: 12,
+    backgroundColor: Botanical.borderDivider,
+    marginVertical: 14,
   },
   infoList: {
-    gap: 8,
+    gap: 10,
   },
   infoRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: 12,
+  },
+  labelWithIcon: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
   infoLabel: {
-    fontSize: 14,
-    color: '#666666',
+    fontSize: 13,
+    color: Botanical.textMuted,
   },
   infoValue: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#111111',
+    fontSize: 13,
+    fontWeight: '600',
+    color: Botanical.textPrimary,
+    fontVariant: ['tabular-nums'],
+  },
+  kelasPill: {
+    backgroundColor: Botanical.sagePill,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: 999,
+  },
+  kelasPillText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: Botanical.primaryDark,
   },
   kodeContainer: {
-    backgroundColor: '#f0f0f0',
-    padding: 10,
-    borderRadius: 6,
+    backgroundColor: Botanical.surfaceBeige,
+    borderWidth: 1,
+    borderColor: Botanical.border,
+    padding: 12,
+    borderRadius: 14,
     alignItems: 'center',
-    marginVertical: 4,
+    marginTop: 4,
   },
   kodeTitle: {
-    fontSize: 12,
-    color: '#666666',
+    fontSize: 11,
+    fontWeight: '600',
+    color: Botanical.textSecondary,
+    textTransform: 'uppercase',
+    letterSpacing: 0.6,
   },
   kodeNumber: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: '#111111',
-    letterSpacing: 2,
+    fontSize: 24,
+    fontWeight: '800',
+    color: Botanical.textPrimary,
+    letterSpacing: 3,
+    fontVariant: ['tabular-nums'],
     marginTop: 2,
   },
   infoButton: {
-    marginTop: 12,
-    paddingVertical: 8,
+    marginTop: 14,
+    paddingVertical: 10,
     alignItems: 'center',
-    borderRadius: 6,
+    borderRadius: 12,
+    backgroundColor: Botanical.surfaceWarm,
     borderWidth: 1,
-    borderColor: '#dddddd',
+    borderColor: Botanical.borderChip,
+  },
+  buttonPressed: {
+    opacity: 0.82,
   },
   infoButtonText: {
     fontSize: 13,
-    color: '#444444',
-    fontWeight: '500',
+    color: Botanical.chipActive,
+    fontWeight: '600',
+  },
+  cornerOrnament: {
+    position: 'absolute',
+    right: 0,
+    bottom: 0,
   },
   panelContainer: {
-    marginTop: 4,
+    marginTop: 2,
   },
   modalBody: {
     fontSize: 14,
-    color: '#444444',
-    lineHeight: 20,
-    marginBottom: 16,
+    color: Botanical.textSecondary,
+    lineHeight: 21,
+    marginBottom: 8,
   },
 });

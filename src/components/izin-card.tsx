@@ -1,18 +1,16 @@
 /**
  * @file izin-card.tsx
- * @description Kartu pengajuan izin dengan status keputusan dan hasil klasifikasi AI (FR-28, FR-29).
+ * @description Kartu pengajuan izin praktikan bergaya Botanical selaras dengan IzinReviewCard (FR-28, FR-29).
  */
 
+import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
-import { Izin, StatusIzin } from '@/types';
+import { CardCornerLeafOrnament } from '@/components/icons/praktikum-theme-icons';
+import { StatusBadge } from '@/components/status-badge';
+import { Botanical } from '@/constants/theme';
+import { Izin } from '@/types';
 import { formatDateIndo } from '@/utils';
-
-const STATUS_STYLE: Record<StatusIzin, { label: string; bg: string; text: string }> = {
-  menunggu: { label: 'Menunggu', bg: '#F2F3F5', text: '#4B5563' },
-  diterima: { label: 'Diterima', bg: '#E4F2E4', text: '#2E7D32' },
-  ditolak: { label: 'Ditolak', bg: '#FAE7E4', text: '#B3261E' },
-};
 
 function tanggalIso(date: Date): string {
   const pad = (n: number) => String(n).padStart(2, '0');
@@ -24,119 +22,137 @@ export interface IzinCardProps {
 }
 
 export function IzinCard({ izin }: IzinCardProps) {
-  const status = STATUS_STYLE[izin.status];
-  const aiTersedia = izin.statusAI === 'berhasil' && izin.kategoriAI;
+  const aiTersedia = izin.statusAI === 'berhasil' && Boolean(izin.kategoriAI);
+  const skorPersen =
+    izin.skorAI !== null ? ` (${Math.round(izin.skorAI * 100)}%)` : '';
 
   return (
     <View style={styles.card}>
-      <View style={styles.header}>
-        <Text style={styles.judul} numberOfLines={2}>
-          {izin.sesiLabel}
-        </Text>
-        <View style={[styles.badge, { backgroundColor: status.bg }]}>
-          <Text style={[styles.badgeText, { color: status.text }]}>{status.label}</Text>
+      <View style={styles.headerRow}>
+        <View style={styles.titleCol}>
+          <Text style={styles.judul} numberOfLines={2}>
+            {izin.sesiLabel}
+          </Text>
+          {izin.diajukanPada ? (
+            <Text style={styles.meta}>
+              Diajukan {formatDateIndo(tanggalIso(izin.diajukanPada))}
+            </Text>
+          ) : null}
         </View>
+        <StatusBadge status={izin.status} />
       </View>
 
-      {izin.diajukanPada ? (
-        <Text style={styles.meta}>
-          Diajukan {formatDateIndo(tanggalIso(izin.diajukanPada))}
-        </Text>
-      ) : null}
+      <View style={styles.alasanBox}>
+        <Text style={styles.alasanText}>{izin.alasan}</Text>
+      </View>
 
-      <Text style={styles.alasan}>{izin.alasan}</Text>
-
-      <View style={[styles.aiChip, !aiTersedia && styles.aiChipGagal]}>
-        <Text style={[styles.aiText, !aiTersedia && styles.aiTextGagal]}>
+      <View style={[styles.aiChip, !aiTersedia && styles.aiChipFallback]}>
+        <Text style={[styles.aiChipText, !aiTersedia && styles.aiChipTextFallback]}>
           {aiTersedia
-            ? `Sentimen AI: ${izin.kategoriAI}`
-            : 'Klasifikasi AI tidak tersedia'}
+            ? `Klasifikasi AI: ${izin.kategoriAI}${skorPersen}`
+            : 'Klasifikasi tidak tersedia'}
         </Text>
       </View>
 
       {izin.catatanAsisten ? (
-        <View style={styles.catatan}>
-          <Text style={styles.catatanLabel}>Catatan asisten</Text>
-          <Text style={styles.catatanText}>{izin.catatanAsisten}</Text>
+        <View style={styles.catatanBox}>
+          <Text style={styles.catatanLabel}>Catatan Asisten</Text>
+          <Text style={styles.catatanValue}>{izin.catatanAsisten}</Text>
         </View>
       ) : null}
+
+      <View style={styles.cornerOrnament} pointerEvents="none">
+        <CardCornerLeafOrnament width={68} height={68} />
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#EAECE3',
+    backgroundColor: Botanical.surface,
     borderRadius: 16,
-    padding: 14,
+    borderWidth: 1,
+    borderColor: Botanical.border,
+    padding: 16,
+    overflow: 'hidden',
+    position: 'relative',
   },
-  header: {
+  headerRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    gap: 8,
+    justifyContent: 'space-between',
+    gap: 10,
+  },
+  titleCol: {
+    flex: 1,
   },
   judul: {
-    flex: 1,
     fontSize: 15,
     fontWeight: '700',
-    lineHeight: 21,
-    color: '#1C281C',
-  },
-  badge: {
-    borderRadius: 999,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-  },
-  badgeText: {
-    fontSize: 11,
-    fontWeight: '700',
+    lineHeight: 20,
+    color: Botanical.textPrimary,
   },
   meta: {
     fontSize: 12,
-    color: '#5A6B5A',
-    marginTop: 2,
+    fontWeight: '400',
+    lineHeight: 16,
+    color: Botanical.textMuted,
+    marginTop: 3,
   },
-  alasan: {
-    fontSize: 14,
-    lineHeight: 20,
-    color: '#333333',
-    marginTop: 8,
+  alasanBox: {
+    backgroundColor: Botanical.surfaceSubtle,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: Botanical.borderSubtle,
+    padding: 12,
+    marginTop: 10,
+  },
+  alasanText: {
+    fontSize: 13,
+    fontWeight: '400',
+    lineHeight: 19,
+    color: Botanical.textPrimary,
   },
   aiChip: {
     alignSelf: 'flex-start',
-    backgroundColor: '#EEF2E6',
-    borderRadius: 999,
+    backgroundColor: Botanical.sagePill,
     paddingHorizontal: 10,
     paddingVertical: 4,
+    borderRadius: 999,
     marginTop: 10,
   },
-  aiChipGagal: {
-    backgroundColor: '#F2F3F5',
+  aiChipFallback: {
+    backgroundColor: Botanical.borderDivider,
   },
-  aiText: {
-    fontSize: 12,
+  aiChipText: {
+    fontSize: 11,
     fontWeight: '600',
-    color: '#3A4D3A',
+    color: Botanical.primaryDark,
   },
-  aiTextGagal: {
-    color: '#6B7280',
+  aiChipTextFallback: {
+    color: Botanical.textMuted,
   },
-  catatan: {
+  catatanBox: {
     marginTop: 10,
     paddingTop: 10,
     borderTopWidth: 1,
-    borderTopColor: '#EEEEEE',
+    borderTopColor: Botanical.borderDivider,
+    paddingRight: 44,
   },
   catatanLabel: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '600',
-    color: '#5A6B5A',
+    color: Botanical.textMuted,
   },
-  catatanText: {
+  catatanValue: {
     fontSize: 13,
-    color: '#333333',
+    color: Botanical.textPrimary,
     marginTop: 2,
+  },
+  cornerOrnament: {
+    position: 'absolute',
+    right: 0,
+    bottom: 0,
   },
 });

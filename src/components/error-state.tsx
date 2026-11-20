@@ -1,6 +1,9 @@
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { AlertCircleIcon } from '@/components/icons/modal-icons';
+import { Botanical } from '@/constants/theme';
+
 export interface ErrorStateProps {
   judul?: string;
   pesan: string;
@@ -16,7 +19,7 @@ export function ErrorState({
 }: ErrorStateProps) {
   return (
     <View style={styles.container}>
-      <Text style={styles.icon}>⚠️</Text>
+      <AlertCircleIcon size={58} />
       <Text style={styles.title}>{judul}</Text>
       <Text style={styles.description}>{pesan}</Text>
       {onRetry ? (
@@ -39,40 +42,37 @@ export function ErrorState({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: Botanical.canvas,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 32,
     paddingVertical: 24,
   },
-  icon: {
-    fontSize: 48,
-    textAlign: 'center',
-  },
   title: {
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: '700',
-    lineHeight: 24,
-    color: '#1C281C',
+    lineHeight: 23,
+    color: Botanical.textPrimary,
     textAlign: 'center',
-    marginTop: 16,
+    marginTop: 14,
   },
   description: {
-    fontSize: 14,
+    fontSize: 13.5,
     fontWeight: '400',
     lineHeight: 20,
-    color: '#6B7280',
+    color: Botanical.textMuted,
     textAlign: 'center',
-    marginTop: 8,
+    marginTop: 6,
     marginBottom: 20,
   },
   button: {
-    backgroundColor: '#208AEF',
-    paddingVertical: 10,
-    paddingHorizontal: 24,
-    borderRadius: 8,
+    backgroundColor: Botanical.primary,
+    paddingVertical: 12,
+    paddingHorizontal: 26,
+    borderRadius: 14,
   },
   buttonPressed: {
-    opacity: 0.8,
+    opacity: 0.84,
   },
   buttonText: {
     color: '#FFFFFF',

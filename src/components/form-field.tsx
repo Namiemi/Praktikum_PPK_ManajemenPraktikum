@@ -8,6 +8,8 @@ import {
   View,
 } from 'react-native';
 
+import { Botanical } from '@/constants/theme';
+
 export interface FormFieldProps extends TextInputProps {
   label: string;
   error?: string | null;
@@ -37,18 +39,23 @@ export function FormField({
       <View style={[styles.inputWrapper, !!error && styles.inputWrapperError]}>
         <TextInput
           style={[styles.input, style]}
-          placeholderTextColor="#9CA3AF"
+          placeholderTextColor={Botanical.textPlaceholder}
           secureTextEntry={isPassword ? !showPassword : inputProps.secureTextEntry}
           {...inputProps}
         />
         {isPassword ? (
           <Pressable
-            style={styles.eyeButton}
+            style={({ pressed }) => [
+              styles.eyeButton,
+              pressed && styles.eyeButtonPressed,
+            ]}
             onPress={() => setShowPassword((prev) => !prev)}
             accessibilityRole="button"
             accessibilityLabel={showPassword ? 'Sembunyikan password' : 'Tampilkan password'}
           >
-            <Text style={styles.eyeIcon}>{showPassword ? '👁️' : '🙈'}</Text>
+            <Text style={styles.eyeText}>
+              {showPassword ? 'Tutup' : 'Lihat'}
+            </Text>
           </Pressable>
         ) : null}
       </View>
@@ -60,7 +67,7 @@ export function FormField({
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 16,
+    marginBottom: 14,
     width: '100%',
   },
   labelRow: {
@@ -68,41 +75,50 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   label: {
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: '600',
-    color: '#374151',
+    color: Botanical.textLabel,
   },
   requiredStar: {
-    color: '#DC2626',
+    color: Botanical.dangerText,
   },
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: Botanical.surface,
     borderWidth: 1,
-    borderColor: '#D1D5DB',
-    borderRadius: 8,
-    paddingHorizontal: 12,
+    borderColor: Botanical.border,
+    borderRadius: 12,
+    paddingHorizontal: 14,
   },
   inputWrapperError: {
-    borderColor: '#DC2626',
-    backgroundColor: '#FEF2F2',
+    borderColor: Botanical.danger,
+    backgroundColor: Botanical.dangerSurface,
   },
   input: {
     flex: 1,
-    height: 44,
-    fontSize: 15,
-    color: '#111827',
+    height: 46,
+    fontSize: 14,
+    color: Botanical.textPrimary,
   },
   eyeButton: {
-    padding: 8,
+    backgroundColor: Botanical.sagePill,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 999,
+    marginLeft: 8,
   },
-  eyeIcon: {
-    fontSize: 16,
+  eyeButtonPressed: {
+    opacity: 0.78,
+  },
+  eyeText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: Botanical.primaryDark,
   },
   errorText: {
     marginTop: 4,
     fontSize: 12,
-    color: '#DC2626',
+    color: Botanical.dangerText,
   },
 });

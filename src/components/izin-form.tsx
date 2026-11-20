@@ -1,6 +1,6 @@
 /**
  * @file izin-form.tsx
- * @description Form pengajuan izin: pilih sesi, isi alasan, konfirmasi (FR-28).
+ * @description Form pengajuan izin: pilih sesi, isi alasan, konfirmasi bergaya Botanical (FR-28).
  * Alasan diklasifikasikan model AI lokal sebelum disimpan (FR-29).
  */
 
@@ -15,6 +15,8 @@ import {
 
 import { ConfirmModal } from '@/components/confirm-modal';
 import { FormField } from '@/components/form-field';
+import { CardCornerLeafOrnament } from '@/components/icons/praktikum-theme-icons';
+import { Botanical } from '@/constants/theme';
 import { usePraktikum } from '@/context/praktikum-context';
 import { klasifikasiAlasan } from '@/services/ai';
 import { Izin, SesiPraktikum } from '@/types';
@@ -69,7 +71,7 @@ export function IzinForm({ sesiPilihan, sesiIdAwal, onSuccess }: IzinFormProps) 
   };
 
   return (
-    <View>
+    <View style={styles.formCard}>
       <Text style={styles.label}>
         Sesi Praktikum <Text style={styles.wajib}>*</Text>
       </Text>
@@ -94,10 +96,12 @@ export function IzinForm({ sesiPilihan, sesiIdAwal, onSuccess }: IzinFormProps) 
               </View>
               <View style={styles.sesiInfo}>
                 <Text style={styles.sesiJudul}>
-                  {sesi.mataKuliah} · Pertemuan {sesi.pertemuan}
+                  {sesi.mataKuliah} - Kelas {sesi.kelas} · Pertemuan{' '}
+                  {sesi.pertemuan}
                 </Text>
                 <Text style={styles.sesiMeta}>
-                  {formatDateIndo(sesi.tanggal)} · {sesi.jamMulai} - {sesi.jamSelesai} WIB
+                  {formatDateIndo(sesi.tanggal)} ({sesi.jamMulai} -{' '}
+                  {sesi.jamSelesai} WIB)
                 </Text>
               </View>
             </Pressable>
@@ -128,18 +132,24 @@ export function IzinForm({ sesiPilihan, sesiIdAwal, onSuccess }: IzinFormProps) 
         </Text>
       </View>
 
-      <Text style={styles.catatanAI}>
-        Alasan akan dianalisis otomatis oleh model AI sebagai informasi tambahan
-        untuk asisten. Keputusan izin tetap ditentukan oleh asisten.
-      </Text>
+      <View style={styles.aiInfoBox}>
+        <Text style={styles.catatanAI}>
+          Alasan akan dianalisis otomatis oleh model AI sebagai informasi
+          tambahan untuk asisten. Keputusan izin tetap ditentukan oleh asisten.
+        </Text>
+      </View>
 
-      {errorKirim ? <Text style={styles.errorKirim}>{errorKirim}</Text> : null}
+      {errorKirim ? (
+        <View style={styles.errorBanner}>
+          <Text style={styles.errorKirim}>{errorKirim}</Text>
+        </View>
+      ) : null}
 
       <Pressable
         style={({ pressed }) => [
           styles.tombol,
           submitting && styles.tombolDisabled,
-          pressed && styles.tombolPressed,
+          pressed && !submitting && styles.tombolPressed,
         ]}
         onPress={handleAjukan}
         disabled={submitting}
@@ -153,6 +163,10 @@ export function IzinForm({ sesiPilihan, sesiIdAwal, onSuccess }: IzinFormProps) 
           <Text style={styles.tombolText}>Ajukan Izin</Text>
         )}
       </Pressable>
+
+      <View style={styles.cornerOrnament} pointerEvents="none">
+        <CardCornerLeafOrnament width={64} height={64} />
+      </View>
 
       <ConfirmModal
         visible={confirmOpen}
@@ -172,14 +186,23 @@ export function IzinForm({ sesiPilihan, sesiIdAwal, onSuccess }: IzinFormProps) 
 }
 
 const styles = StyleSheet.create({
+  formCard: {
+    backgroundColor: Botanical.surface,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: Botanical.border,
+    padding: 18,
+    overflow: 'hidden',
+    position: 'relative',
+  },
   label: {
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: '600',
-    color: '#374151',
-    marginBottom: 6,
+    color: Botanical.textLabel,
+    marginBottom: 8,
   },
   wajib: {
-    color: '#DC2626',
+    color: Botanical.dangerText,
   },
   sesiList: {
     gap: 8,
@@ -191,48 +214,48 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
-    backgroundColor: '#FFFFFF',
+    borderColor: Botanical.border,
+    backgroundColor: Botanical.surfaceSubtle,
   },
   sesiItemAktif: {
-    borderColor: '#2D3E2D',
-    backgroundColor: '#F3F6EE',
+    borderColor: Botanical.primary,
+    backgroundColor: Botanical.surfaceSelected,
   },
   radio: {
     width: 20,
     height: 20,
     borderRadius: 10,
     borderWidth: 2,
-    borderColor: '#9CA3AF',
+    borderColor: Botanical.textPlaceholder,
     alignItems: 'center',
     justifyContent: 'center',
   },
   radioAktif: {
-    borderColor: '#2D3E2D',
+    borderColor: Botanical.primary,
   },
   radioDot: {
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: '#2D3E2D',
+    backgroundColor: Botanical.primary,
   },
   sesiInfo: {
     flex: 1,
   },
   sesiJudul: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#1C281C',
+    fontSize: 13.5,
+    fontWeight: '700',
+    color: Botanical.textPrimary,
   },
   sesiMeta: {
     fontSize: 12,
-    color: '#5A6B5A',
+    color: Botanical.textMuted,
     marginTop: 2,
   },
   error: {
-    marginTop: 4,
+    marginTop: 6,
     fontSize: 12,
-    color: '#DC2626',
+    color: Botanical.dangerText,
   },
   alasanWrap: {
     marginTop: 16,
@@ -245,39 +268,57 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: 0,
     top: 0,
-    fontSize: 12,
-    color: '#6B7280',
+    fontSize: 11.5,
+    fontWeight: '500',
+    color: Botanical.textMuted,
+    fontVariant: ['tabular-nums'],
+  },
+  aiInfoBox: {
+    backgroundColor: Botanical.surfaceWarm,
+    borderWidth: 1,
+    borderColor: Botanical.borderChip,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginBottom: 14,
   },
   catatanAI: {
     fontSize: 12,
     lineHeight: 17,
-    color: '#5A6B5A',
-    marginBottom: 12,
+    color: Botanical.textMuted,
+  },
+  errorBanner: {
+    backgroundColor: Botanical.dangerBg,
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 14,
   },
   errorKirim: {
-    fontSize: 13,
-    color: '#B3261E',
-    backgroundColor: '#FDECEA',
-    borderRadius: 8,
-    padding: 10,
-    marginBottom: 12,
+    fontSize: 12.5,
+    fontWeight: '600',
+    color: Botanical.dangerText,
   },
   tombol: {
-    backgroundColor: '#2D3E2D',
+    backgroundColor: Botanical.primary,
     height: 48,
-    borderRadius: 12,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
   },
   tombolDisabled: {
-    backgroundColor: '#C9CEC4',
+    backgroundColor: Botanical.disabled,
   },
   tombolPressed: {
     opacity: 0.85,
   },
   tombolText: {
     color: '#FFFFFF',
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '700',
+  },
+  cornerOrnament: {
+    position: 'absolute',
+    right: 0,
+    bottom: 0,
   },
 });

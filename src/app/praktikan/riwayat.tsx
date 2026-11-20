@@ -1,9 +1,20 @@
+import React from 'react';
 import { FlatList, StyleSheet, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
+import {
+  BotanicalPageHeader,
+  BotanicalScreenShell,
+} from '@/components/botanical-header';
 import { EmptyState } from '@/components/empty-state';
 import { ErrorState } from '@/components/error-state';
+import {
+  CalendarIcon,
+  CardCornerLeafOrnament,
+  ClockIcon,
+} from '@/components/icons/praktikum-theme-icons';
 import { LoadingState } from '@/components/loading-state';
+import { StatusBadge } from '@/components/status-badge';
+import { Botanical } from '@/constants/theme';
 import { usePraktikum } from '@/context/praktikum-context';
 import { SesiPraktikum } from '@/types';
 import { formatDateIndo } from '@/utils';
@@ -15,15 +26,8 @@ interface ItemRiwayat {
   keterangan: string;
 }
 
-const LABEL_STATUS: Record<StatusKehadiran, string> = {
-  hadir: 'Hadir',
-  izin: 'Izin',
-  tidak_hadir: 'Tidak Hadir',
-  menunggu: 'Menunggu',
-};
-
 export default function RiwayatPraktikanScreen() {
-  const { sesiList, presensiList, izinList, loading, error, retry } =
+  const { currentUser, sesiList, presensiList, izinList, loading, error, retry } =
     usePraktikum();
 
   if (loading) {
@@ -45,14 +49,14 @@ export default function RiwayatPraktikanScreen() {
       );
       const keterangan =
         status === 'hadir'
-          ? `Pukul ${pres?.waktuPresensi}`
+          ? `Pukul ${pres?.waktuPresensi} WIB`
           : status === 'izin'
             ? 'Izin diterima'
             : status === 'menunggu'
               ? sesi.status === 'DIBUKA'
                 ? 'Sesi sedang dibuka'
                 : 'Belum dimulai'
-              : '';
+              : 'Tidak hadir';
       return { sesi, status, keterangan };
     })
     .sort((a, b) =>
@@ -64,167 +68,222 @@ export default function RiwayatPraktikanScreen() {
   const hadirCount = daftar.filter((item) => item.status === 'hadir').length;
   const izinCount = daftar.filter((item) => item.status === 'izin').length;
   const totalSesi = daftar.filter((item) => item.status !== 'menunggu').length;
+  const persentase =
+    totalSesi > 0 ? Math.min(100, Math.round((hadirCount / totalSesi) * 100)) : 0;
 
   const renderItem = ({ item }: { item: ItemRiwayat }) => {
-    const chipStyle = {
-      hadir: [styles.chipHadir, styles.chipTextHadir] as const,
-      izin: [styles.chipIzin, styles.chipTextIzin] as const,
-      tidak_hadir: [styles.chipTidakHadir, styles.chipTextTidakHadir] as const,
-      menunggu: [styles.chipMenunggu, styles.chipTextMenunggu] as const,
-    }[item.status];
-
     return (
       <View style={styles.itemCard}>
-        <View style={styles.itemInfo}>
-          <Text style={styles.itemMataKuliah}>
-            {item.sesi.mataKuliah} · Pertemuan {item.sesi.pertemuan}
+        <View style={styles.cardHeaderRow}>
+          <Text style={styles.itemMataKuliah} numberOfLines={2}>
+            {item.sesi.mataKuliah} - Kelas {item.sesi.kelas}
           </Text>
-          <Text style={styles.itemTanggal}>
-            {formatDateIndo(item.sesi.tanggal)}
-          </Text>
-          <Text style={styles.itemJam}>
-            {item.sesi.jamMulai} - {item.sesi.jamSelesai} WIB
+          <View style={styles.kelasCircle}>
+            <Text style={styles.kelasCircleText}>{item.sesi.kelas}</Text>
+          </View>
+        </View>
+
+        <Text style={styles.topikText} numberOfLines={1}>
+          Pertemuan {item.sesi.pertemuan}: {item.sesi.topik}
+        </Text>
+
+        <View style={styles.metaRow}>
+          <CalendarIcon size={13} color={Botanical.textMuted} />
+          <Text style={styles.itemMeta}>
+            {formatDateIndo(item.sesi.tanggal)} ({item.sesi.jamMulai} -{' '}
+            {item.sesi.jamSelesai} WIB)
           </Text>
         </View>
-        <View style={styles.itemStatus}>
-          <View style={[styles.chip, chipStyle[0]]}>
-            <Text style={[styles.chipText, chipStyle[1]]}>
-              {LABEL_STATUS[item.status]}
-            </Text>
-          </View>
-          {item.keterangan ? (
+
+        <View style={styles.footerRow}>
+          <StatusBadge status={item.status} />
+          <View style={styles.keteranganRow}>
+            <ClockIcon size={12} color={Botanical.textMuted} />
             <Text style={styles.itemKeterangan}>{item.keterangan}</Text>
-          ) : null}
+          </View>
+        </View>
+
+        <View style={styles.cornerOrnament} pointerEvents="none">
+          <CardCornerLeafOrnament width={68} height={68} />
         </View>
       </View>
     );
   };
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['left', 'right']}>
-      <View style={styles.headerRingkasan}>
-        <Text style={styles.ringkasan}>
-          Hadir {hadirCount} dari {totalSesi} sesi
-        </Text>
-        {izinCount > 0 ? (
-          <Text style={styles.ringkasanSub}>Izin {izinCount} sesi</Text>
-        ) : null}
-      </View>
+    <BotanicalScreenShell>
+      <FlatList
+        data={daftar}
+        keyExtractor={(item) => item.sesi.id}
+        renderItem={renderItem}
+        contentContainerStyle={styles.listContent}
+        showsVerticalScrollIndicator={false}
+        ListHeaderComponent={
+          <View>
+            <BotanicalPageHeader
+              userId={currentUser?.id}
+              userName={currentUser?.nama}
+              peran="praktikan"
+              title="Riwayat Kehadiran"
+            />
 
-      {daftar.length === 0 ? (
-        <EmptyState
-          judul="Belum Ada Riwayat Praktikum"
-          deskripsi="Belum ada sesi praktikum untuk kelas Anda."
-        />
-      ) : (
-        <FlatList
-          data={daftar}
-          keyExtractor={(item) => item.sesi.id}
-          renderItem={renderItem}
-          contentContainerStyle={styles.listContent}
-          showsVerticalScrollIndicator={false}
-        />
-      )}
-    </SafeAreaView>
+            <View style={styles.summaryCard}>
+              <View style={styles.counterRow}>
+                <Text style={styles.counterPrimary}>{hadirCount}</Text>
+                <Text style={styles.counterSecondary}>
+                  {' '}
+                  / {totalSesi} Sesi Hadir
+                  {izinCount > 0 ? ` • ${izinCount} Izin` : ''}
+                </Text>
+              </View>
+
+              <View style={styles.progressTrack}>
+                <View
+                  style={[styles.progressFill, { width: `${persentase}%` }]}
+                />
+              </View>
+
+              <View style={styles.cornerOrnament} pointerEvents="none">
+                <CardCornerLeafOrnament width={64} height={64} />
+              </View>
+            </View>
+          </View>
+        }
+        ListEmptyComponent={
+          <EmptyState
+            judul="Belum Ada Riwayat Praktikum"
+            deskripsi="Belum ada sesi praktikum untuk kelas Anda."
+            variant="attendance"
+          />
+        }
+      />
+    </BotanicalScreenShell>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: '#f7f7f7',
-  },
-  headerRingkasan: {
-    backgroundColor: '#ffffff',
-    borderRadius: 8,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: '#e8e8e8',
-    margin: 16,
-  },
-  ringkasan: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#111111',
-  },
-  ringkasanSub: {
-    fontSize: 13,
-    color: '#555555',
-    marginTop: 4,
-  },
   listContent: {
-    paddingHorizontal: 16,
-    paddingBottom: 16,
+    paddingHorizontal: 18,
+    paddingTop: 18,
+    paddingBottom: 32,
+    flexGrow: 1,
+  },
+  summaryCard: {
+    backgroundColor: Botanical.surface,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: Botanical.border,
+    padding: 18,
+    marginBottom: 14,
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  counterRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+  },
+  counterPrimary: {
+    fontSize: 22,
+    fontWeight: '700',
+    lineHeight: 28,
+    color: Botanical.textPrimary,
+    fontVariant: ['tabular-nums'],
+  },
+  counterSecondary: {
+    fontSize: 13,
+    fontWeight: '500',
+    lineHeight: 18,
+    color: Botanical.textMuted,
+  },
+  progressTrack: {
+    height: 8,
+    backgroundColor: Botanical.progressTrack,
+    borderRadius: 999,
+    overflow: 'hidden',
+    marginTop: 10,
+  },
+  progressFill: {
+    height: '100%',
+    backgroundColor: Botanical.progressFill,
+    borderRadius: 999,
   },
   itemCard: {
-    backgroundColor: '#ffffff',
-    borderRadius: 8,
-    padding: 14,
+    backgroundColor: Botanical.surface,
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#e8e8e8',
+    borderColor: Botanical.border,
+    padding: 16,
     marginBottom: 12,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    overflow: 'hidden',
+    position: 'relative',
   },
-  itemInfo: {
-    flex: 1,
+  cardHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: 10,
   },
   itemMataKuliah: {
+    flex: 1,
     fontSize: 15,
     fontWeight: '700',
-    color: '#111111',
+    lineHeight: 20,
+    color: Botanical.textPrimary,
   },
-  itemTanggal: {
-    fontSize: 13,
-    color: '#666666',
-    marginTop: 2,
+  kelasCircle: {
+    minWidth: 22,
+    height: 22,
+    paddingHorizontal: 6,
+    borderRadius: 11,
+    backgroundColor: Botanical.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  itemJam: {
-    fontSize: 13,
-    color: '#666666',
-    marginTop: 2,
-  },
-  itemStatus: {
-    alignItems: 'flex-end',
-  },
-  chip: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 999,
-    marginBottom: 4,
-    alignSelf: 'flex-end',
-  },
-  chipHadir: {
-    backgroundColor: '#e8f5e9',
-  },
-  chipTidakHadir: {
-    backgroundColor: '#ffebee',
-  },
-  chipIzin: {
-    backgroundColor: '#E3EEF9',
-  },
-  chipMenunggu: {
-    backgroundColor: '#fff9c4',
-  },
-  chipText: {
+  kelasCircleText: {
     fontSize: 11,
     fontWeight: '700',
+    color: '#FFFFFF',
   },
-  chipTextHadir: {
-    color: '#2e7d32',
+  topikText: {
+    fontSize: 12,
+    fontWeight: '500',
+    lineHeight: 16,
+    color: Botanical.textSecondary,
+    marginTop: 3,
   },
-  chipTextTidakHadir: {
-    color: '#c62828',
+  metaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    marginTop: 6,
+    paddingRight: 44,
   },
-  chipTextIzin: {
-    color: '#1E5A96',
+  itemMeta: {
+    fontSize: 12,
+    color: Botanical.textMuted,
   },
-  chipTextMenunggu: {
-    color: '#f57f17',
+  footerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginTop: 10,
+    paddingRight: 48,
+    flexWrap: 'wrap',
+  },
+  keteranganRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
   },
   itemKeterangan: {
     fontSize: 12,
-    color: '#666666',
+    fontWeight: '500',
+    color: Botanical.textMuted,
+    fontVariant: ['tabular-nums'],
+  },
+  cornerOrnament: {
+    position: 'absolute',
+    right: 0,
+    bottom: 0,
   },
 });

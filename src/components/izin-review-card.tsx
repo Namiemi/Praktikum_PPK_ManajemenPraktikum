@@ -17,18 +17,10 @@ import {
   CardCornerLeafOrnament,
   CheckIcon,
 } from '@/components/icons/praktikum-theme-icons';
+import { StatusBadge } from '@/components/status-badge';
 import { IzinDecisionTarget } from '@/hooks/use-kelola-izin';
-import { Izin, StatusIzin } from '@/types';
+import { Izin } from '@/types';
 import { formatDateIndo } from '@/utils';
-
-const STATUS_BADGE_MAP: Record<
-  StatusIzin,
-  { label: string; bg: string; text: string }
-> = {
-  menunggu: { label: 'MENUNGGU', bg: '#EAE8E1', text: '#5A6B5A' },
-  diterima: { label: 'DITERIMA', bg: '#C8D7B8', text: '#1C281C' },
-  ditolak: { label: 'DITOLAK', bg: '#F4DFDA', text: '#9E3B2B' },
-};
 
 function toIsoDate(date: Date): string {
   const pad = (n: number) => String(n).padStart(2, '0');
@@ -49,7 +41,6 @@ export function IzinReviewCard({
   onTerima,
   onTolak,
 }: IzinReviewCardProps) {
-  const badge = STATUS_BADGE_MAP[izin.status];
   const hasAI = izin.statusAI === 'berhasil' && Boolean(izin.kategoriAI);
   const skorPersen =
     izin.skorAI !== null ? ` (${Math.round(izin.skorAI * 100)}%)` : '';
@@ -68,11 +59,7 @@ export function IzinReviewCard({
           </Text>
           <Text style={styles.praktikanNim}>({izin.praktikanNim})</Text>
         </View>
-        <View style={[styles.statusBadge, { backgroundColor: badge.bg }]}>
-          <Text style={[styles.statusBadgeText, { color: badge.text }]}>
-            {badge.label}
-          </Text>
-        </View>
+        <StatusBadge status={izin.status} />
       </View>
 
       <Text style={styles.sesiLabel} numberOfLines={2}>
@@ -288,19 +275,6 @@ const styles = StyleSheet.create({
     lineHeight: 16,
     color: '#5A6B5A',
     fontVariant: ['tabular-nums'],
-  },
-  statusBadge: {
-    alignSelf: 'flex-start',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 999,
-  },
-  statusBadgeText: {
-    fontSize: 10,
-    fontWeight: '700',
-    lineHeight: 14,
-    textTransform: 'uppercase',
-    letterSpacing: 0.6,
   },
   sesiLabel: {
     fontSize: 12,

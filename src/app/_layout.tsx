@@ -5,6 +5,7 @@ import React, { useEffect } from 'react';
 
 import { LoadingState } from '@/components/loading-state';
 import { OfflineBanner } from '@/components/offline-banner';
+import { Botanical } from '@/constants/theme';
 import { AuthProvider, useAuth } from '@/context/auth-context';
 import { PraktikumProvider } from '@/context/praktikum-context';
 
@@ -66,10 +67,11 @@ function RootContent() {
       <RouteGuard>
         <Stack
           screenOptions={{
-            headerStyle: { backgroundColor: '#ffffff' },
-            headerTintColor: '#000000',
+            headerStyle: { backgroundColor: Botanical.forest },
+            headerTintColor: Botanical.tabActive,
+            headerTitleStyle: { fontWeight: '700', color: Botanical.tabActive },
             headerShadowVisible: false,
-            contentStyle: { backgroundColor: '#ffffff' },
+            contentStyle: { backgroundColor: Botanical.canvas },
           }}
         >
           <Stack.Screen name="index" options={{ headerShown: false }} />
@@ -80,6 +82,13 @@ function RootContent() {
             name="sesi/[id]"
             options={{
               title: 'Detail Sesi',
+              headerBackTitle: 'Kembali',
+            }}
+          />
+          <Stack.Screen
+            name="izin/ajukan"
+            options={{
+              title: 'Ajukan Izin',
               headerBackTitle: 'Kembali',
             }}
           />

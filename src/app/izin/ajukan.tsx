@@ -15,6 +15,7 @@ import { EmptyState } from '@/components/empty-state';
 import { ErrorState } from '@/components/error-state';
 import { IzinForm } from '@/components/izin-form';
 import { LoadingState } from '@/components/loading-state';
+import { Botanical } from '@/constants/theme';
 import { usePraktikum } from '@/context/praktikum-context';
 import { Izin } from '@/types';
 import { bandingkanSesiJadwal } from '@/utils';
@@ -46,6 +47,7 @@ export default function AjukanIzinScreen() {
       <EmptyState
         judul="Khusus Praktikan"
         deskripsi="Pengajuan izin hanya dapat dilakukan oleh praktikan."
+        variant="attendance"
       />
     );
   } else if (loading) {
@@ -57,6 +59,7 @@ export default function AjukanIzinScreen() {
       <EmptyState
         judul="Tidak Ada Sesi"
         deskripsi="Semua sesi sudah ditutup, sudah Anda hadiri, atau sudah diajukan izin."
+        variant="attendance"
       />
     );
   } else {
@@ -66,7 +69,10 @@ export default function AjukanIzinScreen() {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <ScrollView
-          contentContainerStyle={[styles.content, { paddingBottom: 16 + insets.bottom }]}
+          contentContainerStyle={[
+            styles.content,
+            { paddingBottom: 24 + insets.bottom },
+          ]}
           keyboardShouldPersistTaps="handled"
         >
           <IzinForm
@@ -95,11 +101,13 @@ export default function AjukanIzinScreen() {
           <Text style={styles.sheetInfo}>
             Status pengajuan: Menunggu keputusan asisten.
           </Text>
-          <Text style={styles.sheetAI}>
-            {izinBaru?.statusAI === 'berhasil'
-              ? `Sentimen AI: ${izinBaru.kategoriAI}`
-              : 'Klasifikasi AI tidak tersedia untuk alasan ini.'}
-          </Text>
+          <View style={styles.sheetAIChip}>
+            <Text style={styles.sheetAI}>
+              {izinBaru?.statusAI === 'berhasil'
+                ? `Klasifikasi AI: ${izinBaru.kategoriAI}`
+                : 'Klasifikasi tidak tersedia'}
+            </Text>
+          </View>
         </View>
       </BottomSheet>
     </View>
@@ -109,31 +117,37 @@ export default function AjukanIzinScreen() {
 const styles = StyleSheet.create({
   flex: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: Botanical.canvas,
   },
   content: {
-    padding: 16,
+    padding: 18,
   },
   sheetBody: {
     alignItems: 'center',
     paddingVertical: 8,
-    gap: 4,
+    gap: 6,
   },
   sheetJudul: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#1C281C',
+    color: Botanical.textPrimary,
     textAlign: 'center',
   },
   sheetInfo: {
     fontSize: 13,
-    color: '#5A6B5A',
+    color: Botanical.textMuted,
     textAlign: 'center',
   },
-  sheetAI: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#3A4D3A',
+  sheetAIChip: {
+    backgroundColor: Botanical.sagePill,
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: 999,
     marginTop: 4,
+  },
+  sheetAI: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: Botanical.primaryDark,
   },
 });

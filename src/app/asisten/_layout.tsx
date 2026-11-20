@@ -71,6 +71,7 @@ export default function AsistenTabLayout() {
         name="profil"
         options={{
           title: 'Profil Asisten',
+          headerShown: false,
           tabBarLabel: 'Profil',
           tabBarIcon: ({ color, size }) => (
             <UserIcon size={size ?? 22} color={color} />

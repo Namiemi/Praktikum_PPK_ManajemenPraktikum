@@ -1,19 +1,30 @@
+import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+
+import {
+  EmptyAttendanceIllustration,
+  EmptyScheduleIllustration,
+} from '@/components/icons/praktikum-theme-icons';
+import { Botanical } from '@/constants/theme';
 
 export interface EmptyStateProps {
   judul: string;
   deskripsi: string;
-  ikon?: string;
+  variant?: 'schedule' | 'attendance';
 }
 
 export function EmptyState({
   judul,
   deskripsi,
-  ikon = '📭',
+  variant = 'schedule',
 }: EmptyStateProps) {
   return (
     <View style={styles.container}>
-      <Text style={styles.icon}>{ikon}</Text>
+      {variant === 'attendance' ? (
+        <EmptyAttendanceIllustration width={148} height={148} />
+      ) : (
+        <EmptyScheduleIllustration width={205} height={186} />
+      )}
       <Text style={styles.title}>{judul}</Text>
       <Text style={styles.description}>{deskripsi}</Text>
     </View>
@@ -25,27 +36,24 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 32,
-    paddingVertical: 24,
-  },
-  icon: {
-    fontSize: 56,
-    textAlign: 'center',
+    paddingHorizontal: 24,
+    paddingVertical: 32,
   },
   title: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '700',
-    lineHeight: 24,
-    color: '#1C281C',
+    lineHeight: 22,
+    color: Botanical.textPrimary,
     textAlign: 'center',
-    marginTop: 16,
+    marginTop: 12,
   },
   description: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '400',
-    lineHeight: 20,
-    color: '#6B7280',
+    lineHeight: 19,
+    color: Botanical.textMuted,
     textAlign: 'center',
-    marginTop: 8,
+    paddingHorizontal: 16,
+    marginTop: 6,
   },
 });

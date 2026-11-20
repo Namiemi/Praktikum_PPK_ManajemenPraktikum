@@ -1,6 +1,6 @@
 /**
  * @file presensi-form.tsx
- * @description Form input kode presensi dengan validasi dan konfirmasi (FR-26).
+ * @description Form input kode presensi dengan validasi dan konfirmasi bergaya Botanical (FR-26).
  */
 
 import React, { useState } from 'react';
@@ -8,6 +8,8 @@ import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-nati
 
 import { ConfirmModal } from '@/components/confirm-modal';
 import { FormField } from '@/components/form-field';
+import { CardCornerLeafOrnament } from '@/components/icons/praktikum-theme-icons';
+import { Botanical } from '@/constants/theme';
 import { usePraktikum } from '@/context/praktikum-context';
 import { Presensi } from '@/types';
 import { validateKodePresensi } from '@/utils/validation';
@@ -92,7 +94,7 @@ export function PresensiForm({ sesiId, onSuccess }: PresensiFormProps) {
         style={({ pressed }) => [
           styles.tombol,
           (submitting || !kode) && styles.tombolDisabled,
-          pressed && styles.tombolPressed,
+          pressed && !submitting && kode && styles.tombolPressed,
         ]}
         onPress={handleKonfirmasi}
         disabled={submitting || !kode}
@@ -106,6 +108,10 @@ export function PresensiForm({ sesiId, onSuccess }: PresensiFormProps) {
           <Text style={styles.tombolText}>Kirim Presensi</Text>
         )}
       </Pressable>
+
+      <View style={styles.cornerOrnament} pointerEvents="none">
+        <CardCornerLeafOrnament width={64} height={64} />
+      </View>
 
       <ConfirmModal
         visible={confirmOpen}
@@ -122,58 +128,64 @@ export function PresensiForm({ sesiId, onSuccess }: PresensiFormProps) {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 16,
+    backgroundColor: Botanical.surface,
+    borderRadius: 18,
+    padding: 18,
     borderWidth: 1,
-    borderColor: '#EAECE3',
+    borderColor: Botanical.border,
+    overflow: 'hidden',
+    position: 'relative',
   },
   judul: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#1C281C',
+    color: Botanical.textPrimary,
   },
   deskripsi: {
     fontSize: 13,
-    color: '#5A6B5A',
+    lineHeight: 19,
+    color: Botanical.textMuted,
     marginTop: 4,
-    marginBottom: 12,
+    marginBottom: 14,
   },
   alert: {
-    backgroundColor: '#FDECEA',
-    borderLeftWidth: 4,
-    borderLeftColor: '#B3261E',
-    borderRadius: 8,
+    backgroundColor: Botanical.dangerBg,
+    borderRadius: 12,
     padding: 12,
-    marginBottom: 12,
+    marginBottom: 14,
   },
   alertJudul: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '700',
-    color: '#B3261E',
+    color: Botanical.dangerText,
   },
   alertTeks: {
-    fontSize: 13,
-    color: '#7A1B14',
+    fontSize: 12.5,
+    color: Botanical.dangerText,
     marginTop: 2,
   },
   tombol: {
-    backgroundColor: '#2D3E2D',
+    backgroundColor: Botanical.primary,
     height: 48,
-    borderRadius: 12,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 4,
   },
   tombolDisabled: {
-    backgroundColor: '#C9CEC4',
+    backgroundColor: Botanical.disabled,
   },
   tombolPressed: {
     opacity: 0.85,
   },
   tombolText: {
     color: '#FFFFFF',
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '700',
+  },
+  cornerOrnament: {
+    position: 'absolute',
+    right: 0,
+    bottom: 0,
   },
 });

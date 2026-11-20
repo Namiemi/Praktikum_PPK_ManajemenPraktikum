@@ -7,7 +7,8 @@ import {
   PencilIcon,
   TrashIcon,
 } from '@/components/icons/praktikum-theme-icons';
-import { SesiPraktikum, StatusSesi } from '@/types';
+import { StatusBadge } from '@/components/status-badge';
+import { SesiPraktikum } from '@/types';
 import { formatDateIndo } from '@/utils';
 
 export interface AsistenSesiCardProps {
@@ -16,27 +17,6 @@ export interface AsistenSesiCardProps {
   onEdit?: () => void;
   onDelete?: () => void;
 }
-
-const STATUS_BADGE_MAP: Record<
-  StatusSesi,
-  { label: string; bg: string; text: string }
-> = {
-  BELUM_DIBUKA: {
-    label: 'BELUM DIBUKA',
-    bg: '#EAE8E1',
-    text: '#5A6B5A',
-  },
-  DIBUKA: {
-    label: 'DIBUKA',
-    bg: '#C8D7B8',
-    text: '#1C281C',
-  },
-  DITUTUP: {
-    label: 'DITUTUP',
-    bg: '#F4DFDA',
-    text: '#9E3B2B',
-  },
-};
 
 /**
  * Kartu item jadwal sesi praktikum untuk daftar Jadwal Asisten (Layar 01 - FR-07).
@@ -47,7 +27,6 @@ export function AsistenSesiCard({
   onEdit,
   onDelete,
 }: AsistenSesiCardProps) {
-  const badge = STATUS_BADGE_MAP[sesi.status];
   const showEdit = Boolean(onEdit && sesi.status === 'BELUM_DIBUKA');
 
   return (
@@ -79,11 +58,7 @@ export function AsistenSesiCard({
       </View>
 
       <View style={styles.footerRow}>
-        <View style={[styles.statusBadge, { backgroundColor: badge.bg }]}>
-          <Text style={[styles.statusBadgeText, { color: badge.text }]}>
-            {badge.label}
-          </Text>
-        </View>
+        <StatusBadge status={sesi.status} />
 
         {(showEdit || onDelete) && (
           <View style={styles.actionRow}>
@@ -196,12 +171,6 @@ const styles = StyleSheet.create({
     marginTop: 10,
     paddingRight: 44,
   },
-  statusBadge: {
-    alignSelf: 'flex-start',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 999,
-  },
   actionRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -235,13 +204,6 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '600',
     color: '#9E3B2B',
-  },
-  statusBadgeText: {
-    fontSize: 10,
-    fontWeight: '700',
-    lineHeight: 14,
-    textTransform: 'uppercase',
-    letterSpacing: 0.6,
   },
   cornerOrnament: {
     position: 'absolute',

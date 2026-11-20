@@ -1,7 +1,9 @@
+import { useNetInfo } from '@react-native-community/netinfo';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { useNetInfo } from '@react-native-community/netinfo';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import { Botanical } from '@/constants/theme';
 
 export function OfflineBanner() {
   const netInfo = useNetInfo();
@@ -17,7 +19,7 @@ export function OfflineBanner() {
   return (
     <View style={[styles.banner, { paddingTop: Math.max(insets.top, 8) }]}>
       <Text style={styles.text}>
-        📡 Koneksi terputus. Data ditampilkan dari cache offline.
+        Koneksi terputus. Data ditampilkan dari cache offline.
       </Text>
     </View>
   );
@@ -25,7 +27,7 @@ export function OfflineBanner() {
 
 const styles = StyleSheet.create({
   banner: {
-    backgroundColor: '#B91C1C',
+    backgroundColor: Botanical.danger,
     paddingHorizontal: 16,
     paddingBottom: 8,
     width: '100%',

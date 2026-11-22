@@ -6,17 +6,16 @@
 import {
   addDoc,
   collection,
-  deleteDoc,
   doc,
   getDocs,
   onSnapshot,
   orderBy,
   query,
   serverTimestamp,
+  Timestamp,
   updateDoc,
   where,
-  writeBatch,
-  Timestamp,
+  writeBatch
 } from '@react-native-firebase/firestore';
 
 import { db } from '@/lib/firebase';
@@ -117,16 +116,14 @@ export function subscribeSesiKelas(
 /**
  * Berlangganan seluruh sesi lintas kelas, diurutkan berdasarkan tanggal dan jam mulai.
  * Dipakai untuk kalkulasi aktivitas laboratorium pada peta (FR-39).
+ * Firestore hanya mengurutkan berdasarkan tanggal (index satu field otomatis ada,
+ * tanpa composite index); jam mulai diurutkan di klien.
  */
 export function subscribeSemuaSesi(
   callback: (sesiList: SesiPraktikum[]) => void,
   onError?: (err: unknown) => void
 ): () => void {
-  const q = query(
-    collection(db, 'sesi'),
-    orderBy('tanggal', 'asc'),
-    orderBy('jamMulai', 'asc')
-  );
+  const q = query(collection(db, 'sesi'), orderBy('tanggal', 'asc'));
 
   return onSnapshot(
     q,
@@ -135,6 +132,11 @@ export function subscribeSemuaSesi(
       snapshot.forEach((d) => {
         list.push(mapDocToSesi(d.id, d.data()));
       });
+      list.sort(
+        (a, b) =>
+          a.tanggal.localeCompare(b.tanggal) ||
+          a.jamMulai.localeCompare(b.jamMulai)
+      );
       callback(list);
     },
     (err) => {

@@ -41,6 +41,7 @@ function mapDocToSesi(id: string, data: any): SesiPraktikum {
     jamMulai: data.jamMulai ?? '',
     jamSelesai: data.jamSelesai ?? '',
     ruang: data.ruang ?? '',
+    labId: data.labId ?? null,
     catatan: data.catatan,
     asistenId: data.asistenId ?? '',
     asistenNama: data.asistenNama ?? '',
@@ -155,6 +156,7 @@ export async function tambahSesi(
     jamMulai: input.jamMulai.trim(),
     jamSelesai: input.jamSelesai.trim(),
     ruang: input.ruang.trim(),
+    labId: input.labId ?? null,
     catatan: input.catatan ? input.catatan.trim() : null,
     asistenId: asisten.id,
     asistenNama: asisten.nama,
@@ -182,6 +184,7 @@ export async function ubahSesi(
     jamMulai: input.jamMulai.trim(),
     jamSelesai: input.jamSelesai.trim(),
     ruang: input.ruang.trim(),
+    labId: input.labId ?? null,
     catatan: input.catatan ? input.catatan.trim() : null,
   });
 }

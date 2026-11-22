@@ -544,6 +544,7 @@ export const PraktikumProvider: React.FC<{ children: React.ReactNode }> = ({
         kelasList,
         izinList,
         praktikanList,
+        laboratoriumList: [],
         logout,
         bukaSesi,
         tutupSesi,

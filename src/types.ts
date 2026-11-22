@@ -41,6 +41,8 @@ export interface User {
   kelas?: string;
   /** Nama-nama kelas yang diampu. Hanya untuk asisten */
   kelasDiampu?: string[];
+  /** Token FCM perangkat untuk menerima notifikasi (Sprint 3) */
+  fcmToken?: string | null;
 }
 
 /**
@@ -84,6 +86,8 @@ export interface SesiPraktikum {
   jamSelesai: string;
   /** Ruangan laboratorium */
   ruang: string;
+  /** ID laboratorium yang dipakai untuk validasi radius presensi (Sprint 3) */
+  labId?: string | null;
   /** Identifier asisten yang mengampu sesi ini */
   asistenId: string;
   /** Nama asisten pengampu */
@@ -131,6 +135,14 @@ export interface Presensi {
   waktuPresensi: string;
   /** Waktu pencatatan presensi (waktu server) */
   waktuAt?: Date;
+  /** Latitude perangkat saat presensi dicatat (Sprint 3) */
+  latitude?: number | null;
+  /** Longitude perangkat saat presensi dicatat (Sprint 3) */
+  longitude?: number | null;
+  /** Jarak perangkat ke titik laboratorium dalam meter (Sprint 3) */
+  jarakMeter?: number | null;
+  /** true bila presensi dilakukan di dalam radius laboratorium (Sprint 3) */
+  dalamRadius?: boolean | null;
 }
 
 /**
@@ -179,6 +191,83 @@ export interface Izin {
 }
 
 /**
+ * Entitas laboratorium Informatika beserta titik koordinat dan radius presensi.
+ * Disimpan di `laboratorium/{labId}` (Sprint 3).
+ */
+export interface Laboratorium {
+  /** ID dokumen laboratorium */
+  id: string;
+  /** Nama laboratorium */
+  nama: string;
+  /** Lokasi atau nama gedung laboratorium */
+  lokasi: string;
+  /** Latitude titik pusat laboratorium */
+  latitude: number;
+  /** Longitude titik pusat laboratorium */
+  longitude: number;
+  /** Radius validasi presensi dalam meter */
+  radius: number;
+  /** uid asisten yang membuat data laboratorium */
+  dibuatOleh: string;
+  /** Waktu perubahan terakhir data laboratorium */
+  diperbaruiPada?: Date;
+}
+
+/**
+ * Data masukan form laboratorium (FR-35).
+ */
+export interface LaboratoriumInput {
+  nama: string;
+  lokasi: string;
+  latitude: number;
+  longitude: number;
+  /** Radius validasi presensi dalam meter */
+  radius: number;
+}
+
+/**
+ * Jenis notifikasi kegiatan praktikum (Sprint 3).
+ */
+export type TipeNotifikasi =
+  | 'SESI_DIBUKA'
+  | 'JADWAL_DIUBAH'
+  | 'IZIN_DIPUTUSKAN';
+
+/**
+ * Entitas notifikasi kegiatan praktikum. Disimpan di `notifikasi/{notifId}`.
+ */
+export interface Notifikasi {
+  /** ID dokumen notifikasi */
+  id: string;
+  /** Jenis kegiatan yang memicu notifikasi */
+  tipe: TipeNotifikasi;
+  /** Judul notifikasi */
+  judul: string;
+  /** Isi pesan notifikasi */
+  pesan: string;
+  /** ID sesi terkait, bila ada */
+  sesiId?: string;
+  /** ID kelas penerima, bila ada */
+  kelasId?: string;
+  /** uid pengguna penerima notifikasi */
+  targetUid: string;
+  /** Waktu notifikasi dibuat */
+  dibuatPada?: Date;
+}
+
+/**
+ * Data masukan pembuatan notifikasi (FR-40).
+ */
+export interface NotifikasiInput {
+  tipe: TipeNotifikasi;
+  judul: string;
+  pesan: string;
+  sesiId?: string;
+  kelasId?: string;
+  targetUid: string;
+}
+
+/**
  * Data masukan form kelas (FR-21).
  */
 export interface KelasInput {
@@ -200,6 +289,8 @@ export interface SesiInput {
   jamMulai: string;
   jamSelesai: string;
   ruang: string;
+  /** ID laboratorium yang dipakai untuk validasi radius presensi (Sprint 3) */
+  labId?: string | null;
   catatan?: string;
 }
 
@@ -251,6 +342,8 @@ export interface PraktikumContextType {
   izinList: Izin[];
   /** Daftar seluruh praktikan terdaftar. Hanya terisi untuk asisten (pemilih peserta) */
   praktikanList: User[];
+  /** Daftar seluruh laboratorium Informatika (Sprint 3) */
+  laboratoriumList: Laboratorium[];
 
   /**
    * Mengakhiri sesi login pengguna aktif (signOut).
@@ -272,12 +365,20 @@ export interface PraktikumContextType {
   tutupSesi: (sesiId: string) => Promise<ActionResult<SesiPraktikum>>;
 
   /**
-   * Melakukan pencatatan kehadiran oleh praktikan (FR-26).
-   * Menerapkan validasi anti-presensi ganda; kebenaran kode diverifikasi Security Rules.
+   * Melakukan pencatatan kehadiran oleh praktikan (FR-26, FR-37).
+   * Menerapkan validasi anti-presensi ganda dan validasi radius laboratorium;
+   * kebenaran kode diverifikasi Security Rules.
    * @param sesiId ID sesi yang dihadiri
    * @param kodeInput Kode 4 digit yang dimasukkan oleh praktikan
+   * @param latitude Latitude perangkat saat presensi
+   * @param longitude Longitude perangkat saat presensi
    */
-  presensi: (sesiId: string, kodeInput: string) => Promise<ActionResult<Presensi>>;
+  presensi: (
+    sesiId: string,
+    kodeInput: string,
+    latitude?: number,
+    longitude?: number
+  ) => Promise<ActionResult<Presensi>>;
 
   /**
    * Mengajukan izin untuk sesi tertentu (FR-28). Status awal selalu 'menunggu'.

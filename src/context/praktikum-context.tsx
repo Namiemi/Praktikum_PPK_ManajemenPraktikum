@@ -31,6 +31,7 @@ import {
   subscribePresensiSesi,
   subscribeSesiAsisten,
   subscribeSesiKelas,
+  subscribeSemuaSesi,
   tutupSesi as serviceTutupSesi,
 } from '@/services';
 import {
@@ -65,6 +66,7 @@ export const PraktikumProvider: React.FC<{ children: React.ReactNode }> = ({
   const [retryTrigger, setRetryTrigger] = useState<number>(0);
 
   const [rawSesiList, setRawSesiList] = useState<SesiPraktikum[]>([]);
+  const [semuaSesiList, setSemuaSesiList] = useState<SesiPraktikum[]>([]);
   const [kelasList, setKelasList] = useState<Kelas[]>([]);
   const [izinList, setIzinList] = useState<Izin[]>([]);
   const [praktikanList, setPraktikanList] = useState<User[]>([]);
@@ -97,6 +99,7 @@ export const PraktikumProvider: React.FC<{ children: React.ReactNode }> = ({
   useEffect(() => {
     if (!currentUser) {
       setRawSesiList([]);
+      setSemuaSesiList([]);
       setKelasList([]);
       setIzinList([]);
       setPraktikanList([]);
@@ -123,6 +126,13 @@ export const PraktikumProvider: React.FC<{ children: React.ReactNode }> = ({
       handleError
     );
     unsubs.push(unsubLaboratorium);
+
+    // Seluruh sesi lintas kelas untuk kalkulasi aktivitas laboratorium (FR-39).
+    const unsubSemuaSesi = subscribeSemuaSesi(
+      (list) => setSemuaSesiList(list),
+      handleError
+    );
+    unsubs.push(unsubSemuaSesi);
 
     if (currentUser.peran === 'asisten') {
       // 1. Langganan sesi asisten
@@ -601,6 +611,7 @@ export const PraktikumProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const logout = async () => {
     setLaboratoriumList([]);
+    setSemuaSesiList([]);
     await authLogout();
   };
 
@@ -612,6 +623,7 @@ export const PraktikumProvider: React.FC<{ children: React.ReactNode }> = ({
         error,
         retry,
         sesiList,
+        semuaSesiList,
         presensiList,
         kelasList,
         izinList,

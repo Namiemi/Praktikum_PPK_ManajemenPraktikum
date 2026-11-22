@@ -334,6 +334,8 @@ export interface PraktikumContextType {
 
   /** Daftar sesi praktikum (asisten: miliknya; praktikan: sesi kelasnya) */
   sesiList: SesiPraktikum[];
+  /** Daftar seluruh sesi lintas kelas untuk aktivitas laboratorium (FR-39) */
+  semuaSesiList: SesiPraktikum[];
   /** Daftar presensi (asisten: seluruh presensi sesi miliknya; praktikan: presensinya sendiri) */
   presensiList: Presensi[];
   /** Daftar kelas (asisten: kelas yang diampu; praktikan: kelas yang diikuti) */

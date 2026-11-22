@@ -115,6 +115,35 @@ export function subscribeSesiKelas(
 }
 
 /**
+ * Berlangganan seluruh sesi lintas kelas, diurutkan berdasarkan tanggal dan jam mulai.
+ * Dipakai untuk kalkulasi aktivitas laboratorium pada peta (FR-39).
+ */
+export function subscribeSemuaSesi(
+  callback: (sesiList: SesiPraktikum[]) => void,
+  onError?: (err: unknown) => void
+): () => void {
+  const q = query(
+    collection(db, 'sesi'),
+    orderBy('tanggal', 'asc'),
+    orderBy('jamMulai', 'asc')
+  );
+
+  return onSnapshot(
+    q,
+    (snapshot) => {
+      const list: SesiPraktikum[] = [];
+      snapshot.forEach((d) => {
+        list.push(mapDocToSesi(d.id, d.data()));
+      });
+      callback(list);
+    },
+    (err) => {
+      if (onError) onError(err);
+    }
+  );
+}
+
+/**
  * Berlangganan kode presensi sesi (khusus asisten pemilik sesi).
  */
 export function subscribeKode(

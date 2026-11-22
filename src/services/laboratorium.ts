@@ -13,14 +13,44 @@ import {
   orderBy,
   query,
   serverTimestamp,
-  updateDoc,
   Timestamp,
+  updateDoc,
 } from '@react-native-firebase/firestore';
 
 import { db } from '@/lib/firebase';
 import { Laboratorium, LaboratoriumInput } from '@/types';
 
-function mapDocToLaboratorium(id: string, data: any): Laboratorium {
+/**
+ * Memeriksa bahwa koordinat dan radius laboratorium berupa angka yang valid.
+ * Data rusak tidak boleh diam-diam menjadi koordinat (0, 0).
+ */
+function dataLaboratoriumValid(data: any): boolean {
+  const { latitude, longitude, radius } = data ?? {};
+  return (
+    typeof latitude === 'number' &&
+    Number.isFinite(latitude) &&
+    latitude >= -90 &&
+    latitude <= 90 &&
+    typeof longitude === 'number' &&
+    Number.isFinite(longitude) &&
+    longitude >= -180 &&
+    longitude <= 180 &&
+    typeof radius === 'number' &&
+    Number.isFinite(radius) &&
+    radius > 0
+  );
+}
+
+/**
+ * Memetakan dokumen Firestore ke `Laboratorium`.
+ * @returns `null` bila koordinat atau radius tidak valid
+ */
+function mapDocToLaboratorium(id: string, data: any): Laboratorium | null {
+  if (!dataLaboratoriumValid(data)) {
+    console.warn(`Laboratorium "${id}" diabaikan: koordinat/radius tidak valid.`);
+    return null;
+  }
+
   const diperbaruiTimestamp = data.diperbaruiPada as Timestamp | undefined;
   const diperbaruiDate = diperbaruiTimestamp?.toDate
     ? diperbaruiTimestamp.toDate()
@@ -30,9 +60,9 @@ function mapDocToLaboratorium(id: string, data: any): Laboratorium {
     id,
     nama: data.nama ?? '',
     lokasi: data.lokasi ?? '',
-    latitude: Number(data.latitude) || 0,
-    longitude: Number(data.longitude) || 0,
-    radius: Number(data.radius) || 0,
+    latitude: data.latitude,
+    longitude: data.longitude,
+    radius: data.radius,
     dibuatOleh: data.dibuatOleh ?? '',
     diperbaruiPada: diperbaruiDate,
   };
@@ -52,7 +82,8 @@ export function subscribeLaboratorium(
     (snapshot) => {
       const list: Laboratorium[] = [];
       snapshot.forEach((d) => {
-        list.push(mapDocToLaboratorium(d.id, d.data()));
+        const lab = mapDocToLaboratorium(d.id, d.data());
+        if (lab) list.push(lab);
       });
       callback(list);
     },
@@ -102,6 +133,7 @@ export async function tambahLaboratorium(
     longitude: Number(input.longitude),
     radius: Number(input.radius),
     dibuatOleh: asisten.id,
+    diperbaruiPada: serverTimestamp(),
   });
   return docRef.id;
 }

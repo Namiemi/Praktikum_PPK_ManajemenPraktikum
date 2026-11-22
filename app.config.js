@@ -1,7 +1,7 @@
 /**
  * @file app.config.js
- * @description Konfigurasi dinamis Expo untuk membaca Google Maps API Key dari environment
- * tanpa menyimpan key di dalam app.json.
+ * @description Konfigurasi dinamis Expo untuk membaca Google Maps API Key dan
+ * google-services.json dari environment tanpa menyimpannya di dalam app.json.
  */
 
 module.exports = ({ config }) => {
@@ -24,6 +24,10 @@ module.exports = ({ config }) => {
     plugins,
     android: {
       ...config.android,
+      // Di EAS, GOOGLE_SERVICES_JSON berisi path file sementara.
+      // Di laptop variabel ini kosong, jadi memakai file lokal.
+      googleServicesFile:
+        process.env.GOOGLE_SERVICES_JSON ?? './google-services.json',
       config: {
         ...config.android?.config,
         googleMaps: {

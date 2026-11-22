@@ -9,6 +9,7 @@ import { LoadingState } from '@/components/loading-state';
 import { OfflineBanner } from '@/components/offline-banner';
 import { AuthProvider, useAuth } from '@/context/auth-context';
 import { PraktikumProvider } from '@/context/praktikum-context';
+import { useNotifikasi } from '@/hooks/use-notifikasi';
 import { messaging } from '@/lib/firebase';
 import { buatSaluranNotifikasi, tampilkanNotifikasiLokal } from '@/services';
 
@@ -87,7 +88,7 @@ function RouteGuard({ children }: { children: React.ReactNode }) {
 
 function RootContent() {
   const { initializing } = useAuth();
-
+  useNotifikasi();
   useEffect(() => {
     if (!initializing) {
       SplashScreen.hideAsync();

@@ -45,7 +45,11 @@ import {
   User,
 } from '@/types';
 import { getErrorMessage, isPermissionDenied } from '@/utils/errors';
-import { validateAlasanIzin, validateKodePresensi } from '@/utils/validation';
+import {
+  validateAlasanIzin,
+  validateKodePresensi,
+  validateWaktuBukaSesi,
+} from '@/utils/validation';
 
 const PraktikumContext = createContext<PraktikumContextType | undefined>(
   undefined
@@ -281,6 +285,15 @@ export const PraktikumProvider: React.FC<{ children: React.ReactNode }> = ({
         success: false,
         message: 'Hanya sesi yang belum dibuka yang dapat dibuka.',
       };
+    }
+
+    const errWaktu = validateWaktuBukaSesi(
+      sesi.tanggal,
+      sesi.jamMulai,
+      sesi.jamSelesai
+    );
+    if (errWaktu) {
+      return { success: false, message: errWaktu };
     }
 
     try {

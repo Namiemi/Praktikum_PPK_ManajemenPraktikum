@@ -23,14 +23,27 @@ service cloud.firestore {
       return get(/databases/$(database)/documents/sesi/$(sesiId)).data;
     }
 
-    // 1. Koleksi Users (FR-16, SRS-15, SRS-32)
+    function labDoc(labId) {
+      return get(/databases/$(database)/documents/laboratorium/$(labId)).data;
+    }
+
+    // Validasi data laboratorium (Sprint 3, FR-34, SRS-40)
+    function isLabValid(d) {
+      return d.nama is string && d.nama.size() > 0
+        && d.get('lokasi', '') is string
+        && d.latitude is number && d.latitude >= -90 && d.latitude <= 90
+        && d.longitude is number && d.longitude >= -180 && d.longitude <= 180
+        && d.radius is number && d.radius > 0;
+    }
+
+    // 1. Koleksi Users (FR-16, SRS-15, SRS-32, SRS-34)
     match /users/{uid} {
       allow read: if signedIn() && (request.auth.uid == uid || isAsisten());
 
       allow create: if signedIn() && request.auth.uid == uid
         && request.resource.data.keys().hasOnly(['nama', 'nim', 'email', 'peran', 'kelas', 'dibuatPada'])
         && request.resource.data.nama is string && request.resource.data.nama.size() >= 3
-        && request.resource.data.nim is string && request.resource.data.nim.size() >= 8
+        && request.resource.data.nim is string && request.resource.data.nim.matches('^[0-9]{14}$')
         && request.resource.data.email == request.auth.token.email
         && request.resource.data.kelas == null
         && (
@@ -42,11 +55,17 @@ service cloud.firestore {
         );
 
       allow update: if (
-        // Praktikan/Asisten mengubah profilnya sendiri (hanya nama/nim)
+        // Pengguna mengubah profilnya sendiri (hanya nama/nim)
         signedIn() && request.auth.uid == uid
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['nama', 'nim'])
         && request.resource.data.nama is string && request.resource.data.nama.size() >= 3
-        && request.resource.data.nim is string && request.resource.data.nim.size() >= 8
+        && request.resource.data.nim is string && request.resource.data.nim.matches('^[0-9]{14}$')
+      ) || (
+        // Pengguna menyimpan token FCM miliknya sendiri (Sprint 3, SRS-44)
+        signedIn() && request.auth.uid == uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['fcmToken'])
+        && request.resource.data.fcmToken is string
+        && request.resource.data.fcmToken.size() > 0
       ) || (
         // Asisten menugaskan kelas ke praktikan (hanya field kelas)
         isAsisten()
@@ -81,7 +100,27 @@ service cloud.firestore {
       allow delete: if isAsisten() && resource.data.asistenId == request.auth.uid;
     }
 
-    // 4. Koleksi Sesi Praktikum (FR-21, FR-22, SRS-18, SRS-20)
+    // 4. Koleksi Laboratorium (Sprint 3: FR-35, FR-34, SRS-40, SRS-41)
+    match /laboratorium/{labId} {
+      allow read: if signedIn();
+
+      allow create: if isAsisten()
+        && request.resource.data.dibuatOleh == request.auth.uid
+        && request.resource.data.keys().hasOnly([
+          'nama', 'lokasi', 'latitude', 'longitude', 'radius',
+          'dibuatOleh', 'diperbaruiPada'
+        ])
+        && isLabValid(request.resource.data);
+
+      allow update: if isAsisten()
+        && request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['nama', 'lokasi', 'latitude', 'longitude', 'radius', 'diperbaruiPada'])
+        && isLabValid(request.resource.data);
+
+      allow delete: if isAsisten();
+    }
+
+    // 5. Koleksi Sesi Praktikum (FR-21, FR-22, SRS-18, SRS-20, SRS-41)
     match /sesi/{sesiId} {
       allow read: if signedIn();
 
@@ -90,9 +129,13 @@ service cloud.firestore {
         && request.resource.data.status == 'BELUM_DIBUKA'
         && request.resource.data.keys().hasOnly([
           'mataKuliah', 'pertemuan', 'topik', 'kelasId', 'kelas',
-          'tanggal', 'jamMulai', 'jamSelesai', 'ruang', 'catatan',
+          'tanggal', 'jamMulai', 'jamSelesai', 'ruang', 'labId', 'catatan',
           'asistenId', 'asistenNama', 'status', 'dibuatPada'
-        ]);
+        ])
+        && (
+          request.resource.data.get('labId', null) == null ||
+          request.resource.data.get('labId', null) is string
+        );
 
       allow update: if isAsisten()
         && resource.data.asistenId == request.auth.uid
@@ -113,7 +156,7 @@ service cloud.firestore {
         allow read, write: if isAsisten() && sesiDoc(sesiId).asistenId == request.auth.uid;
       }
 
-      // Subkoleksi Presensi Kehadiran (FR-26, SRS-21, SRS-22)
+      // Subkoleksi Presensi Kehadiran (FR-26, FR-37, SRS-21, SRS-22, SRS-38, SRS-39)
       match /presensi/{uid} {
         allow read: if signedIn() && (
           request.auth.uid == uid ||
@@ -125,7 +168,18 @@ service cloud.firestore {
           && uid == request.resource.data.praktikanId
           && sesiDoc(sesiId).status == 'DIBUKA'
           && request.resource.data.kode == get(/databases/$(database)/documents/sesi/$(sesiId)/rahasia/kode).data.kode
-          && request.resource.data.keys().hasOnly(['praktikanId', 'praktikanNama', 'praktikanNim', 'kode', 'waktu']);
+          && request.resource.data.keys().hasOnly([
+            'praktikanId', 'praktikanNama', 'praktikanNim', 'kode', 'waktu',
+            'latitude', 'longitude', 'jarakMeter', 'dalamRadius'
+          ])
+          // Validasi lokasi (Sprint 3): jarak yang dilaporkan harus dalam radius laboratorium sesi
+          && request.resource.data.latitude is number
+          && request.resource.data.longitude is number
+          && request.resource.data.jarakMeter is number
+          && request.resource.data.jarakMeter >= 0
+          && request.resource.data.dalamRadius == true
+          && sesiDoc(sesiId).labId is string
+          && request.resource.data.jarakMeter <= labDoc(sesiDoc(sesiId).labId).radius;
 
         // Anti presensi ganda (SRS-22): Update dilarang sepenuhnya
         allow update: if false;
@@ -134,7 +188,7 @@ service cloud.firestore {
       }
     }
 
-    // 5. Koleksi Pengajuan Izin Praktikan (FR-28, FR-24, SRS-25, SRS-28)
+    // 6. Koleksi Pengajuan Izin Praktikan (FR-28, FR-24, SRS-25, SRS-28)
     match /izin/{izinId} {
       allow read: if signedIn() && (
         resource.data.praktikanId == request.auth.uid ||
@@ -159,6 +213,25 @@ service cloud.firestore {
         && request.resource.data.diputuskanOleh == request.auth.uid;
 
       allow delete: if isAsisten() && resource.data.asistenId == request.auth.uid;
+    }
+
+    // 7. Koleksi Notifikasi Kegiatan (Sprint 3: FR-40, SRS-44, SRS-45, SRS-46)
+    match /notifikasi/{notifId} {
+      // Penerima hanya membaca notifikasi miliknya sendiri
+      allow read: if signedIn() && resource.data.targetUid == request.auth.uid;
+
+      // Hanya asisten yang membuat notifikasi (buka sesi, ubah jadwal, putusan izin)
+      allow create: if isAsisten()
+        && request.resource.data.keys().hasOnly([
+          'tipe', 'judul', 'pesan', 'sesiId', 'kelasId', 'targetUid', 'dibuatPada'
+        ])
+        && request.resource.data.tipe in ['SESI_DIBUKA', 'JADWAL_DIUBAH', 'IZIN_DIPUTUSKAN']
+        && request.resource.data.judul is string && request.resource.data.judul.size() > 0
+        && request.resource.data.pesan is string
+        && request.resource.data.targetUid is string && request.resource.data.targetUid.size() > 0
+        && request.resource.data.dibuatPada == request.time;
+
+      allow update, delete: if false;
     }
   }
 }

@@ -19,7 +19,12 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.app.manajemenpraktikum"
+      "package": "com.app.manajemenpraktikum",
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "POST_NOTIFICATIONS"
+      ]
     },
     "web": {
       "output": "single",
@@ -46,7 +51,16 @@
         }
       ],
       "expo-web-browser",
-      "expo-status-bar"
+      "expo-status-bar",
+      "@react-native-firebase/messaging",
+      "react-native-maps",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Aplikasi memerlukan akses lokasi untuk memeriksa jarak Anda ke laboratorium saat presensi.",
+          "locationAlwaysAndWhenInUsePermission": "Aplikasi memerlukan akses lokasi untuk memeriksa jarak Anda ke laboratorium saat presensi."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

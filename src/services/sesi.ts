@@ -6,17 +6,16 @@
 import {
   addDoc,
   collection,
-  deleteDoc,
   doc,
   getDocs,
   onSnapshot,
   orderBy,
   query,
   serverTimestamp,
+  Timestamp,
   updateDoc,
   where,
-  writeBatch,
-  Timestamp,
+  writeBatch
 } from '@react-native-firebase/firestore';
 
 import { db } from '@/lib/firebase';
@@ -41,6 +40,7 @@ function mapDocToSesi(id: string, data: any): SesiPraktikum {
     jamMulai: data.jamMulai ?? '',
     jamSelesai: data.jamSelesai ?? '',
     ruang: data.ruang ?? '',
+    labId: data.labId ?? null,
     catatan: data.catatan,
     asistenId: data.asistenId ?? '',
     asistenNama: data.asistenNama ?? '',
@@ -114,6 +114,38 @@ export function subscribeSesiKelas(
 }
 
 /**
+ * Berlangganan seluruh sesi lintas kelas, diurutkan berdasarkan tanggal dan jam mulai.
+ * Dipakai untuk kalkulasi aktivitas laboratorium pada peta (FR-39).
+ * Firestore hanya mengurutkan berdasarkan tanggal (index satu field otomatis ada,
+ * tanpa composite index); jam mulai diurutkan di klien.
+ */
+export function subscribeSemuaSesi(
+  callback: (sesiList: SesiPraktikum[]) => void,
+  onError?: (err: unknown) => void
+): () => void {
+  const q = query(collection(db, 'sesi'), orderBy('tanggal', 'asc'));
+
+  return onSnapshot(
+    q,
+    (snapshot) => {
+      const list: SesiPraktikum[] = [];
+      snapshot.forEach((d) => {
+        list.push(mapDocToSesi(d.id, d.data()));
+      });
+      list.sort(
+        (a, b) =>
+          a.tanggal.localeCompare(b.tanggal) ||
+          a.jamMulai.localeCompare(b.jamMulai)
+      );
+      callback(list);
+    },
+    (err) => {
+      if (onError) onError(err);
+    }
+  );
+}
+
+/**
  * Berlangganan kode presensi sesi (khusus asisten pemilik sesi).
  */
 export function subscribeKode(
@@ -155,6 +187,7 @@ export async function tambahSesi(
     jamMulai: input.jamMulai.trim(),
     jamSelesai: input.jamSelesai.trim(),
     ruang: input.ruang.trim(),
+    labId: input.labId ?? null,
     catatan: input.catatan ? input.catatan.trim() : null,
     asistenId: asisten.id,
     asistenNama: asisten.nama,
@@ -182,6 +215,7 @@ export async function ubahSesi(
     jamMulai: input.jamMulai.trim(),
     jamSelesai: input.jamSelesai.trim(),
     ruang: input.ruang.trim(),
+    labId: input.labId ?? null,
     catatan: input.catatan ? input.catatan.trim() : null,
   });
 }

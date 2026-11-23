@@ -31,6 +31,10 @@ function mapDocToPresensi(sesiId: string, id: string, data: any): Presensi {
     praktikanNim: data.praktikanNim ?? '',
     waktuPresensi: getFormattedTime(date),
     waktuAt: date,
+    latitude: typeof data.latitude === 'number' ? data.latitude : null,
+    longitude: typeof data.longitude === 'number' ? data.longitude : null,
+    jarakMeter: typeof data.jarakMeter === 'number' ? data.jarakMeter : null,
+    dalamRadius: typeof data.dalamRadius === 'boolean' ? data.dalamRadius : null,
   };
 }
 
@@ -96,14 +100,18 @@ export function subscribePresensiSaya(
 }
 
 /**
- * Mencatat presensi praktikan ke Firestore.
+ * Mencatat presensi praktikan ke Firestore beserta hasil validasi lokasi.
  * Menggunakan uid sebagai ID dokumen untuk mencegah presensi ganda (SRS-22, FR-26).
  * Kebenaran kode presensi diverifikasi oleh Firebase Security Rules.
  */
 export async function catatPresensi(
   sesiId: string,
   user: User,
-  kode: string
+  kode: string,
+  latitude: number,
+  longitude: number,
+  jarakMeter: number,
+  dalamRadius: boolean
 ): Promise<Presensi> {
   const presensiRef = doc(db, 'sesi', sesiId, 'presensi', user.id);
 
@@ -116,13 +124,17 @@ export async function catatPresensi(
   const now = new Date();
   const waktuPresensi = getFormattedTime(now);
 
-  // 2. Tulis dokumen presensi
+  // 2. Tulis dokumen presensi beserta data lokasi (Sprint 3)
   await setDoc(presensiRef, {
     praktikanId: user.id,
     praktikanNama: user.nama,
     praktikanNim: user.nim,
     kode: kode.trim(),
     waktu: serverTimestamp(),
+    latitude,
+    longitude,
+    jarakMeter,
+    dalamRadius,
   });
 
   return {
@@ -133,5 +145,9 @@ export async function catatPresensi(
     praktikanNim: user.nim,
     waktuPresensi,
     waktuAt: now,
+    latitude,
+    longitude,
+    jarakMeter,
+    dalamRadius,
   };
 }

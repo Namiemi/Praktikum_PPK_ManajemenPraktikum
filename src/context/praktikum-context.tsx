@@ -18,17 +18,20 @@ import {
   ajukanIzin as serviceAjukanIzin,
   bukaSesi as serviceBukaSesi,
   catatPresensi as serviceCatatPresensi,
+  hitungJarakMeter,
   putuskanIzin as servicePutuskanIzin,
   subscribeIzinAsisten,
   subscribeIzinPraktikan,
   subscribeKelasAsisten,
   subscribeKelasById,
   subscribeKode,
+  subscribeLaboratorium,
   subscribePraktikan,
   subscribePresensiSaya,
   subscribePresensiSesi,
   subscribeSesiAsisten,
   subscribeSesiKelas,
+  subscribeSemuaSesi,
   tutupSesi as serviceTutupSesi,
 } from '@/services';
 import {
@@ -36,13 +39,18 @@ import {
   HasilAI,
   Izin,
   Kelas,
+  Laboratorium,
   PraktikumContextType,
   Presensi,
   SesiPraktikum,
   User,
 } from '@/types';
 import { getErrorMessage, isPermissionDenied } from '@/utils/errors';
-import { validateAlasanIzin, validateKodePresensi } from '@/utils/validation';
+import {
+  validateAlasanIzin,
+  validateKodePresensi,
+  validateWaktuBukaSesi,
+} from '@/utils/validation';
 
 const PraktikumContext = createContext<PraktikumContextType | undefined>(
   undefined
@@ -58,9 +66,11 @@ export const PraktikumProvider: React.FC<{ children: React.ReactNode }> = ({
   const [retryTrigger, setRetryTrigger] = useState<number>(0);
 
   const [rawSesiList, setRawSesiList] = useState<SesiPraktikum[]>([]);
+  const [semuaSesiList, setSemuaSesiList] = useState<SesiPraktikum[]>([]);
   const [kelasList, setKelasList] = useState<Kelas[]>([]);
   const [izinList, setIzinList] = useState<Izin[]>([]);
   const [praktikanList, setPraktikanList] = useState<User[]>([]);
+  const [laboratoriumList, setLaboratoriumList] = useState<Laboratorium[]>([]);
 
   // Map kode presensi per sesi (khusus asisten): sesiId -> kode
   const [kodeMap, setKodeMap] = useState<Record<string, string>>({});
@@ -89,6 +99,7 @@ export const PraktikumProvider: React.FC<{ children: React.ReactNode }> = ({
   useEffect(() => {
     if (!currentUser) {
       setRawSesiList([]);
+      setSemuaSesiList([]);
       setKelasList([]);
       setIzinList([]);
       setPraktikanList([]);
@@ -108,6 +119,20 @@ export const PraktikumProvider: React.FC<{ children: React.ReactNode }> = ({
       setError(getErrorMessage(err));
       setLoading(false);
     };
+
+    // Langganan laboratorium berlaku untuk asisten dan praktikan.
+    const unsubLaboratorium = subscribeLaboratorium(
+      (list) => setLaboratoriumList(list),
+      handleError
+    );
+    unsubs.push(unsubLaboratorium);
+
+    // Seluruh sesi lintas kelas untuk kalkulasi aktivitas laboratorium (FR-39).
+    const unsubSemuaSesi = subscribeSemuaSesi(
+      (list) => setSemuaSesiList(list),
+      handleError
+    );
+    unsubs.push(unsubSemuaSesi);
 
     if (currentUser.peran === 'asisten') {
       // 1. Langganan sesi asisten
@@ -272,6 +297,15 @@ export const PraktikumProvider: React.FC<{ children: React.ReactNode }> = ({
       };
     }
 
+    const errWaktu = validateWaktuBukaSesi(
+      sesi.tanggal,
+      sesi.jamMulai,
+      sesi.jamSelesai
+    );
+    if (errWaktu) {
+      return { success: false, message: errWaktu };
+    }
+
     try {
       const kode = await serviceBukaSesi(sesiId);
       const updatedSesi: SesiPraktikum = {
@@ -334,10 +368,12 @@ export const PraktikumProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
-  // FR-12 / FR-26: Presensi Praktikan
+  // FR-12 / FR-26 / FR-37: Presensi Praktikan dengan validasi radius laboratorium
   const presensi = async (
     sesiId: string,
-    kodeInput: string
+    kodeInput: string,
+    latitude?: number,
+    longitude?: number
   ): Promise<ActionResult<Presensi>> => {
     if (!currentUser || currentUser.peran !== 'praktikan') {
       return {
@@ -376,11 +412,56 @@ export const PraktikumProvider: React.FC<{ children: React.ReactNode }> = ({
       };
     }
 
+    if (
+      latitude === undefined ||
+      latitude === null ||
+      longitude === undefined ||
+      longitude === null
+    ) {
+      return {
+        success: false,
+        message: 'Lokasi belum tersedia. Aktifkan GPS dan coba lagi.',
+      };
+    }
+
+    if (!sesi.labId) {
+      return {
+        success: false,
+        message: 'Sesi ini belum terhubung ke laboratorium.',
+      };
+    }
+
+    const laboratorium = laboratoriumList.find((lab) => lab.id === sesi.labId);
+    if (!laboratorium) {
+      return {
+        success: false,
+        message: 'Data laboratorium tidak ditemukan.',
+      };
+    }
+
+    const jarakMeter = hitungJarakMeter(
+      latitude,
+      longitude,
+      laboratorium.latitude,
+      laboratorium.longitude
+    );
+
+    if (jarakMeter > laboratorium.radius) {
+      return {
+        success: false,
+        message: `Anda berada di luar radius laboratorium (jarak ${jarakMeter} m, maksimal ${laboratorium.radius} m).`,
+      };
+    }
+
     try {
       const dataPresensi = await serviceCatatPresensi(
         sesiId,
         currentUser,
-        kodeInput
+        kodeInput,
+        latitude,
+        longitude,
+        jarakMeter,
+        true
       );
       return {
         success: true,
@@ -529,6 +610,8 @@ export const PraktikumProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   const logout = async () => {
+    setLaboratoriumList([]);
+    setSemuaSesiList([]);
     await authLogout();
   };
 
@@ -540,10 +623,12 @@ export const PraktikumProvider: React.FC<{ children: React.ReactNode }> = ({
         error,
         retry,
         sesiList,
+        semuaSesiList,
         presensiList,
         kelasList,
         izinList,
         praktikanList,
+        laboratoriumList,
         logout,
         bukaSesi,
         tutupSesi,

@@ -10,3 +10,6 @@ export * from './sesi';
 export * from './presensi';
 export * from './izin';
 export * from './ai';
+export * from './laboratorium';
+export * from './location';
+export * from './notification';

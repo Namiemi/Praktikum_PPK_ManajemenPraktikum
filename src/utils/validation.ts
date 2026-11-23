@@ -6,8 +6,7 @@
 
 export type ValidationResult = string | null;
 
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const NIM_REGEX = /^\d{8,15}$/;
+const NIM_REGEX = /^\d{14}$/;
 const KODE_PRESENSI_REGEX = /^\d{4}$/;
 const TANGGAL_REGEX = /^\d{4}-\d{2}-\d{2}$/;
 const JAM_REGEX = /^([01]\d|2[0-3]):[0-5]\d$/;
@@ -15,6 +14,7 @@ const JAM_REGEX = /^([01]\d|2[0-3]):[0-5]\d$/;
 export const ALASAN_IZIN_MIN = 10;
 export const ALASAN_IZIN_MAX = 300;
 export const PASSWORD_MIN = 6;
+export const PASSWORD_MAX = 8;
 
 /** Wajib diisi (tidak kosong setelah di-trim). */
 export function validateRequired(value: string, label: string): ValidationResult {
@@ -31,14 +31,14 @@ export function validateNama(value: string): ValidationResult {
 export function validateEmail(value: string): ValidationResult {
   const email = value.trim();
   if (!email) return 'Email wajib diisi.';
-  return EMAIL_REGEX.test(email) ? null : 'Format email tidak valid.';
+  return email.includes('@') ? null : "Email harus memuat karakter '@'.";
 }
 
 export function validatePassword(value: string): ValidationResult {
   if (!value) return 'Password wajib diisi.';
-  return value.length >= PASSWORD_MIN
+  return value.length >= PASSWORD_MIN && value.length <= PASSWORD_MAX
     ? null
-    : `Password minimal ${PASSWORD_MIN} karakter.`;
+    : `Password harus ${PASSWORD_MIN}–${PASSWORD_MAX} karakter.`;
 }
 
 export function validateKonfirmasiPassword(
@@ -52,7 +52,7 @@ export function validateKonfirmasiPassword(
 export function validateNim(value: string): ValidationResult {
   const nim = value.trim();
   if (!nim) return 'NIM wajib diisi.';
-  return NIM_REGEX.test(nim) ? null : 'NIM harus 8–15 digit angka.';
+  return NIM_REGEX.test(nim) ? null : 'NIM harus tepat 14 digit angka.';
 }
 
 export function validateKodePresensi(value: string): ValidationResult {
@@ -98,6 +98,58 @@ export function validateRentangJam(
   return jamSelesai.trim() > jamMulai.trim()
     ? null
     : 'Jam selesai harus setelah jam mulai.';
+}
+
+/**
+ * Sesi hanya boleh dibuka pada tanggal pelaksanaan (YYYY-MM-DD) dan di dalam
+ * rentang jam mulai–selesai (HH:MM), memakai waktu lokal perangkat.
+ */
+export function validateWaktuBukaSesi(
+  tanggal: string,
+  jamMulai: string,
+  jamSelesai: string
+): ValidationResult {
+  const errTanggal = validateTanggal(tanggal);
+  if (errTanggal) return errTanggal;
+
+  const errJamMulai = validateJam(jamMulai, 'Jam mulai');
+  if (errJamMulai) return errJamMulai;
+
+  const errJamSelesai = validateJam(jamSelesai, 'Jam selesai');
+  if (errJamSelesai) return errJamSelesai;
+
+  const errRentang = validateRentangJam(jamMulai, jamSelesai);
+  if (errRentang) return errRentang;
+
+  const sekarang = new Date();
+  const [tahun, bulan, hari] = tanggal.trim().split('-').map(Number);
+  const [jamMulaiAngka, menitMulaiAngka] = jamMulai.trim().split(':').map(Number);
+  const [jamSelesaiAngka, menitSelesaiAngka] = jamSelesai
+    .trim()
+    .split(':')
+    .map(Number);
+
+  const tanggalSekarang = [
+    sekarang.getFullYear(),
+    String(sekarang.getMonth() + 1).padStart(2, '0'),
+    String(sekarang.getDate()).padStart(2, '0'),
+  ].join('-');
+
+  const menitSekarang = sekarang.getHours() * 60 + sekarang.getMinutes();
+  const batasMulai = jamMulaiAngka * 60 + menitMulaiAngka;
+  const batasSelesai = jamSelesaiAngka * 60 + menitSelesaiAngka;
+
+  const padaTanggalSesi = tanggalSekarang === tanggal.trim();
+  const dalamRentangJam =
+    menitSekarang >= batasMulai && menitSekarang <= batasSelesai;
+
+  if (padaTanggalSesi && dalamRentangJam) return null;
+
+  const tanggalTampil = `${String(hari).padStart(2, '0')}-${String(bulan).padStart(
+    2,
+    '0'
+  )}-${tahun}`;
+  return `Sesi hanya dapat dibuka pada tanggal ${tanggalTampil} pukul ${jamMulai.trim()}-${jamSelesai.trim()}.`;
 }
 
 /**

@@ -1,3 +1,5 @@
+import notifee, { EventType } from '@notifee/react-native';
+import { setBackgroundMessageHandler } from '@react-native-firebase/messaging';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
@@ -7,8 +9,42 @@ import { LoadingState } from '@/components/loading-state';
 import { OfflineBanner } from '@/components/offline-banner';
 import { AuthProvider, useAuth } from '@/context/auth-context';
 import { PraktikumProvider } from '@/context/praktikum-context';
+import { useNotifikasi } from '@/hooks/use-notifikasi';
+import { messaging } from '@/lib/firebase';
+import { buatSaluranNotifikasi, tampilkanNotifikasiLokal } from '@/services';
 
 SplashScreen.preventAutoHideAsync();
+
+// Handler pesan FCM di latar belakang/quit. Wajib didaftarkan di level modul,
+// bukan di dalam komponen, agar pesan tetap diproses saat aplikasi tidak aktif.
+setBackgroundMessageHandler(messaging, async (remoteMessage) => {
+  const judul = remoteMessage.notification?.title ?? 'Notifikasi Praktikum';
+  const pesan =
+    remoteMessage.notification?.body ??
+    'Ada pembaruan kegiatan praktikum. Silakan buka aplikasi.';
+
+  const data = Object.fromEntries(
+    Object.entries(remoteMessage.data ?? {}).map(([key, value]) => [
+      key,
+      String(value),
+    ])
+  );
+
+  await tampilkanNotifikasiLokal(
+    remoteMessage.messageId ?? `fcm-${Date.now()}`,
+    judul,
+    pesan,
+    data
+  );
+});
+
+// Event Notifee di latar belakang. Notifee sudah menampilkan notifikasinya;
+// di sini saluran dipastikan tersedia saat pengguna menekan notifikasi.
+notifee.onBackgroundEvent(async (event) => {
+  if (event.type === EventType.PRESS) {
+    await buatSaluranNotifikasi();
+  }
+});
 
 function RouteGuard({ children }: { children: React.ReactNode }) {
   const { currentUser, initializing } = useAuth();
@@ -52,7 +88,7 @@ function RouteGuard({ children }: { children: React.ReactNode }) {
 
 function RootContent() {
   const { initializing } = useAuth();
-
+  useNotifikasi();
   useEffect(() => {
     if (!initializing) {
       SplashScreen.hideAsync();

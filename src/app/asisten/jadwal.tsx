@@ -33,6 +33,7 @@ export default function JadwalAsistenScreen() {
   const {
     currentUser,
     kelasList,
+    laboratoriumList,
     loading,
     error,
     retry,
@@ -168,6 +169,7 @@ export default function JadwalAsistenScreen() {
         visible={formOpen}
         editingSesi={editingSesi}
         kelasList={kelasList}
+        laboratoriumList={laboratoriumList}
         submitting={submitting}
         errorMessage={actionError}
         onSubmit={handleSimpanSesi}

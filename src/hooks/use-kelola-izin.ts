@@ -2,6 +2,7 @@ import { useState } from 'react';
 
 import { usePraktikum } from '@/context/praktikum-context';
 import { Izin, StatusIzin } from '@/types';
+import { kirimNotifIzinDiputuskan } from '@/utils/notifikasi-asisten';
 
 export type FilterStatusIzin = 'SEMUA' | StatusIzin;
 
@@ -81,6 +82,12 @@ export function useKelolaIzin() {
       setActionError(result.message);
       return;
     }
+
+    void kirimNotifIzinDiputuskan(
+      decisionTarget.izin,
+      decisionTarget.keputusan,
+      catatan
+    );
 
     setDecisionTarget(null);
     setCatatanAsisten('');

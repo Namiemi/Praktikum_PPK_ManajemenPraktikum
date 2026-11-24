@@ -5,15 +5,24 @@ import { hapusSesi, tambahSesi, ubahSesi } from '@/services';
 import { SesiInput, SesiPraktikum, StatusSesi } from '@/types';
 import { bandingkanSesiJadwal } from '@/utils';
 import { getErrorMessage } from '@/utils/errors';
+import { kirimNotifJadwalDiubah } from '@/utils/notifikasi-asisten';
 
 export type FilterStatus = 'SEMUA' | StatusSesi;
 
 /**
- * Custom hook untuk logika CRUD dan filter jadwal sesi asisten (FR-21).
+ * Custom hook untuk logika CRUD dan filter jadwal sesi asisten (FR-21, FR-35, FR-40).
  */
 export function useKelolaSesi() {
-  const { currentUser, sesiList, kelasList, loading, error, retry } =
-    usePraktikum();
+  const {
+    currentUser,
+    sesiList,
+    kelasList,
+    laboratoriumList,
+    praktikanList,
+    loading,
+    error,
+    retry,
+  } = usePraktikum();
 
   const [selectedFilter, setSelectedFilter] = useState<FilterStatus>('SEMUA');
   const [formOpen, setFormOpen] = useState(false);
@@ -57,6 +66,7 @@ export function useKelolaSesi() {
     try {
       if (editingSesi) {
         await ubahSesi(editingSesi.id, input);
+        void kirimNotifJadwalDiubah(editingSesi, input, praktikanList);
       } else {
         await tambahSesi(input, currentUser);
       }
@@ -98,6 +108,7 @@ export function useKelolaSesi() {
   return {
     currentUser,
     kelasList,
+    laboratoriumList,
     loading,
     error,
     retry,

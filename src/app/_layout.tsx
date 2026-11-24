@@ -114,6 +114,10 @@ function RootContent() {
           <Stack.Screen name="asisten" options={{ headerShown: false }} />
           <Stack.Screen name="praktikan" options={{ headerShown: false }} />
           <Stack.Screen
+            name="presensi/[sesiId]"
+            options={{ title: 'Presensi', headerBackTitle: 'Kembali' }}
+          />
+          <Stack.Screen
             name="sesi/[id]"
             options={{
               title: 'Detail Sesi',

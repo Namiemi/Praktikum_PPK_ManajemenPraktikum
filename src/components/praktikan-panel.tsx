@@ -1,16 +1,14 @@
 /**
  * @file praktikan-panel.tsx
- * @description Panel bawah Detail Sesi untuk praktikan (FR-25, FR-26).
- * Menampilkan form presensi, kartu presensi tercatat, atau info sesuai status sesi.
+ * @description Panel bawah Detail Sesi untuk praktikan (FR-25, FR-37).
+ * Menampilkan tombol menuju halaman presensi, kartu presensi tercatat, atau info sesuai status sesi.
  */
 
 import { router } from 'expo-router';
-import React, { useState } from 'react';
+import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { BottomSheet } from '@/components/bottom-sheet';
 import { CheckIcon } from '@/components/icons/praktikum-theme-icons';
-import { PresensiForm } from '@/components/presensi-form';
 import { usePraktikum } from '@/context/praktikum-context';
 import { SesiPraktikum } from '@/types';
 
@@ -20,7 +18,6 @@ export interface PraktikanPanelProps {
 
 export function PraktikanPanel({ sesi }: PraktikanPanelProps) {
   const { currentUser, getPresensiBySesi, getIzinBySesi } = usePraktikum();
-  const [waktuSukses, setWaktuSukses] = useState<string | null>(null);
 
   const presensiSaya = getPresensiBySesi(sesi.id).find(
     (p) => p.praktikanId === currentUser?.id
@@ -52,10 +49,21 @@ export function PraktikanPanel({ sesi }: PraktikanPanelProps) {
     );
   } else if (sesi.status === 'DIBUKA') {
     konten = (
-      <PresensiForm
-        sesiId={sesi.id}
-        onSuccess={(p) => setWaktuSukses(p.waktuPresensi)}
-      />
+      <View style={[styles.card, styles.cardBuka]}>
+        <Text style={styles.judulInfo}>Sesi Sedang Dibuka</Text>
+        <Text style={styles.teksInfo}>
+          Lakukan presensi di halaman presensi. Lokasi Anda akan diperiksa
+          terhadap radius laboratorium.
+        </Text>
+        <Pressable
+          style={({ pressed }) => [styles.tombolPresensi, pressed && styles.linkPressed]}
+          onPress={() => router.push(`/presensi/${sesi.id}`)}
+          accessibilityRole="button"
+          accessibilityLabel="Buka halaman presensi"
+        >
+          <Text style={styles.tombolPresensiText}>Buka Halaman Presensi</Text>
+        </Pressable>
+      </View>
     );
   } else if (sesi.status === 'DITUTUP') {
     konten = (
@@ -120,18 +128,6 @@ export function PraktikanPanel({ sesi }: PraktikanPanelProps) {
       {konten}
       {infoIzin}
 
-      <BottomSheet
-        visible={waktuSukses !== null}
-        onClose={() => setWaktuSukses(null)}
-        title="Presensi Berhasil"
-        closeText="Tutup"
-      >
-        <View style={styles.sheetBody}>
-          <Text style={styles.sheetJudul}>Kehadiran Anda tercatat</Text>
-          <Text style={styles.sheetWaktu}>Pukul {waktuSukses} WIB</Text>
-          <Text style={styles.sheetInfo}>Terima kasih telah hadir.</Text>
-        </View>
-      </BottomSheet>
     </>
   );
 }
@@ -141,6 +137,23 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 16,
     borderWidth: 1,
+  },
+  cardBuka: {
+    backgroundColor: '#FFFFFF',
+    borderColor: '#C8D7B8',
+  },
+  tombolPresensi: {
+    marginTop: 12,
+    backgroundColor: '#2D3E2D',
+    height: 48,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  tombolPresensiText: {
+    color: '#FFFFFF',
+    fontSize: 15,
+    fontWeight: '700',
   },
   cardHadir: {
     backgroundColor: '#EDF3E6',
@@ -233,26 +246,5 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: '#3E543E',
-  },
-  sheetBody: {
-    alignItems: 'center',
-    paddingVertical: 8,
-  },
-  sheetJudul: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: '#1C281C',
-  },
-  sheetWaktu: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#344E38',
-    fontVariant: ['tabular-nums'],
-    marginTop: 4,
-  },
-  sheetInfo: {
-    fontSize: 13,
-    color: '#5A6B5A',
-    marginTop: 4,
   },
 });

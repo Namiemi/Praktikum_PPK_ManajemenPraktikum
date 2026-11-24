@@ -1,6 +1,7 @@
 /**
  * @file presensi-form.tsx
- * @description Form input kode presensi dengan validasi dan konfirmasi (FR-26).
+ * @description Form input kode presensi dengan validasi dan konfirmasi (FR-26, FR-37).
+ * Koordinat perangkat dikirim bersama kode untuk validasi radius laboratorium.
  */
 
 import React, { useState } from 'react';
@@ -14,10 +15,21 @@ import { validateKodePresensi } from '@/utils/validation';
 
 export interface PresensiFormProps {
   sesiId: string;
+  /** Posisi perangkat terkini; `null` bila belum tersedia */
+  latitude: number | null;
+  longitude: number | null;
+  /** Menonaktifkan form, misalnya saat di luar radius atau lokasi belum siap */
+  disabled?: boolean;
   onSuccess: (presensi: Presensi) => void;
 }
 
-export function PresensiForm({ sesiId, onSuccess }: PresensiFormProps) {
+export function PresensiForm({
+  sesiId,
+  latitude,
+  longitude,
+  disabled = false,
+  onSuccess,
+}: PresensiFormProps) {
   const { presensi } = usePraktikum();
   const [kode, setKode] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -32,6 +44,7 @@ export function PresensiForm({ sesiId, onSuccess }: PresensiFormProps) {
   };
 
   const handleKonfirmasi = () => {
+    if (disabled) return;
     const errKode = validateKodePresensi(kode);
     if (errKode) {
       setError(errKode);
@@ -43,7 +56,12 @@ export function PresensiForm({ sesiId, onSuccess }: PresensiFormProps) {
   const handleKirim = async () => {
     setConfirmOpen(false);
     setSubmitting(true);
-    const result = await presensi(sesiId, kode.trim());
+    const result = await presensi(
+      sesiId,
+      kode.trim(),
+      latitude ?? undefined,
+      longitude ?? undefined
+    );
     setSubmitting(false);
 
     if (result.success && result.data) {
@@ -82,7 +100,7 @@ export function PresensiForm({ sesiId, onSuccess }: PresensiFormProps) {
         placeholder="Contoh: 1234"
         keyboardType="number-pad"
         maxLength={4}
-        editable={!submitting}
+        editable={!submitting && !disabled}
         returnKeyType="done"
         onSubmitEditing={handleKonfirmasi}
         accessibilityLabel="Kode presensi"
@@ -91,14 +109,17 @@ export function PresensiForm({ sesiId, onSuccess }: PresensiFormProps) {
       <Pressable
         style={({ pressed }) => [
           styles.tombol,
-          (submitting || !kode) && styles.tombolDisabled,
+          (submitting || disabled || !kode) && styles.tombolDisabled,
           pressed && styles.tombolPressed,
         ]}
         onPress={handleKonfirmasi}
-        disabled={submitting || !kode}
+        disabled={submitting || disabled || !kode}
         accessibilityRole="button"
         accessibilityLabel="Kirim presensi"
-        accessibilityState={{ disabled: submitting || !kode, busy: submitting }}
+        accessibilityState={{
+          disabled: submitting || disabled || !kode,
+          busy: submitting,
+        }}
       >
         {submitting ? (
           <ActivityIndicator color="#FFFFFF" />

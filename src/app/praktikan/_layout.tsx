@@ -6,6 +6,7 @@ import {
   CalendarIcon,
   ClipboardListIcon,
   FileTextIcon,
+  MapPinIcon,
   UserIcon,
 } from '@/components/icons/praktikum-theme-icons';
 
@@ -64,6 +65,17 @@ export default function PraktikanTabLayout() {
           tabBarLabel: 'Izin',
           tabBarIcon: ({ color, size }) => (
             <FileTextIcon size={size ?? 22} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="peta"
+        options={{
+          title: 'Peta Laboratorium',
+          headerShown: false,
+          tabBarLabel: 'Peta',
+          tabBarIcon: ({ color, size }) => (
+            <MapPinIcon size={size ?? 22} color={color} />
           ),
         }}
       />

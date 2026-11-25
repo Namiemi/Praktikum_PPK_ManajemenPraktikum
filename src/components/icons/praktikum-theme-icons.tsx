@@ -58,6 +58,7 @@ function TintedSvgIcon({
         height: size,
         minWidth: size,
         minHeight: size,
+        flexShrink: 0,
         alignItems: 'center',
         justifyContent: 'center',
       }}
@@ -66,8 +67,9 @@ function TintedSvgIcon({
         source={source}
         style={{ width: size, height: size }}
         tintColor={resolvedColor}
-        cachePolicy="none"
-        recyclingKey={`${source}-${resolvedColor ?? 'default'}-${size}`}
+        cachePolicy="memory-disk"
+        allowDownscaling={false}
+        transition={0}
         contentFit="contain"
       />
     </View>

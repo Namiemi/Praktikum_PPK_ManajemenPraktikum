@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import {
+  Keyboard,
+  Modal,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -7,6 +9,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import {
   DatePickerModal,
@@ -21,7 +24,7 @@ import { formatDateIndo } from '@/utils';
 import {
   countActiveAdvancedFilters,
   FilterStatusSesi,
-  hasActiveJadwalFilter,
+  INITIAL_JADWAL_FILTER,
   JadwalFilterOptions,
   JadwalFilterState,
 } from '@/utils/jadwal-filter';
@@ -40,6 +43,7 @@ export interface JadwalFilterBarProps {
     key: K,
     value: JadwalFilterState[K]
   ) => void;
+  onApplyFilter: (nextFilter: JadwalFilterState) => void;
   onReset: () => void;
 }
 
@@ -114,23 +118,278 @@ function ChipFilterRow({
   );
 }
 
+function FilterJadwalModalContent({
+  initialFilter,
+  options,
+  onApply,
+  onReset,
+  onClose,
+}: {
+  initialFilter: JadwalFilterState;
+  options: JadwalFilterOptions;
+  onApply: (nextFilter: JadwalFilterState) => void;
+  onReset: () => void;
+  onClose: () => void;
+}) {
+  const insets = useSafeAreaInsets();
+  const [draft, setDraft] = useState<JadwalFilterState>(initialFilter);
+  const [activePicker, setActivePicker] = useState<
+    'tanggal' | 'jamMulai' | 'jamSelesai' | null
+  >(null);
+
+  const updateDraft = <K extends keyof JadwalFilterState>(
+    key: K,
+    value: JadwalFilterState[K]
+  ) => {
+    setDraft((prev) => ({ ...prev, [key]: value }));
+  };
+
+  return (
+    <View style={styles.backdrop}>
+      <Pressable style={styles.backdropDismiss} onPress={onClose} />
+      <View
+        style={[
+          styles.sheetContainer,
+          { paddingBottom: Math.max(insets.bottom, 16) + 12 },
+        ]}
+      >
+        <View style={styles.dragHandle} />
+        <Text style={styles.modalTitle}>Filter Jadwal</Text>
+        <View style={styles.divider} />
+
+        <ScrollView
+          style={styles.modalScroll}
+          contentContainerStyle={styles.modalScrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.filterGroup}>
+            <Text style={styles.filterLabel}>Status Sesi</Text>
+            <View style={styles.chipRow}>
+              {STATUS_OPTIONS.map((chip) => {
+                const isActive = draft.status === chip.value;
+                return (
+                  <Pressable
+                    key={chip.value}
+                    style={[
+                      styles.chip,
+                      isActive ? styles.chipActive : styles.chipInactive,
+                    ]}
+                    onPress={() => updateDraft('status', chip.value)}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: isActive }}
+                  >
+                    <Text
+                      style={[
+                        styles.chipText,
+                        isActive
+                          ? styles.chipTextActive
+                          : styles.chipTextInactive,
+                      ]}
+                    >
+                      {chip.label}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          </View>
+
+          <ChipFilterRow
+            label="Mata Kuliah"
+            items={options.mataKuliahList}
+            selectedValue={draft.mataKuliah}
+            onSelect={(val) => updateDraft('mataKuliah', val)}
+          />
+
+          <ChipFilterRow
+            label="Ruangan"
+            items={options.ruangList}
+            selectedValue={draft.ruang}
+            onSelect={(val) => updateDraft('ruang', val)}
+          />
+
+          <View style={styles.filterGroup}>
+            <View style={styles.labelActionRow}>
+              <Text style={styles.filterLabel}>Tanggal</Text>
+              {draft.tanggal ? (
+                <Pressable
+                  onPress={() => updateDraft('tanggal', '')}
+                  hitSlop={6}
+                >
+                  <Text style={styles.resetInlineText}>Hapus</Text>
+                </Pressable>
+              ) : null}
+            </View>
+            <Pressable
+              style={styles.pickerField}
+              onPress={() => setActivePicker('tanggal')}
+              accessibilityRole="button"
+              accessibilityLabel="Filter berdasarkan tanggal"
+            >
+              <Text
+                style={
+                  draft.tanggal ? styles.pickerText : styles.pickerPlaceholder
+                }
+                numberOfLines={1}
+              >
+                {draft.tanggal
+                  ? `${formatDateIndo(draft.tanggal)} (${draft.tanggal})`
+                  : 'Semua tanggal'}
+              </Text>
+              <CalendarIcon size={15} color="#4A5D4A" />
+            </Pressable>
+          </View>
+
+          <View style={styles.filterGroup}>
+            <View style={styles.labelActionRow}>
+              <Text style={styles.filterLabel}>Rentang Jam</Text>
+              {draft.jamMulai || draft.jamSelesai ? (
+                <Pressable
+                  onPress={() => {
+                    updateDraft('jamMulai', '');
+                    updateDraft('jamSelesai', '');
+                  }}
+                  hitSlop={6}
+                >
+                  <Text style={styles.resetInlineText}>Hapus</Text>
+                </Pressable>
+              ) : null}
+            </View>
+
+            <View style={styles.twoColRow}>
+              <Pressable
+                style={[styles.pickerField, styles.colHalf]}
+                onPress={() => setActivePicker('jamMulai')}
+                accessibilityRole="button"
+                accessibilityLabel="Filter dari jam"
+              >
+                <Text
+                  style={
+                    draft.jamMulai
+                      ? styles.pickerText
+                      : styles.pickerPlaceholder
+                  }
+                >
+                  {draft.jamMulai ? `Dari ${draft.jamMulai}` : 'Dari jam'}
+                </Text>
+                <ClockIcon size={14} color="#4A5D4A" />
+              </Pressable>
+
+              <Pressable
+                style={[styles.pickerField, styles.colHalf]}
+                onPress={() => setActivePicker('jamSelesai')}
+                accessibilityRole="button"
+                accessibilityLabel="Filter sampai jam"
+              >
+                <Text
+                  style={
+                    draft.jamSelesai
+                      ? styles.pickerText
+                      : styles.pickerPlaceholder
+                  }
+                >
+                  {draft.jamSelesai
+                    ? `Sampai ${draft.jamSelesai}`
+                    : 'Sampai jam'}
+                </Text>
+                <ClockIcon size={14} color="#4A5D4A" />
+              </Pressable>
+            </View>
+          </View>
+        </ScrollView>
+
+        <View style={styles.buttonRow}>
+          <Pressable
+            style={({ pressed }) => [
+              styles.modalButton,
+              styles.cancelButton,
+              pressed && styles.pressed,
+            ]}
+            onPress={() => {
+              setDraft(INITIAL_JADWAL_FILTER);
+              onReset();
+              onClose();
+            }}
+            accessibilityRole="button"
+            accessibilityLabel="Reset semua filter"
+          >
+            <Text style={styles.cancelButtonText}>Reset</Text>
+          </Pressable>
+
+          <Pressable
+            style={({ pressed }) => [
+              styles.modalButton,
+              styles.primaryButton,
+              pressed && styles.pressed,
+            ]}
+            onPress={() => {
+              onApply(draft);
+              onClose();
+            }}
+            accessibilityRole="button"
+            accessibilityLabel="Terapkan filter jadwal"
+          >
+            <Text style={styles.primaryButtonText}>Terapkan</Text>
+          </Pressable>
+        </View>
+      </View>
+
+      <DatePickerModal
+        visible={activePicker === 'tanggal'}
+        value={draft.tanggal}
+        onSelect={(val) => {
+          updateDraft('tanggal', val);
+          setActivePicker(null);
+        }}
+        onClose={() => setActivePicker(null)}
+      />
+
+      <TimePickerModal
+        visible={activePicker === 'jamMulai'}
+        title="Dari Jam"
+        value={draft.jamMulai}
+        defaultTime="07:00"
+        onSelect={(val) => {
+          updateDraft('jamMulai', val);
+          setActivePicker(null);
+        }}
+        onClose={() => setActivePicker(null)}
+      />
+
+      <TimePickerModal
+        visible={activePicker === 'jamSelesai'}
+        title="Sampai Jam"
+        value={draft.jamSelesai}
+        defaultTime="17:00"
+        onSelect={(val) => {
+          updateDraft('jamSelesai', val);
+          setActivePicker(null);
+        }}
+        onClose={() => setActivePicker(null)}
+      />
+    </View>
+  );
+}
+
 /**
- * Bar pencarian dan filter multi-kriteria untuk daftar jadwal sesi (FR-36, SRS-35).
+ * Bar pencarian dan tombol modal filter multi-kriteria untuk jadwal sesi (FR-36, SRS-35).
  */
 export function JadwalFilterBar({
   filter,
   options,
   onChangeFilter,
+  onApplyFilter,
   onReset,
 }: JadwalFilterBarProps) {
-  const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
-  const [activePicker, setActivePicker] = useState<
-    'tanggal' | 'jamMulai' | 'jamSelesai' | null
-  >(null);
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
 
-  // ponytail: derived counts langsung dari props filter tanpa useEffect sync
+  // ponytail: derived count langsung dari props filter tanpa useEffect sync
   const advancedCount = countActiveAdvancedFilters(filter);
-  const isAnyActive = hasActiveJadwalFilter(filter);
+
+  const handleOpenFilterModal = () => {
+    Keyboard.dismiss();
+    setIsFilterModalOpen(true);
+  };
 
   return (
     <View style={styles.container}>
@@ -186,19 +445,16 @@ export function JadwalFilterBar({
         <Pressable
           style={[
             styles.chip,
-            isAdvancedOpen || advancedCount > 0
-              ? styles.filterToggleActive
-              : styles.chipInactive,
+            advancedCount > 0 ? styles.filterToggleActive : styles.chipInactive,
           ]}
-          onPress={() => setIsAdvancedOpen((prev) => !prev)}
+          onPress={handleOpenFilterModal}
           accessibilityRole="button"
-          accessibilityLabel="Filter lanjutan jadwal"
-          accessibilityState={{ expanded: isAdvancedOpen }}
+          accessibilityLabel="Buka modal filter jadwal"
         >
           <Text
             style={[
               styles.chipText,
-              isAdvancedOpen || advancedCount > 0
+              advancedCount > 0
                 ? styles.chipTextActive
                 : styles.chipTextInactive,
             ]}
@@ -208,160 +464,23 @@ export function JadwalFilterBar({
         </Pressable>
       </View>
 
-      {isAdvancedOpen ? (
-        <View style={styles.advancedCard}>
-          <ChipFilterRow
-            label="Mata Kuliah"
-            items={options.mataKuliahList}
-            selectedValue={filter.mataKuliah}
-            onSelect={(val) => onChangeFilter('mataKuliah', val)}
+      <Modal
+        transparent
+        visible={isFilterModalOpen}
+        animationType="slide"
+        onRequestClose={() => setIsFilterModalOpen(false)}
+      >
+        {isFilterModalOpen ? (
+          <FilterJadwalModalContent
+            key={JSON.stringify(filter)}
+            initialFilter={filter}
+            options={options}
+            onApply={onApplyFilter}
+            onReset={onReset}
+            onClose={() => setIsFilterModalOpen(false)}
           />
-
-          <ChipFilterRow
-            label="Ruangan"
-            items={options.ruangList}
-            selectedValue={filter.ruang}
-            onSelect={(val) => onChangeFilter('ruang', val)}
-          />
-
-          <View style={styles.filterGroup}>
-            <View style={styles.labelActionRow}>
-              <Text style={styles.filterLabel}>Tanggal</Text>
-              {filter.tanggal ? (
-                <Pressable
-                  onPress={() => onChangeFilter('tanggal', '')}
-                  hitSlop={6}
-                >
-                  <Text style={styles.resetInlineText}>Hapus</Text>
-                </Pressable>
-              ) : null}
-            </View>
-            <Pressable
-              style={styles.pickerField}
-              onPress={() => setActivePicker('tanggal')}
-              accessibilityRole="button"
-              accessibilityLabel="Filter berdasarkan tanggal"
-            >
-              <Text
-                style={
-                  filter.tanggal ? styles.pickerText : styles.pickerPlaceholder
-                }
-                numberOfLines={1}
-              >
-                {filter.tanggal
-                  ? `${formatDateIndo(filter.tanggal)} (${filter.tanggal})`
-                  : 'Semua tanggal'}
-              </Text>
-              <CalendarIcon size={15} color="#4A5D4A" />
-            </Pressable>
-          </View>
-
-          <View style={styles.filterGroup}>
-            <View style={styles.labelActionRow}>
-              <Text style={styles.filterLabel}>Rentang Jam</Text>
-              {filter.jamMulai || filter.jamSelesai ? (
-                <Pressable
-                  onPress={() => {
-                    onChangeFilter('jamMulai', '');
-                    onChangeFilter('jamSelesai', '');
-                  }}
-                  hitSlop={6}
-                >
-                  <Text style={styles.resetInlineText}>Hapus</Text>
-                </Pressable>
-              ) : null}
-            </View>
-
-            <View style={styles.twoColRow}>
-              <Pressable
-                style={[styles.pickerField, styles.colHalf]}
-                onPress={() => setActivePicker('jamMulai')}
-                accessibilityRole="button"
-                accessibilityLabel="Filter dari jam"
-              >
-                <Text
-                  style={
-                    filter.jamMulai
-                      ? styles.pickerText
-                      : styles.pickerPlaceholder
-                  }
-                >
-                  {filter.jamMulai ? `Dari ${filter.jamMulai}` : 'Dari jam'}
-                </Text>
-                <ClockIcon size={14} color="#4A5D4A" />
-              </Pressable>
-
-              <Pressable
-                style={[styles.pickerField, styles.colHalf]}
-                onPress={() => setActivePicker('jamSelesai')}
-                accessibilityRole="button"
-                accessibilityLabel="Filter sampai jam"
-              >
-                <Text
-                  style={
-                    filter.jamSelesai
-                      ? styles.pickerText
-                      : styles.pickerPlaceholder
-                  }
-                >
-                  {filter.jamSelesai
-                    ? `Sampai ${filter.jamSelesai}`
-                    : 'Sampai jam'}
-                </Text>
-                <ClockIcon size={14} color="#4A5D4A" />
-              </Pressable>
-            </View>
-          </View>
-
-          {isAnyActive ? (
-            <Pressable
-              style={({ pressed }) => [
-                styles.resetButton,
-                pressed && styles.pressed,
-              ]}
-              onPress={onReset}
-              accessibilityRole="button"
-              accessibilityLabel="Reset semua filter"
-            >
-              <Text style={styles.resetButtonText}>Reset Semua Filter</Text>
-            </Pressable>
-          ) : null}
-        </View>
-      ) : null}
-
-      <DatePickerModal
-        visible={activePicker === 'tanggal'}
-        value={filter.tanggal}
-        onSelect={(val) => {
-          onChangeFilter('tanggal', val);
-          setActivePicker(null);
-        }}
-        onClose={() => setActivePicker(null)}
-      />
-
-      <TimePickerModal
-        visible={activePicker === 'jamMulai'}
-        title="Dari Jam"
-        value={filter.jamMulai}
-        defaultTime="07:00"
-        onSelect={(val) => {
-          onChangeFilter('jamMulai', val);
-          setActivePicker(null);
-        }}
-        onClose={() => setActivePicker(null)}
-      />
-
-      <TimePickerModal
-        visible={activePicker === 'jamSelesai'}
-        title="Sampai Jam"
-        value={filter.jamSelesai}
-        defaultTime="17:00"
-        onSelect={(val) => {
-          onChangeFilter('jamSelesai', val);
-          setActivePicker(null);
-        }}
-        onClose={() => setActivePicker(null)}
-      />
+        ) : null}
+      </Modal>
     </View>
   );
 }
@@ -431,13 +550,56 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: '#3E543E',
   },
-  advancedCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#E6E4DD',
-    padding: 14,
-    gap: 12,
+  backdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(28, 40, 28, 0.65)',
+    justifyContent: 'flex-end',
+  },
+  backdropDismiss: {
+    flex: 1,
+  },
+  sheetContainer: {
+    width: '100%',
+    maxWidth: 540,
+    maxHeight: '84%',
+    alignSelf: 'center',
+    backgroundColor: '#FAF9F5',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingHorizontal: 22,
+    paddingTop: 12,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 16,
+    elevation: 10,
+  },
+  dragHandle: {
+    width: 38,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: '#D1D7C9',
+    alignSelf: 'center',
+    marginBottom: 14,
+  },
+  modalTitle: {
+    fontSize: 19,
+    fontWeight: '700',
+    lineHeight: 24,
+    color: '#1C281C',
+    textAlign: 'center',
+  },
+  divider: {
+    height: 1,
+    backgroundColor: '#EAECE3',
+    marginVertical: 14,
+  },
+  modalScroll: {
+    flexGrow: 0,
+  },
+  modalScrollContent: {
+    gap: 16,
+    paddingBottom: 12,
   },
   filterGroup: {
     gap: 6,
@@ -458,12 +620,12 @@ const styles = StyleSheet.create({
     color: '#9E3B2B',
   },
   pickerField: {
-    height: 42,
-    backgroundColor: '#FAF9F5',
+    height: 44,
+    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     borderWidth: 1,
     borderColor: '#E6E4DD',
-    paddingHorizontal: 12,
+    paddingHorizontal: 14,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -487,18 +649,33 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#8C9786',
   },
-  resetButton: {
-    backgroundColor: '#F5F2EB',
-    borderWidth: 1,
-    borderColor: '#D5E0D5',
-    borderRadius: 12,
-    paddingVertical: 10,
-    alignItems: 'center',
+  buttonRow: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 12,
   },
-  resetButtonText: {
-    fontSize: 12,
+  modalButton: {
+    flex: 1,
+    paddingVertical: 13,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cancelButton: {
+    backgroundColor: '#E5EAD7',
+  },
+  cancelButtonText: {
+    fontSize: 14,
     fontWeight: '600',
-    color: '#3E543E',
+    color: '#2D3E2D',
+  },
+  primaryButton: {
+    backgroundColor: '#2D3E2D',
+  },
+  primaryButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#FFFFFF',
   },
   pressed: {
     opacity: 0.82,

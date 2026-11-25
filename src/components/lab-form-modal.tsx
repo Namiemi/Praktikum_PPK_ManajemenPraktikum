@@ -91,6 +91,8 @@ function LabFormContent({
   const keyboardHeightRef = useRef<number>(0);
   const focusTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const scrollTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   const [isInputFocused, setIsInputFocused] = useState(false);
   const [isMapInteracting, setIsMapInteracting] = useState(false);
@@ -134,13 +136,22 @@ function LabFormContent({
       keyboardHeightRef.current = nextHeight;
       setKeyboardHeight(nextHeight);
       if (focusedFieldRef.current) {
-        scrollFieldToCenter(focusedFieldRef.current, nextHeight);
+        const targetField = focusedFieldRef.current;
+        scrollFieldToCenter(targetField, nextHeight);
+        if (scrollTimerRef.current) {
+          clearTimeout(scrollTimerRef.current);
+        }
+        scrollTimerRef.current = setTimeout(() => {
+          scrollFieldToCenter(targetField, nextHeight);
+        }, 60);
       }
     };
 
     const handleHide = () => {
       keyboardHeightRef.current = 0;
+      focusedFieldRef.current = null;
       setKeyboardHeight(0);
+      setIsInputFocused(false);
     };
 
     const subs = [
@@ -159,6 +170,9 @@ function LabFormContent({
       if (focusTimerRef.current) {
         clearTimeout(focusTimerRef.current);
       }
+      if (scrollTimerRef.current) {
+        clearTimeout(scrollTimerRef.current);
+      }
     };
   }, []);
 
@@ -171,7 +185,7 @@ function LabFormContent({
     }
     focusTimerRef.current = setTimeout(() => {
       scrollFieldToCenter(key);
-    }, 120);
+    }, 140);
   };
 
   const recordFieldLayout = (

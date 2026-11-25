@@ -35,6 +35,7 @@ export default function JadwalAsistenScreen() {
     filterOptions,
     hasActiveFilter,
     handleChangeFilter,
+    handleApplyFilter,
     handleResetFilter,
     sesiMilikAsisten,
     filteredSesi,
@@ -108,6 +109,7 @@ export default function JadwalAsistenScreen() {
                 filter={filterState}
                 options={filterOptions}
                 onChangeFilter={handleChangeFilter}
+                onApplyFilter={handleApplyFilter}
                 onReset={handleResetFilter}
               />
             )}

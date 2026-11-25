@@ -54,6 +54,10 @@ export function useKelolaSesi() {
     setFilterState((prev) => ({ ...prev, [key]: value }));
   };
 
+  const handleApplyFilter = (nextFilter: JadwalFilterState) => {
+    setFilterState(nextFilter);
+  };
+
   const handleResetFilter = () => {
     setFilterState(INITIAL_JADWAL_FILTER);
   };
@@ -133,6 +137,7 @@ export function useKelolaSesi() {
     filterOptions,
     hasActiveFilter,
     handleChangeFilter,
+    handleApplyFilter,
     handleResetFilter,
     sesiMilikAsisten,
     filteredSesi,

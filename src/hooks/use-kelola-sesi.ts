@@ -2,20 +2,36 @@ import { useState } from 'react';
 
 import { usePraktikum } from '@/context/praktikum-context';
 import { hapusSesi, tambahSesi, ubahSesi } from '@/services';
-import { SesiInput, SesiPraktikum, StatusSesi } from '@/types';
+import { SesiInput, SesiPraktikum } from '@/types';
 import { bandingkanSesiJadwal } from '@/utils';
 import { getErrorMessage } from '@/utils/errors';
-
-export type FilterStatus = 'SEMUA' | StatusSesi;
+import {
+  extractJadwalFilterOptions,
+  filterJadwalSesi,
+  hasActiveJadwalFilter,
+  INITIAL_JADWAL_FILTER,
+  JadwalFilterState,
+} from '@/utils/jadwal-filter';
+import { kirimNotifJadwalDiubah } from '@/utils/notifikasi-asisten';
 
 /**
- * Custom hook untuk logika CRUD dan filter jadwal sesi asisten (FR-21).
+ * Custom hook untuk logika CRUD dan filter jadwal sesi asisten (FR-21, FR-35, FR-36, FR-40).
  */
 export function useKelolaSesi() {
-  const { currentUser, sesiList, kelasList, loading, error, retry } =
-    usePraktikum();
+  const {
+    currentUser,
+    sesiList,
+    kelasList,
+    laboratoriumList,
+    praktikanList,
+    loading,
+    error,
+    retry,
+  } = usePraktikum();
 
-  const [selectedFilter, setSelectedFilter] = useState<FilterStatus>('SEMUA');
+  const [filterState, setFilterState] = useState<JadwalFilterState>(
+    INITIAL_JADWAL_FILTER
+  );
   const [formOpen, setFormOpen] = useState(false);
   const [editingSesi, setEditingSesi] = useState<SesiPraktikum | null>(null);
   const [deletingSesi, setDeletingSesi] = useState<SesiPraktikum | null>(null);
@@ -27,10 +43,24 @@ export function useKelolaSesi() {
     .filter((s) => s.asistenId === currentUser?.id)
     .sort(bandingkanSesiJadwal);
 
-  const filteredSesi =
-    selectedFilter === 'SEMUA'
-      ? sesiMilikAsisten
-      : sesiMilikAsisten.filter((s) => s.status === selectedFilter);
+  const filterOptions = extractJadwalFilterOptions(sesiMilikAsisten);
+  const hasActiveFilter = hasActiveJadwalFilter(filterState);
+  const filteredSesi = filterJadwalSesi(sesiMilikAsisten, filterState);
+
+  const handleChangeFilter = <K extends keyof JadwalFilterState>(
+    key: K,
+    value: JadwalFilterState[K]
+  ) => {
+    setFilterState((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const handleApplyFilter = (nextFilter: JadwalFilterState) => {
+    setFilterState(nextFilter);
+  };
+
+  const handleResetFilter = () => {
+    setFilterState(INITIAL_JADWAL_FILTER);
+  };
 
   const handleOpenTambah = () => {
     setActionError(null);
@@ -57,6 +87,7 @@ export function useKelolaSesi() {
     try {
       if (editingSesi) {
         await ubahSesi(editingSesi.id, input);
+        void kirimNotifJadwalDiubah(editingSesi, input, praktikanList);
       } else {
         await tambahSesi(input, currentUser);
       }
@@ -98,11 +129,16 @@ export function useKelolaSesi() {
   return {
     currentUser,
     kelasList,
+    laboratoriumList,
     loading,
     error,
     retry,
-    selectedFilter,
-    setSelectedFilter,
+    filterState,
+    filterOptions,
+    hasActiveFilter,
+    handleChangeFilter,
+    handleApplyFilter,
+    handleResetFilter,
     sesiMilikAsisten,
     filteredSesi,
     formOpen,

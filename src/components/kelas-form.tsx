@@ -6,6 +6,7 @@ import {
   Modal,
   Platform,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -15,6 +16,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { UserAvatar } from '@/components/icons/asisten-avatar';
 import { CheckIcon, SearchIcon } from '@/components/icons/praktikum-theme-icons';
+import { useAndroidKeyboardHeight } from '@/hooks/use-keyboard-height';
 import { Kelas, KelasInput, User } from '@/types';
 import { validateRequired } from '@/utils/validation';
 
@@ -35,6 +37,7 @@ function KelasFormContent({
   onClose,
 }: Omit<KelasFormModalProps, 'visible'>) {
   const insets = useSafeAreaInsets();
+  const keyboardHeight = useAndroidKeyboardHeight();
   const [nama, setNama] = useState(editingKelas?.nama ?? '');
   const [mataKuliah, setMataKuliah] = useState(editingKelas?.mataKuliah ?? '');
   const [namaError, setNamaError] = useState<string | null>(null);
@@ -60,7 +63,7 @@ function KelasFormContent({
         style={[
           styles.sheetContainer,
           styles.kelasFormSheet,
-          { paddingBottom: Math.max(insets.bottom, 16) + 12 },
+          { paddingBottom: Math.max(insets.bottom, 16) + 12 + keyboardHeight },
         ]}
       >
         <View style={styles.dragHandle} />
@@ -69,45 +72,51 @@ function KelasFormContent({
         </Text>
         <View style={styles.divider} />
 
-        {errorMessage ? (
-          <View style={styles.errorBanner}>
-            <Text style={styles.errorBannerText}>{errorMessage}</Text>
-          </View>
-        ) : null}
-
-        <View style={styles.fieldGroup}>
-          <Text style={styles.label}>Nama Kelas</Text>
-          <TextInput
-            style={[styles.input, !!namaError && styles.inputError]}
-            placeholder="Contoh: A"
-            placeholderTextColor="#8C9786"
-            value={nama}
-            onChangeText={(text) => {
-              setNama(text);
-              if (namaError) setNamaError(null);
-            }}
-            editable={!submitting}
-          />
-          {namaError ? <Text style={styles.fieldError}>{namaError}</Text> : null}
-        </View>
-
-        <View style={styles.fieldGroup}>
-          <Text style={styles.label}>Mata Kuliah</Text>
-          <TextInput
-            style={[styles.input, !!matkulError && styles.inputError]}
-            placeholder="Contoh: Pemrograman Mobile"
-            placeholderTextColor="#8C9786"
-            value={mataKuliah}
-            onChangeText={(text) => {
-              setMataKuliah(text);
-              if (matkulError) setMatkulError(null);
-            }}
-            editable={!submitting}
-          />
-          {matkulError ? (
-            <Text style={styles.fieldError}>{matkulError}</Text>
+        <ScrollView
+          style={styles.formScroll}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          {errorMessage ? (
+            <View style={styles.errorBanner}>
+              <Text style={styles.errorBannerText}>{errorMessage}</Text>
+            </View>
           ) : null}
-        </View>
+
+          <View style={styles.fieldGroup}>
+            <Text style={styles.label}>Nama Kelas</Text>
+            <TextInput
+              style={[styles.input, !!namaError && styles.inputError]}
+              placeholder="Contoh: A"
+              placeholderTextColor="#8C9786"
+              value={nama}
+              onChangeText={(text) => {
+                setNama(text);
+                if (namaError) setNamaError(null);
+              }}
+              editable={!submitting}
+            />
+            {namaError ? <Text style={styles.fieldError}>{namaError}</Text> : null}
+          </View>
+
+          <View style={styles.fieldGroup}>
+            <Text style={styles.label}>Mata Kuliah</Text>
+            <TextInput
+              style={[styles.input, !!matkulError && styles.inputError]}
+              placeholder="Contoh: Pemrograman Mobile"
+              placeholderTextColor="#8C9786"
+              value={mataKuliah}
+              onChangeText={(text) => {
+                setMataKuliah(text);
+                if (matkulError) setMatkulError(null);
+              }}
+              editable={!submitting}
+            />
+            {matkulError ? (
+              <Text style={styles.fieldError}>{matkulError}</Text>
+            ) : null}
+          </View>
+        </ScrollView>
 
         <View style={styles.buttonRow}>
           <Pressable
@@ -198,6 +207,7 @@ export function PesertaKelasModal({
   onClose,
 }: PesertaKelasModalProps) {
   const insets = useSafeAreaInsets();
+  const keyboardHeight = useAndroidKeyboardHeight();
   const terdaftarCount = kelas
     ? praktikanList.filter((p) => p.kelasId === kelas.id).length
     : 0;
@@ -218,7 +228,7 @@ export function PesertaKelasModal({
           style={[
             styles.sheetContainer,
             styles.pesertaSheet,
-            { paddingBottom: Math.max(insets.bottom, 16) + 12 },
+            { paddingBottom: Math.max(insets.bottom, 16) + 12 + keyboardHeight },
           ]}
         >
           <View style={styles.dragHandle} />
@@ -346,10 +356,13 @@ const styles = StyleSheet.create({
     elevation: 10,
   },
   pesertaSheet: {
-    maxHeight: '85%',
+    maxHeight: '90%',
   },
   kelasFormSheet: {
-    minHeight: '72%',
+    maxHeight: '90%',
+  },
+  formScroll: {
+    flexGrow: 0,
   },
   dragHandle: {
     width: 38,
@@ -486,6 +499,7 @@ const styles = StyleSheet.create({
     padding: 6,
     borderWidth: 1,
     borderColor: '#EFE8DC',
+    flexShrink: 1,
     maxHeight: 280,
     marginBottom: 16,
   },

@@ -177,3 +177,31 @@ export function validateBilanganPositif(value: string, label: string): Validatio
     ? null
     : `${label} harus berupa angka lebih dari 0.`;
 }
+
+/** Angka koordinat (latitude [-90..90] atau longitude [-180..180]). */
+export function validateKoordinat(
+  value: string,
+  label: string,
+  min: number,
+  max: number
+): ValidationResult {
+  const teks = value.trim().replace(',', '.');
+  if (!teks) return `${label} wajib diisi.`;
+  const angka = Number(teks);
+  if (!Number.isFinite(angka)) return `${label} harus berupa angka valid.`;
+  if (angka < min || angka > max) {
+    return `${label} harus di antara ${min} sampai ${max}.`;
+  }
+  return null;
+}
+
+/** Radius presensi laboratorium dalam meter (> 0). */
+export function validateRadiusLab(value: string): ValidationResult {
+  const teks = value.trim();
+  if (!teks) return 'Radius wajib diisi.';
+  const angka = Number(teks);
+  if (!Number.isFinite(angka) || angka <= 0) {
+    return 'Radius harus berupa angka lebih dari 0 meter.';
+  }
+  return null;
+}

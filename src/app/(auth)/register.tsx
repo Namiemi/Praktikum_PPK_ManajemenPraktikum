@@ -182,7 +182,7 @@ export default function RegisterScreen() {
 
             <FormField
               label="Nomor Induk Mahasiswa (NIM)"
-              placeholder="Contoh: 23512001 (8-15 digit angka)"
+              placeholder="Contoh: 24123456789012 (harus 14 digit)"
               value={nim}
               onChangeText={(text) => {
                 setNim(text);

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { router } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
@@ -17,6 +17,11 @@ import { usePraktikum } from '@/context/praktikum-context';
 import { hapusSesi, ubahSesi } from '@/services';
 import { SesiInput, SesiPraktikum } from '@/types';
 import { getErrorMessage } from '@/utils/errors';
+import {
+  kirimNotifJadwalDiubah,
+  kirimNotifSesiDibuka,
+} from '@/utils/notifikasi-asisten';
+import { validateWaktuBukaSesi } from '@/utils/validation';
 
 export interface AsistenPanelProps {
   sesi: SesiPraktikum;
@@ -25,17 +30,33 @@ export interface AsistenPanelProps {
 type ConfirmActionType = 'buka' | 'tutup' | 'hapus' | null;
 
 /**
- * Panel Kontrol Asisten pada Halaman Detail Sesi (FR-08, FR-09, FR-21, FR-22, FR-23).
+ * Panel Kontrol Asisten pada Halaman Detail Sesi (FR-08, FR-09, FR-21, FR-22, FR-23, FR-32, FR-35, FR-40).
  * Mengelola siklus hidup sesi (BELUM_DIBUKA -> DIBUKA -> DITUTUP), edit/hapus sesi, dan rekap kehadiran.
  */
 export function AsistenPanel({ sesi }: AsistenPanelProps) {
-  const { bukaSesi, tutupSesi, getPresensiBySesi, getIzinBySesi, kelasList } =
-    usePraktikum();
+  const {
+    bukaSesi,
+    tutupSesi,
+    getPresensiBySesi,
+    getIzinBySesi,
+    kelasList,
+    laboratoriumList,
+    praktikanList,
+  } = usePraktikum();
   const [confirmType, setConfirmType] = useState<ConfirmActionType>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [editError, setEditError] = useState<string | null>(null);
+  const [nowTick, setNowTick] = useState(() => Date.now());
+
+  useEffect(() => {
+    if (sesi.status !== 'BELUM_DIBUKA') return;
+    const timer = setInterval(() => {
+      setNowTick(Date.now());
+    }, 30000);
+    return () => clearInterval(timer);
+  }, [sesi.status]);
 
   // ponytail: derived state langsung dari context tanpa sinkronisasi useEffect
   const daftarHadir = [...getPresensiBySesi(sesi.id)].sort((a, b) =>
@@ -44,6 +65,11 @@ export function AsistenPanel({ sesi }: AsistenPanelProps) {
   const daftarIzinDiterima = getIzinBySesi(sesi.id).filter(
     (item) => item.status === 'diterima'
   );
+  const errWaktuBuka =
+    sesi.status === 'BELUM_DIBUKA' && nowTick > 0
+      ? validateWaktuBukaSesi(sesi.tanggal, sesi.jamMulai, sesi.jamSelesai)
+      : null;
+  const canBukaSesi = errWaktuBuka === null;
 
   const isConfirmDanger = confirmType === 'tutup' || confirmType === 'hapus';
 
@@ -56,6 +82,8 @@ export function AsistenPanel({ sesi }: AsistenPanelProps) {
       const result = await bukaSesi(sesi.id);
       if (!result.success) {
         setActionError(result.message);
+      } else {
+        void kirimNotifSesiDibuka(result.data ?? sesi, praktikanList);
       }
       return;
     }
@@ -83,6 +111,7 @@ export function AsistenPanel({ sesi }: AsistenPanelProps) {
     setEditError(null);
     try {
       await ubahSesi(sesi.id, input);
+      void kirimNotifJadwalDiubah(sesi, input, praktikanList);
       setIsEditOpen(false);
       return true;
     } catch (err) {
@@ -181,15 +210,24 @@ export function AsistenPanel({ sesi }: AsistenPanelProps) {
               Harap buka sesi agar praktikan dapat melakukan presensi.
             </Text>
 
+            {errWaktuBuka ? (
+              <View style={styles.scheduleNoticeBox}>
+                <Text style={styles.scheduleNoticeText}>{errWaktuBuka}</Text>
+              </View>
+            ) : null}
+
             <Pressable
               style={({ pressed }) => [
                 styles.primaryButton,
                 styles.bukaButton,
-                pressed && styles.buttonPressed,
+                !canBukaSesi && styles.buttonDisabled,
+                pressed && canBukaSesi && styles.buttonPressed,
               ]}
               onPress={() => setConfirmType('buka')}
+              disabled={!canBukaSesi}
               accessibilityRole="button"
               accessibilityLabel="Buka Sesi"
+              accessibilityState={{ disabled: !canBukaSesi }}
             >
               <Text style={styles.primaryButtonText}>BUKA SESI</Text>
             </Pressable>
@@ -285,6 +323,7 @@ export function AsistenPanel({ sesi }: AsistenPanelProps) {
         visible={isEditOpen}
         editingSesi={sesi}
         kelasList={kelasList}
+        laboratoriumList={laboratoriumList}
         submitting={submitting}
         errorMessage={editError}
         onSubmit={handleEditSubmit}
@@ -457,6 +496,26 @@ const styles = StyleSheet.create({
   },
   bukaButton: {
     backgroundColor: '#344E38',
+  },
+  buttonDisabled: {
+    backgroundColor: '#C9CEC4',
+  },
+  scheduleNoticeBox: {
+    width: '100%',
+    backgroundColor: '#F7EFD8',
+    borderWidth: 1,
+    borderColor: '#E6DAB8',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+    marginBottom: 14,
+  },
+  scheduleNoticeText: {
+    fontSize: 12,
+    fontWeight: '600',
+    lineHeight: 17,
+    color: '#6B5A31',
+    textAlign: 'center',
   },
   tutupButton: {
     backgroundColor: '#B84A39',

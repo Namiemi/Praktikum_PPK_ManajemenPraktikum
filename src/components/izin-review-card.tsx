@@ -5,6 +5,7 @@ import {
   Modal,
   Platform,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -17,6 +18,7 @@ import {
   CardCornerLeafOrnament,
   CheckIcon,
 } from '@/components/icons/praktikum-theme-icons';
+import { useAndroidKeyboardHeight } from '@/hooks/use-keyboard-height';
 import { IzinDecisionTarget } from '@/hooks/use-kelola-izin';
 import { Izin, StatusIzin } from '@/types';
 import { formatDateIndo } from '@/utils';
@@ -162,6 +164,7 @@ export function IzinKeputusanModal({
   onClose,
 }: IzinKeputusanModalProps) {
   const insets = useSafeAreaInsets();
+  const keyboardHeight = useAndroidKeyboardHeight();
   const isReject = target?.keputusan === 'ditolak';
 
   return (
@@ -179,7 +182,7 @@ export function IzinKeputusanModal({
         <View
           style={[
             styles.sheetContainer,
-            { paddingBottom: Math.max(insets.bottom, 16) + 12 },
+            { paddingBottom: Math.max(insets.bottom, 16) + 12 + keyboardHeight },
           ]}
         >
           <View style={styles.dragHandle} />
@@ -188,33 +191,39 @@ export function IzinKeputusanModal({
           </Text>
           <View style={styles.divider} />
 
-          {target ? (
-            <View style={styles.summaryBox}>
-              <Text style={styles.summaryName}>
-                {target.izin.praktikanNama} ({target.izin.praktikanNim})
-              </Text>
-              <Text style={styles.summaryMeta}>{target.izin.sesiLabel}</Text>
-            </View>
-          ) : null}
+          <ScrollView
+            style={styles.modalScroll}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+          >
+            {target ? (
+              <View style={styles.summaryBox}>
+                <Text style={styles.summaryName}>
+                  {target.izin.praktikanNama} ({target.izin.praktikanNim})
+                </Text>
+                <Text style={styles.summaryMeta}>{target.izin.sesiLabel}</Text>
+              </View>
+            ) : null}
 
-          {errorMessage ? (
-            <View style={styles.errorBanner}>
-              <Text style={styles.errorBannerText}>{errorMessage}</Text>
-            </View>
-          ) : null}
+            {errorMessage ? (
+              <View style={styles.errorBanner}>
+                <Text style={styles.errorBannerText}>{errorMessage}</Text>
+              </View>
+            ) : null}
 
-          <View style={styles.fieldGroup}>
-            <Text style={styles.label}>Catatan Asisten (Opsional)</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Tambahkan catatan keputusan..."
-              placeholderTextColor="#8C9786"
-              value={catatan}
-              onChangeText={onChangeCatatan}
-              multiline
-              editable={!submitting}
-            />
-          </View>
+            <View style={styles.fieldGroup}>
+              <Text style={styles.label}>Catatan Asisten (Opsional)</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Tambahkan catatan keputusan..."
+                placeholderTextColor="#8C9786"
+                value={catatan}
+                onChangeText={onChangeCatatan}
+                multiline
+                editable={!submitting}
+              />
+            </View>
+          </ScrollView>
 
           <View style={styles.buttonRow}>
             <Pressable
@@ -407,7 +416,7 @@ const styles = StyleSheet.create({
   sheetContainer: {
     width: '100%',
     maxWidth: 540,
-    minHeight: '68%',
+    maxHeight: '90%',
     alignSelf: 'center',
     backgroundColor: '#FAF9F5',
     borderTopLeftRadius: 24,
@@ -419,6 +428,9 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.12,
     shadowRadius: 16,
     elevation: 10,
+  },
+  modalScroll: {
+    flexGrow: 0,
   },
   dragHandle: {
     width: 38,

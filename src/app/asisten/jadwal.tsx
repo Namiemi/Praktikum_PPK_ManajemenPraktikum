@@ -19,25 +19,24 @@ import {
   PlusIcon,
 } from '@/components/icons/praktikum-theme-icons';
 import { LoadingState } from '@/components/loading-state';
+import { JadwalFilterBar } from '@/components/jadwal-filter-bar';
 import { SesiFormModal } from '@/components/sesi-form';
-import { FilterStatus, useKelolaSesi } from '@/hooks/use-kelola-sesi';
-
-const FILTER_OPTIONS: { value: FilterStatus; label: string }[] = [
-  { value: 'SEMUA', label: 'Semua' },
-  { value: 'DIBUKA', label: 'Dibuka' },
-  { value: 'BELUM_DIBUKA', label: 'Belum Dibuka' },
-  { value: 'DITUTUP', label: 'Ditutup' },
-];
+import { useKelolaSesi } from '@/hooks/use-kelola-sesi';
 
 export default function JadwalAsistenScreen() {
   const {
     currentUser,
     kelasList,
+    laboratoriumList,
     loading,
     error,
     retry,
-    selectedFilter,
-    setSelectedFilter,
+    filterState,
+    filterOptions,
+    hasActiveFilter,
+    handleChangeFilter,
+    handleApplyFilter,
+    handleResetFilter,
     sesiMilikAsisten,
     filteredSesi,
     formOpen,
@@ -74,6 +73,8 @@ export default function JadwalAsistenScreen() {
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
         ListHeaderComponent={
           <View style={styles.headerSection}>
             <View style={styles.profileRow}>
@@ -103,42 +104,21 @@ export default function JadwalAsistenScreen() {
               </Pressable>
             </View>
 
+            {sesiMilikAsisten.length > 0 && (
+              <JadwalFilterBar
+                filter={filterState}
+                options={filterOptions}
+                onChangeFilter={handleChangeFilter}
+                onApplyFilter={handleApplyFilter}
+                onReset={handleResetFilter}
+              />
+            )}
+
             {actionError && !formOpen && !deletingSesi ? (
               <View style={styles.errorBanner}>
                 <Text style={styles.errorBannerText}>{actionError}</Text>
               </View>
             ) : null}
-
-            {sesiMilikAsisten.length > 0 && (
-              <View style={styles.chipRow}>
-                {FILTER_OPTIONS.map((chip) => {
-                  const isActive = selectedFilter === chip.value;
-                  return (
-                    <Pressable
-                      key={chip.value}
-                      style={[
-                        styles.chip,
-                        isActive ? styles.chipActive : styles.chipInactive,
-                      ]}
-                      onPress={() => setSelectedFilter(chip.value)}
-                      accessibilityRole="button"
-                      accessibilityState={{ selected: isActive }}
-                    >
-                      <Text
-                        style={[
-                          styles.chipText,
-                          isActive
-                            ? styles.chipTextActive
-                            : styles.chipTextInactive,
-                        ]}
-                      >
-                        {chip.label}
-                      </Text>
-                    </Pressable>
-                  );
-                })}
-              </View>
-            )}
           </View>
         }
         renderItem={({ item }) => (
@@ -154,12 +134,29 @@ export default function JadwalAsistenScreen() {
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <EmptyScheduleIllustration width={205} height={186} />
-            <Text style={styles.emptyTitle}>Belum Ada Jadwal Sesi</Text>
+            <Text style={styles.emptyTitle}>
+              {hasActiveFilter
+                ? 'Jadwal Tidak Ditemukan'
+                : 'Belum Ada Jadwal Sesi'}
+            </Text>
             <Text style={styles.emptyDescription}>
               {sesiMilikAsisten.length === 0
                 ? 'Anda tidak memiliki jadwal\npraktikum yang aktif saat ini.'
-                : 'Tidak ada sesi praktikum dengan\nstatus filter yang dipilih.'}
+                : 'Tidak ada sesi praktikum yang cocok\ndengan pencarian atau filter Anda.'}
             </Text>
+            {hasActiveFilter ? (
+              <Pressable
+                style={({ pressed }) => [
+                  styles.resetEmptyButton,
+                  pressed && styles.pressed,
+                ]}
+                onPress={handleResetFilter}
+                accessibilityRole="button"
+                accessibilityLabel="Reset Filter"
+              >
+                <Text style={styles.resetEmptyText}>Reset Filter</Text>
+              </Pressable>
+            ) : null}
           </View>
         }
       />
@@ -168,6 +165,7 @@ export default function JadwalAsistenScreen() {
         visible={formOpen}
         editingSesi={editingSesi}
         kelasList={kelasList}
+        laboratoriumList={laboratoriumList}
         submitting={submitting}
         errorMessage={actionError}
         onSubmit={handleSimpanSesi}
@@ -273,37 +271,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#9E3B2B',
   },
-  chipRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-    marginTop: 14,
-  },
-  chip: {
-    paddingHorizontal: 14,
-    paddingVertical: 7,
-    borderRadius: 999,
-  },
-  chipActive: {
-    backgroundColor: '#3E543E',
-  },
-  chipInactive: {
-    backgroundColor: '#F5F2EB',
-    borderWidth: 1,
-    borderColor: '#D5E0D5',
-  },
-  chipText: {
-    fontSize: 12,
-    lineHeight: 16,
-  },
-  chipTextActive: {
-    fontWeight: '600',
-    color: '#FFFFFF',
-  },
-  chipTextInactive: {
-    fontWeight: '500',
-    color: '#3E543E',
-  },
   cardWrapper: {
     marginBottom: 12,
   },
@@ -329,5 +296,19 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     paddingHorizontal: 16,
     marginTop: 6,
+  },
+  resetEmptyButton: {
+    marginTop: 14,
+    backgroundColor: '#F5F2EB',
+    borderWidth: 1,
+    borderColor: '#D5E0D5',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 999,
+  },
+  resetEmptyText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#3E543E',
   },
 });

@@ -3,9 +3,10 @@ import React from 'react';
 
 import {
   CalendarIcon,
+  ClipboardListIcon,
+  MapPinIcon,
   UserIcon,
   UsersIcon,
-  ClipboardListIcon
 } from '@/components/icons/praktikum-theme-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -29,7 +30,7 @@ export default function AsistenTabLayout() {
         tabBarActiveTintColor: '#FDFBF7',
         tabBarInactiveTintColor: '#A0A79A',
         tabBarLabelStyle: {
-          fontSize: 12,
+          fontSize: 11,
           fontWeight: '600',
         },
       }}
@@ -64,6 +65,17 @@ export default function AsistenTabLayout() {
           tabBarLabel: 'Izin',
           tabBarIcon: ({ color, size }) => (
             <ClipboardListIcon size={size ?? 22} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="peta"
+        options={{
+          title: 'Peta & Lab',
+          headerShown: false,
+          tabBarLabel: 'Peta',
+          tabBarIcon: ({ color, size }) => (
+            <MapPinIcon size={size ?? 22} color={color} />
           ),
         }}
       />

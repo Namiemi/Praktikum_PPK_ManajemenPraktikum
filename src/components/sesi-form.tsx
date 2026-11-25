@@ -23,7 +23,7 @@ import {
   CalendarIcon,
   ClockIcon,
 } from '@/components/icons/praktikum-theme-icons';
-import { Kelas, SesiInput, SesiPraktikum } from '@/types';
+import { Kelas, Laboratorium, SesiInput, SesiPraktikum } from '@/types';
 import { formatDateIndo } from '@/utils';
 import {
   validateBilanganPositif,
@@ -38,6 +38,7 @@ export interface SesiFormModalProps {
   visible: boolean;
   editingSesi: SesiPraktikum | null;
   kelasList: Kelas[];
+  laboratoriumList: Laboratorium[];
   submitting: boolean;
   errorMessage: string | null;
   onSubmit: (input: SesiInput) => Promise<boolean>;
@@ -46,19 +47,20 @@ export interface SesiFormModalProps {
 
 interface SesiErrors {
   kelas?: string | null;
+  lab?: string | null;
   pertemuan?: string | null;
-  ruang?: string | null;
   topik?: string | null;
   tanggal?: string | null;
   jamMulai?: string | null;
   jamSelesai?: string | null;
 }
 
-type SesiFieldScrollKey = 'pertemuanRuang' | 'topik' | 'catatan';
+type SesiFieldScrollKey = 'pertemuan' | 'topik' | 'catatan';
 
 function SesiFormContent({
   editingSesi,
   kelasList,
+  laboratoriumList,
   submitting,
   errorMessage,
   onSubmit,
@@ -77,13 +79,24 @@ function SesiFormContent({
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   const [isInputFocused, setIsInputFocused] = useState(false);
 
+  const initialLab =
+    laboratoriumList.find((l) => l.id === editingSesi?.labId) ??
+    laboratoriumList.find(
+      (l) =>
+        l.nama.trim().toLowerCase() ===
+        (editingSesi?.ruang ?? '').trim().toLowerCase()
+    );
+
   const [kelasId, setKelasId] = useState(editingSesi?.kelasId ?? '');
   const [kelasNama, setKelasNama] = useState(editingSesi?.kelas ?? '');
   const [mataKuliah, setMataKuliah] = useState(editingSesi?.mataKuliah ?? '');
   const [pertemuan, setPertemuan] = useState(
     editingSesi ? String(editingSesi.pertemuan) : ''
   );
-  const [ruang, setRuang] = useState(editingSesi?.ruang ?? '');
+  const [labId, setLabId] = useState(initialLab?.id ?? '');
+  const [ruang, setRuang] = useState(
+    initialLab?.nama ?? editingSesi?.ruang ?? ''
+  );
   const [topik, setTopik] = useState(editingSesi?.topik ?? '');
   const [tanggal, setTanggal] = useState(editingSesi?.tanggal ?? '');
   const [jamMulai, setJamMulai] = useState(editingSesi?.jamMulai ?? '');
@@ -160,11 +173,13 @@ function SesiFormContent({
     }, 120);
   };
 
-  const handleGroupLayout =
-    (key: SesiFieldScrollKey) => (e: LayoutChangeEvent) => {
-      const { y, height } = e.nativeEvent.layout;
-      fieldLayoutsRef.current[key] = { y, height };
-    };
+  const recordFieldLayout = (
+    key: SesiFieldScrollKey,
+    e: LayoutChangeEvent
+  ) => {
+    const { y, height } = e.nativeEvent.layout;
+    fieldLayoutsRef.current[key] = { y, height };
+  };
 
   const clearError = (key: keyof SesiErrors) => {
     if (errors[key]) {
@@ -178,6 +193,14 @@ function SesiFormContent({
     setMataKuliah(selected.mataKuliah);
     setErrors((prev) => ({ ...prev, kelas: null }));
   };
+
+  const handleSelectLab = (selected: Laboratorium) => {
+    setLabId(selected.id);
+    setRuang(selected.nama);
+    setErrors((prev) => ({ ...prev, lab: null }));
+  };
+
+  const selectedLab = laboratoriumList.find((l) => l.id === labId) ?? null;
 
   const handleSave = async () => {
     const errJamMulai = validateJam(jamMulai, 'Jam mulai');
@@ -200,8 +223,8 @@ function SesiFormContent({
 
     const nextErrors: SesiErrors = {
       kelas: validateRequired(kelasId, 'Kelas'),
+      lab: validateRequired(labId, 'Laboratorium'),
       pertemuan: validateBilanganPositif(pertemuan, 'Pertemuan'),
-      ruang: validateRequired(ruang, 'Ruang'),
       topik: validateRequired(topik, 'Topik'),
       tanggal: errTanggal,
       jamMulai: errJamMulai ?? errLewat,
@@ -216,7 +239,8 @@ function SesiFormContent({
       kelas: kelasNama,
       mataKuliah,
       pertemuan: Number(pertemuan.trim()),
-      ruang,
+      labId: labId || null,
+      ruang: selectedLab?.nama ?? ruang,
       topik,
       tanggal,
       jamMulai,
@@ -287,6 +311,8 @@ function SesiFormContent({
                       ]}
                       onPress={() => handleSelectKelas(k)}
                       disabled={submitting}
+                      accessibilityRole="button"
+                      accessibilityState={{ selected: isActive }}
                     >
                       <Text
                         style={[
@@ -308,55 +334,90 @@ function SesiFormContent({
             ) : null}
           </View>
 
-          <View
-            style={styles.twoColRow}
-            onLayout={handleGroupLayout('pertemuanRuang')}
-          >
-            <View style={[styles.fieldGroup, styles.colHalf]}>
-              <Text style={styles.label}>Pertemuan</Text>
-              <TextInput
-                style={[styles.input, !!errors.pertemuan && styles.inputError]}
-                placeholder="1"
-                placeholderTextColor="#8C9786"
-                keyboardType="number-pad"
-                value={pertemuan}
-                onChangeText={(text) => {
-                  setPertemuan(text.replace(/\D/g, ''));
-                  clearError('pertemuan');
-                }}
-                onFocus={() => handleFieldFocus('pertemuanRuang')}
-                onPressIn={() => handleFieldFocus('pertemuanRuang')}
-                onBlur={() => setIsInputFocused(false)}
-                editable={!submitting}
-              />
-              {errors.pertemuan ? (
-                <Text style={styles.fieldError}>{errors.pertemuan}</Text>
-              ) : null}
-            </View>
-
-            <View style={[styles.fieldGroup, styles.colHalf]}>
-              <Text style={styles.label}>Ruang</Text>
-              <TextInput
-                style={[styles.input, !!errors.ruang && styles.inputError]}
-                placeholder="Lab 1"
-                placeholderTextColor="#8C9786"
-                value={ruang}
-                onChangeText={(text) => {
-                  setRuang(text);
-                  clearError('ruang');
-                }}
-                onFocus={() => handleFieldFocus('pertemuanRuang')}
-                onPressIn={() => handleFieldFocus('pertemuanRuang')}
-                onBlur={() => setIsInputFocused(false)}
-                editable={!submitting}
-              />
-              {errors.ruang ? (
-                <Text style={styles.fieldError}>{errors.ruang}</Text>
-              ) : null}
-            </View>
+          <View style={styles.fieldGroup}>
+            <Text style={styles.label}>Pilih Laboratorium</Text>
+            {laboratoriumList.length === 0 ? (
+              <Text style={styles.emptyKelasText}>
+                Belum ada laboratorium. Tambahkan data laboratorium di tab Peta terlebih dahulu.
+              </Text>
+            ) : (
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.chipRow}
+              >
+                {laboratoriumList.map((lab) => {
+                  const isActive = labId === lab.id;
+                  return (
+                    <Pressable
+                      key={lab.id}
+                      style={[
+                        styles.chip,
+                        isActive ? styles.chipActive : styles.chipInactive,
+                      ]}
+                      onPress={() => handleSelectLab(lab)}
+                      disabled={submitting}
+                      accessibilityRole="button"
+                      accessibilityState={{ selected: isActive }}
+                    >
+                      <Text
+                        style={[
+                          styles.chipText,
+                          isActive
+                            ? styles.chipTextActive
+                            : styles.chipTextInactive,
+                        ]}
+                      >
+                        {lab.nama} ({lab.radius} m)
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </ScrollView>
+            )}
+            {selectedLab ? (
+              <Text style={styles.labMetaText}>
+                {selectedLab.lokasi} • Radius presensi {selectedLab.radius} m
+              </Text>
+            ) : editingSesi && editingSesi.ruang ? (
+              <Text style={styles.labMetaText}>
+                Ruang sebelumnya &ldquo;{editingSesi.ruang}&rdquo; belum terhubung ke lab aktif. Pilih laboratorium di atas.
+              </Text>
+            ) : null}
+            {errors.lab ? (
+              <Text style={styles.fieldError}>{errors.lab}</Text>
+            ) : null}
           </View>
 
-          <View style={styles.fieldGroup} onLayout={handleGroupLayout('topik')}>
+          <View
+            style={styles.fieldGroup}
+            onLayout={(e) => recordFieldLayout('pertemuan', e)}
+          >
+            <Text style={styles.label}>Pertemuan</Text>
+            <TextInput
+              style={[styles.input, !!errors.pertemuan && styles.inputError]}
+              placeholder="1"
+              placeholderTextColor="#8C9786"
+              keyboardType="number-pad"
+              value={pertemuan}
+              onChangeText={(text) => {
+                setPertemuan(text.replace(/\D/g, ''));
+                clearError('pertemuan');
+              }}
+              onFocus={() => handleFieldFocus('pertemuan')}
+              onPressIn={() => handleFieldFocus('pertemuan')}
+              onBlur={() => setIsInputFocused(false)}
+              editable={!submitting}
+            />
+            {errors.pertemuan ? (
+              <Text style={styles.fieldError}>{errors.pertemuan}</Text>
+            ) : null}
+          </View>
+
+          <View
+            style={styles.fieldGroup}
+            onLayout={(e) => recordFieldLayout('topik', e)}
+          >
             <Text style={styles.label}>Topik</Text>
             <TextInput
               style={[styles.input, !!errors.topik && styles.inputError]}
@@ -467,7 +528,7 @@ function SesiFormContent({
 
           <View
             style={styles.fieldGroup}
-            onLayout={handleGroupLayout('catatan')}
+            onLayout={(e) => recordFieldLayout('catatan', e)}
           >
             <Text style={styles.label}>Catatan (Opsional)</Text>
             <TextInput
@@ -578,6 +639,7 @@ export function SesiFormModal(props: SesiFormModalProps) {
           key={props.editingSesi?.id ?? 'new'}
           editingSesi={props.editingSesi}
           kelasList={props.kelasList}
+          laboratoriumList={props.laboratoriumList}
           submitting={props.submitting}
           errorMessage={props.errorMessage}
           onSubmit={props.onSubmit}
@@ -670,6 +732,11 @@ const styles = StyleSheet.create({
   emptyKelasText: {
     fontSize: 12,
     color: '#9E3B2B',
+  },
+  labMetaText: {
+    fontSize: 11,
+    color: '#5A6B5A',
+    marginTop: 5,
   },
   chipRow: {
     flexDirection: 'row',
